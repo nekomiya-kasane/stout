@@ -1,0 +1,6 @@
+{
+  "name": "stout",
+  "type": "custom",
+  "version": "0.1.0",
+  "description": "C++23 Cross-Platform Compound Document Library (shared)"
+}
