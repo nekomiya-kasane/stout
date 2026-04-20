@@ -1,11 +1,12 @@
 #pragma once
 
-#include "stout/exports.h"
-#include "stout/types.h"
 #include "stout/cfb/constants.h"
 #include "stout/cfb/sector_io.h"
+#include "stout/exports.h"
 #include "stout/io/lock_bytes.h"
+#include "stout/types.h"
 #include "stout/util/endian.h"
+
 #include <cstdint>
 #include <expected>
 #include <span>
@@ -15,13 +16,12 @@ namespace stout::cfb {
 
 // In-memory FAT table: maps sector_id -> next sector_id in chain
 class STOUT_API fat_table {
-public:
+  public:
     fat_table() = default;
 
     // Load the entire FAT from disk given the list of FAT sector IDs
-    template<io::lock_bytes LB>
-    auto load(sector_io<LB>& sio, std::span<const uint32_t> fat_sector_ids)
-        -> std::expected<void, error> {
+    template <io::lock_bytes LB>
+    auto load(sector_io<LB> &sio, std::span<const uint32_t> fat_sector_ids) -> std::expected<void, error> {
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss);
         entries_.resize(fat_sector_ids.size() * entries_per, freesect);
@@ -31,17 +31,15 @@ public:
             auto r = sio.read_sector(fat_sector_ids[i], buf);
             if (!r) return std::unexpected(r.error());
             for (uint32_t j = 0; j < entries_per; ++j) {
-                entries_[i * entries_per + j] =
-                    util::read_u32_le(buf.data() + j * 4);
+                entries_[i * entries_per + j] = util::read_u32_le(buf.data() + j * 4);
             }
         }
         return {};
     }
 
     // Flush the entire FAT back to disk
-    template<io::lock_bytes LB>
-    auto flush(sector_io<LB>& sio, std::span<const uint32_t> fat_sector_ids)
-        -> std::expected<void, error> {
+    template <io::lock_bytes LB>
+    auto flush(sector_io<LB> &sio, std::span<const uint32_t> fat_sector_ids) -> std::expected<void, error> {
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss);
         std::vector<uint8_t> buf(ss);
@@ -131,28 +129,27 @@ public:
     }
 
     [[nodiscard]] auto size() const noexcept -> size_t { return entries_.size(); }
-    [[nodiscard]] auto entries() const noexcept -> const std::vector<uint32_t>& { return entries_; }
-    [[nodiscard]] auto entries() noexcept -> std::vector<uint32_t>& { return entries_; }
+    [[nodiscard]] auto entries() const noexcept -> const std::vector<uint32_t> & { return entries_; }
+    [[nodiscard]] auto entries() noexcept -> std::vector<uint32_t> & { return entries_; }
 
     void resize(size_t count) { entries_.resize(count, freesect); }
 
-private:
+  private:
     std::vector<uint32_t> entries_;
 };
 
 // Sector chain iterator for range-based for loops
 class sector_chain_iterator {
-public:
+  public:
     using value_type = uint32_t;
     using difference_type = std::ptrdiff_t;
 
     sector_chain_iterator() = default;
-    sector_chain_iterator(const fat_table& fat, uint32_t sector_id)
-        : fat_(&fat), current_(sector_id) {}
+    sector_chain_iterator(const fat_table &fat, uint32_t sector_id) : fat_(&fat), current_(sector_id) {}
 
     auto operator*() const noexcept -> uint32_t { return current_; }
 
-    auto operator++() -> sector_chain_iterator& {
+    auto operator++() -> sector_chain_iterator & {
         if (fat_ && current_ != endofchain && current_ != freesect) {
             current_ = fat_->next(current_);
         } else {
@@ -167,40 +164,33 @@ public:
         return tmp;
     }
 
-    friend auto operator==(const sector_chain_iterator& a, const sector_chain_iterator& b) -> bool {
+    friend auto operator==(const sector_chain_iterator &a, const sector_chain_iterator &b) -> bool {
         return a.current_ == b.current_;
     }
 
-    friend auto operator!=(const sector_chain_iterator& a, const sector_chain_iterator& b) -> bool {
-        return !(a == b);
-    }
+    friend auto operator!=(const sector_chain_iterator &a, const sector_chain_iterator &b) -> bool { return !(a == b); }
 
-private:
-    const fat_table* fat_ = nullptr;
+  private:
+    const fat_table *fat_ = nullptr;
     uint32_t current_ = endofchain;
 };
 
 // Range adapter for sector chains
 class sector_chain_range {
-public:
-    sector_chain_range(const fat_table& fat, uint32_t start)
-        : fat_(&fat), start_(start) {}
+  public:
+    sector_chain_range(const fat_table &fat, uint32_t start) : fat_(&fat), start_(start) {}
 
-    [[nodiscard]] auto begin() const -> sector_chain_iterator {
-        return {*fat_, start_};
-    }
+    [[nodiscard]] auto begin() const -> sector_chain_iterator { return {*fat_, start_}; }
 
-    [[nodiscard]] auto end() const -> sector_chain_iterator {
-        return {*fat_, endofchain};
-    }
+    [[nodiscard]] auto end() const -> sector_chain_iterator { return {*fat_, endofchain}; }
 
-private:
-    const fat_table* fat_;
+  private:
+    const fat_table *fat_;
     uint32_t start_;
 };
 
 // Convenience function
-[[nodiscard]] inline auto iterate_chain(const fat_table& fat, uint32_t start) -> sector_chain_range {
+[[nodiscard]] inline auto iterate_chain(const fat_table &fat, uint32_t start) -> sector_chain_range {
     return {fat, start};
 }
 

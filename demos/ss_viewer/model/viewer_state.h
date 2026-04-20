@@ -6,28 +6,26 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <Windows.h>
-#include <objbase.h>
-#include <objidl.h>
+#include "ss_viewer/model/entry_info.h"
+#include "ss_viewer/model/paged_reader.h"
+#include "ss_viewer/model/stout_backend.h"
+#include "ss_viewer/model/win32_backend.h"
+#include "stout/compound_file.h"
+#include "stout/ole/property_set.h"
 
+#include <Windows.h>
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <deque>
 #include <filesystem>
+#include <objbase.h>
+#include <objidl.h>
 #include <optional>
 #include <span>
 #include <string>
 #include <unordered_set>
 #include <vector>
-
-#include "stout/compound_file.h"
-#include "stout/ole/property_set.h"
-
-#include "ss_viewer/model/entry_info.h"
-#include "ss_viewer/model/paged_reader.h"
-#include "ss_viewer/model/stout_backend.h"
-#include "ss_viewer/model/win32_backend.h"
 
 namespace ssv {
 
@@ -42,7 +40,7 @@ struct viewer_state {
     std::optional<stout::compound_file> cf;
 
     // ── Win32 backend ──
-    IStorage* root_stg = nullptr;
+    IStorage *root_stg = nullptr;
 
     // ── Tree data ──
     entry_info root_entry;
@@ -51,14 +49,14 @@ struct viewer_state {
     std::vector<std::string> flat_paths;
 
     // ── Selection ──
-    const entry_info* selected = nullptr;
+    const entry_info *selected = nullptr;
 
     // ── Detail tabs ──
-    int active_tab = 0;  ///< 0=Info, 1=Hex, 2=Properties
+    int active_tab = 0; ///< 0=Info, 1=Hex, 2=Properties
 
     // ── Hex dump cache ──
-    std::vector<uint8_t> hex_data;      ///< Legacy bulk data (for properties parsing)
-    paged_reader hex_reader;             ///< On-demand paged reader (no size cap)
+    std::vector<uint8_t> hex_data; ///< Legacy bulk data (for properties parsing)
+    paged_reader hex_reader;       ///< On-demand paged reader (no size cap)
     uint32_t hex_scroll = 0;
     std::string hex_cached_path;
 
@@ -71,12 +69,12 @@ struct viewer_state {
     std::string sector_str;
 
     // ── UI overlay state ──
-    bool show_help = false;   ///< Show keybinding help popup.
-    bool show_search = false; ///< Show search popup (text input mode).
-    std::string search_query; ///< Current search query text.
-    int search_match_count = 0;   ///< Number of matches found.
-    int search_current_match = 0; ///< Index of current match (1-based).
-    std::string toast_msg;    ///< Toast message to display (empty = hidden).
+    bool show_help = false;                              ///< Show keybinding help popup.
+    bool show_search = false;                            ///< Show search popup (text input mode).
+    std::string search_query;                            ///< Current search query text.
+    int search_match_count = 0;                          ///< Number of matches found.
+    int search_current_match = 0;                        ///< Index of current match (1-based).
+    std::string toast_msg;                               ///< Toast message to display (empty = hidden).
     std::chrono::steady_clock::time_point toast_until{}; ///< When toast expires.
 
     // ── Theme ──
@@ -88,15 +86,15 @@ struct viewer_state {
     static constexpr uint32_t tree_panel_max = 60;
 
     // ── Goto overlay (Ctrl+G) ──
-    bool show_goto = false;       ///< Show goto input overlay.
-    std::string goto_query;       ///< Current goto query text.
+    bool show_goto = false;          ///< Show goto input overlay.
+    std::string goto_query;          ///< Current goto query text.
     bool goto_is_hex_offset = false; ///< true = hex offset mode, false = path mode.
 
     // ── Hex enhancements ──
-    uint64_t hex_cursor = 0;      ///< Byte offset of hex cursor.
-    bool hex_show_ascii = true;   ///< Show ASCII column in hex view.
-    uint64_t hex_sel_start = 0;   ///< Start of hex selection range.
-    uint64_t hex_sel_end = 0;     ///< End of hex selection range (exclusive).
+    uint64_t hex_cursor = 0;        ///< Byte offset of hex cursor.
+    bool hex_show_ascii = true;     ///< Show ASCII column in hex view.
+    uint64_t hex_sel_start = 0;     ///< Start of hex selection range.
+    uint64_t hex_sel_end = 0;       ///< End of hex selection range (exclusive).
     bool hex_has_selection = false; ///< Whether a hex selection is active.
 
     // ── Navigation history ──
@@ -105,10 +103,10 @@ struct viewer_state {
     static constexpr size_t nav_max = 50;
 
     // ── Bookmarks ──
-    std::vector<std::string> bookmarks;  ///< Bookmarked entry full_paths.
+    std::vector<std::string> bookmarks; ///< Bookmarked entry full_paths.
 
     // ── Dirty flag for diff-based rebuild ──
-    bool dirty = true;  ///< Set when state changes; cleared after widget rebuild.
+    bool dirty = true; ///< Set when state changes; cleared after widget rebuild.
 
     /// @brief Push current selection onto back history before navigating.
     void push_nav_history() {
@@ -144,7 +142,7 @@ struct viewer_state {
     }
 
     /// @brief Navigate to a specific entry by full_path.
-    void navigate_to_path(const std::string& target) {
+    void navigate_to_path(const std::string &target) {
         for (int i = 0; i < static_cast<int>(flat_paths.size()); ++i) {
             if (flat_paths[i] == target) {
                 tree_cursor = i;
@@ -166,12 +164,12 @@ struct viewer_state {
     }
 
     /// @brief Check if an entry is bookmarked.
-    [[nodiscard]] bool is_bookmarked(const std::string& path) const {
+    [[nodiscard]] bool is_bookmarked(const std::string &path) const {
         return std::find(bookmarks.begin(), bookmarks.end(), path) != bookmarks.end();
     }
 
     /// @brief Ensure children of an entry are loaded (lazy loading).
-    void ensure_children_loaded(entry_info& ei) {
+    void ensure_children_loaded(entry_info &ei) {
         if (ei.children_loaded) return;
         if (use_win32 && root_stg)
             load_win32_children(root_stg, ei);
@@ -191,7 +189,7 @@ struct viewer_state {
     /// @brief Update selection to match current tree_cursor position.
     void select_current() {
         if (tree_cursor >= 0 && tree_cursor < static_cast<int>(flat_paths.size())) {
-            auto& path = flat_paths[tree_cursor];
+            auto &path = flat_paths[tree_cursor];
             selected = find_entry(root_entry, path);
             load_hex_data();
             load_properties();
@@ -231,8 +229,7 @@ struct viewer_state {
 
     /// @brief Load OLE property set for the currently selected property stream.
     void load_properties() {
-        if (!selected || selected->type != stout::entry_type::stream ||
-            !is_property_stream(selected->name)) {
+        if (!selected || selected->type != stout::entry_type::stream || !is_property_stream(selected->name)) {
             prop_set.reset();
             prop_cached_path.clear();
             return;
@@ -241,24 +238,28 @@ struct viewer_state {
         prop_cached_path = selected->full_path;
 
         if (!hex_data.empty()) {
-            auto result = stout::ole::parse_property_set(
-                std::span<const uint8_t>(hex_data));
-            if (result) prop_set = std::move(*result);
-            else prop_set.reset();
+            auto result = stout::ole::parse_property_set(std::span<const uint8_t>(hex_data));
+            if (result)
+                prop_set = std::move(*result);
+            else
+                prop_set.reset();
         } else {
             prop_set.reset();
         }
     }
 
     ~viewer_state() {
-        if (root_stg) { root_stg->Release(); root_stg = nullptr; }
+        if (root_stg) {
+            root_stg->Release();
+            root_stg = nullptr;
+        }
     }
 
     viewer_state() = default;
-    viewer_state(const viewer_state&) = delete;
-    viewer_state& operator=(const viewer_state&) = delete;
-    viewer_state(viewer_state&&) = default;
-    viewer_state& operator=(viewer_state&&) = default;
+    viewer_state(const viewer_state &) = delete;
+    viewer_state &operator=(const viewer_state &) = delete;
+    viewer_state(viewer_state &&) = default;
+    viewer_state &operator=(viewer_state &&) = default;
 };
 
 } // namespace ssv

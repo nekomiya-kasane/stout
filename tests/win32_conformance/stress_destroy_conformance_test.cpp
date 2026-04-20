@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPDest {
 };
 
 class StressDestroyConformance : public ::testing::TestWithParam<VPDest> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPDest vp_dest[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressDestroyConformance, ::testing::ValuesIn(vp_dest),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Destroy stream ──────────────────────────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyStream) {
-    auto p = temp_file("sd_strm"); guard_.add(p);
+    auto p = temp_file("sd_strm");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -43,7 +45,8 @@ TEST_P(StressDestroyConformance, DestroyStream) {
 }
 
 TEST_P(StressDestroyConformance, DestroyStorage) {
-    auto p = temp_file("sd_stg"); guard_.add(p);
+    auto p = temp_file("sd_stg");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -57,7 +60,8 @@ TEST_P(StressDestroyConformance, DestroyStorage) {
 }
 
 TEST_P(StressDestroyConformance, DestroyNonExistent) {
-    auto p = temp_file("sd_noex"); guard_.add(p);
+    auto p = temp_file("sd_noex");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().remove("Ghost");
@@ -67,7 +71,8 @@ TEST_P(StressDestroyConformance, DestroyNonExistent) {
 // ── Destroy with children ───────────────────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyStorageWithChildren) {
-    auto p = temp_file("sd_wchild"); guard_.add(p);
+    auto p = temp_file("sd_wchild");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -86,7 +91,8 @@ TEST_P(StressDestroyConformance, DestroyStorageWithChildren) {
 // ── Destroy first, middle, last sibling ─────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyFirstSibling) {
-    auto p = temp_file("sd_first"); guard_.add(p);
+    auto p = temp_file("sd_first");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -104,7 +110,8 @@ TEST_P(StressDestroyConformance, DestroyFirstSibling) {
 }
 
 TEST_P(StressDestroyConformance, DestroyMiddleSibling) {
-    auto p = temp_file("sd_mid"); guard_.add(p);
+    auto p = temp_file("sd_mid");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -123,7 +130,8 @@ TEST_P(StressDestroyConformance, DestroyMiddleSibling) {
 }
 
 TEST_P(StressDestroyConformance, DestroyLastSibling) {
-    auto p = temp_file("sd_last"); guard_.add(p);
+    auto p = temp_file("sd_last");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -143,15 +151,14 @@ TEST_P(StressDestroyConformance, DestroyLastSibling) {
 // ── Destroy all one by one ──────────────────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyAllOneByOne) {
-    auto p = temp_file("sd_all"); guard_.add(p);
+    auto p = temp_file("sd_all");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 5; ++i)
-            ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
-        for (int i = 0; i < 5; ++i)
-            ASSERT_TRUE(root.remove("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) ASSERT_TRUE(root.remove("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(cf->flush().has_value());
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -162,7 +169,8 @@ TEST_P(StressDestroyConformance, DestroyAllOneByOne) {
 // ── Destroy and recreate same name ──────────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyAndRecreateSameName) {
-    auto p = temp_file("sd_recreate"); guard_.add(p);
+    auto p = temp_file("sd_recreate");
+    guard_.add(p);
     auto data = make_test_data(300, 0x77);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -191,14 +199,17 @@ TEST_P(StressDestroyConformance, DestroyAndRecreateSameName) {
 // ── Win32 destroys, Stout verifies ──────────────────────────────────────
 
 TEST_P(StressDestroyConformance, Win32DestroyStoutVerifies) {
-    auto p = temp_file("sd_w32"); guard_.add(p);
+    auto p = temp_file("sd_w32");
+    guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"Victim",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"Victim", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         strm.reset();
         ASSERT_TRUE(SUCCEEDED(stg->DestroyElement(L"Victim")));
     }
@@ -210,7 +221,8 @@ TEST_P(StressDestroyConformance, Win32DestroyStoutVerifies) {
 // ── Stout destroys, Win32 verifies ──────────────────────────────────────
 
 TEST_P(StressDestroyConformance, StoutDestroyWin32Verifies) {
-    auto p = temp_file("sd_s2w"); guard_.add(p);
+    auto p = temp_file("sd_s2w");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -231,7 +243,8 @@ TEST_P(StressDestroyConformance, StoutDestroyWin32Verifies) {
 // ── Destroy in sub-storage ──────────────────────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyInSubStorage) {
-    auto p = temp_file("sd_sub"); guard_.add(p);
+    auto p = temp_file("sd_sub");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -253,7 +266,8 @@ TEST_P(StressDestroyConformance, DestroyInSubStorage) {
 // ── Destroy mini stream, others unaffected ──────────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyMiniOthersUnaffected) {
-    auto p = temp_file("sd_mini"); guard_.add(p);
+    auto p = temp_file("sd_mini");
+    guard_.add(p);
     auto data_b = make_test_data(200, 0x22);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -282,7 +296,8 @@ TEST_P(StressDestroyConformance, DestroyMiniOthersUnaffected) {
 // ── Destroy regular stream, others unaffected ───────────────────────────
 
 TEST_P(StressDestroyConformance, DestroyRegularOthersUnaffected) {
-    auto p = temp_file("sd_reg"); guard_.add(p);
+    auto p = temp_file("sd_reg");
+    guard_.add(p);
     auto data_b = make_test_data(5000, 0x22);
     {
         auto cf = compound_file::create(p, GetParam().ver);

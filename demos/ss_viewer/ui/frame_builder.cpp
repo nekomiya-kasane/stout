@@ -4,17 +4,6 @@
  */
 #include "ss_viewer/ui/frame_builder.h"
 
-#include <algorithm>
-#include <format>
-#include <string>
-
-#include "tapiru/widgets/breadcrumb.h"
-#include "tapiru/widgets/popup.h"
-#include "tapiru/widgets/search_input.h"
-#include "tapiru/widgets/tab.h"
-#include "tapiru/widgets/toast.h"
-#include "tapiru/widgets/tree_view.h"
-
 #include "ss_viewer/ui/help_popup.h"
 #include "ss_viewer/ui/hex_tab.h"
 #include "ss_viewer/ui/info_tab.h"
@@ -23,12 +12,22 @@
 #include "ss_viewer/ui/stats_tab.h"
 #include "ss_viewer/ui/theme.h"
 #include "ss_viewer/util/format.h"
+#include "tapiru/widgets/breadcrumb.h"
+#include "tapiru/widgets/popup.h"
+#include "tapiru/widgets/search_input.h"
+#include "tapiru/widgets/tab.h"
+#include "tapiru/widgets/toast.h"
+#include "tapiru/widgets/tree_view.h"
+
+#include <algorithm>
+#include <format>
+#include <string>
 
 namespace ssv {
 
 using namespace tapiru;
 
-sized_box_builder build_content(viewer_state& st, int viewport_h) {
+sized_box_builder build_content(viewer_state &st, int viewport_h) {
     auto vt = current_theme(st.use_dark_theme);
 
     // Build tree node
@@ -36,12 +35,12 @@ sized_box_builder build_content(viewer_state& st, int viewport_h) {
 
     // Left pane: tree view in a panel
     auto tree = tree_view_builder()
-        .root(std::move(tree_root))
-        .expanded_set(&st.expanded)
-        .cursor(&st.tree_cursor)
-        .node_style(vt.tree_node)
-        .highlight_style(vt.tree_highlight)
-        .guide_style(vt.tree_guide);
+                    .root(std::move(tree_root))
+                    .expanded_set(&st.expanded)
+                    .cursor(&st.tree_cursor)
+                    .node_style(vt.tree_node)
+                    .highlight_style(vt.tree_highlight)
+                    .guide_style(vt.tree_guide);
 
     panel_builder tree_panel(std::move(tree));
     tree_panel.title("Storage Tree");
@@ -62,8 +61,7 @@ sized_box_builder build_content(viewer_state& st, int viewport_h) {
             path.erase(0, pos + 1);
         }
         std::string leaf = path;
-        if (st.is_bookmarked(st.selected->full_path))
-            leaf = "\xe2\x98\x85 " + leaf;  // ★ prefix for bookmarked
+        if (st.is_bookmarked(st.selected->full_path)) leaf = "\xe2\x98\x85 " + leaf; // ★ prefix for bookmarked
         bc.add_item(leaf);
         bc.separator(" \xe2\x80\xba ");
         bc.item_style(vt.breadcrumb_item);
@@ -94,11 +92,9 @@ sized_box_builder build_content(viewer_state& st, int viewport_h) {
     if (st.prop_set && !st.prop_set->sections.empty()) {
         rows_builder prop_rows;
         prop_rows.gap(0);
-        for (auto& section : st.prop_set->sections) {
-            prop_rows.add(text_builder(std::format(
-                "[bold bright_yellow]Section: {}[/]", format_guid(section.fmtid))));
-            prop_rows.add(text_builder(std::format(
-                "[dim]Codepage: {}[/]", section.codepage)));
+        for (auto &section : st.prop_set->sections) {
+            prop_rows.add(text_builder(std::format("[bold bright_yellow]Section: {}[/]", format_guid(section.fmtid))));
+            prop_rows.add(text_builder(std::format("[dim]Codepage: {}[/]", section.codepage)));
         }
         prop_rows.add(build_properties_table(*st.prop_set));
         tabs.add_tab("Properties", std::move(prop_rows));
@@ -136,35 +132,31 @@ sized_box_builder build_content(viewer_state& st, int viewport_h) {
     return sized;
 }
 
-void build_status(const viewer_state& st, status_bar_builder& sb) {
+void build_status(const viewer_state &st, status_bar_builder &sb) {
     std::string left = st.file_path.filename().string();
-    if (st.use_win32) left += " [Win32]";
-    else left += " [stout]";
+    if (st.use_win32)
+        left += " [Win32]";
+    else
+        left += " [stout]";
     sb.left(left);
 
-    sb.center(std::format("CFB {} | Sector {} | {}",
-        st.version_str, st.sector_str, format_size(st.file_size)));
+    sb.center(std::format("CFB {} | Sector {} | {}", st.version_str, st.sector_str, format_size(st.file_size)));
 
     if (st.selected)
-        sb.right(std::format("{} | {}", entry_type_str(st.selected->type),
-            format_size(st.selected->size)));
+        sb.right(std::format("{} | {}", entry_type_str(st.selected->type), format_size(st.selected->size)));
     else
         sb.right("No selection");
 }
 
-rows_builder build_frame(viewer_state& st, int viewport_h,
-                          const classic_app_theme& app_theme) {
+rows_builder build_frame(viewer_state &st, int viewport_h, const classic_app_theme &app_theme) {
     // Menu bar
     std::string bar = " ";
     auto menus = build_menus();
-    for (auto& m : menus) {
-        bar += "[rgb(" + std::to_string(app_theme.menu_bar_bg.fg.r) + ","
-            + std::to_string(app_theme.menu_bar_bg.fg.g) + ","
-            + std::to_string(app_theme.menu_bar_bg.fg.b) + ") on_rgb("
-            + std::to_string(app_theme.menu_bar_bg.bg.r) + ","
-            + std::to_string(app_theme.menu_bar_bg.bg.g) + ","
-            + std::to_string(app_theme.menu_bar_bg.bg.b) + ")] "
-            + m.label + " [/]";
+    for (auto &m : menus) {
+        bar += "[rgb(" + std::to_string(app_theme.menu_bar_bg.fg.r) + "," + std::to_string(app_theme.menu_bar_bg.fg.g) +
+               "," + std::to_string(app_theme.menu_bar_bg.fg.b) + ") on_rgb(" +
+               std::to_string(app_theme.menu_bar_bg.bg.r) + "," + std::to_string(app_theme.menu_bar_bg.bg.g) + "," +
+               std::to_string(app_theme.menu_bar_bg.bg.b) + ")] " + m.label + " [/]";
     }
     auto menu_bar = text_builder(bar);
     menu_bar.style_override(app_theme.menu_bar_bg);
@@ -199,10 +191,8 @@ rows_builder build_frame(viewer_state& st, int viewport_h,
 
     // Goto overlay
     if (st.show_goto) {
-        std::string label = st.goto_is_hex_offset
-            ? "Goto hex offset: " : "Goto entry path: ";
-        frame.add(text_builder("[bold cyan]" + label + "[/][bold white]" +
-                               st.goto_query + "_[/]"));
+        std::string label = st.goto_is_hex_offset ? "Goto hex offset: " : "Goto entry path: ";
+        frame.add(text_builder("[bold cyan]" + label + "[/][bold white]" + st.goto_query + "_[/]"));
     }
 
     // Help popup overlay
@@ -211,8 +201,7 @@ rows_builder build_frame(viewer_state& st, int viewport_h,
     }
 
     // Toast overlay
-    if (!st.toast_msg.empty() &&
-        std::chrono::steady_clock::now() < st.toast_until) {
+    if (!st.toast_msg.empty() && std::chrono::steady_clock::now() < st.toast_until) {
         frame.add(text_builder("[bold green] \xe2\x9c\x93 " + st.toast_msg + " [/]"));
     } else {
         st.toast_msg.clear();

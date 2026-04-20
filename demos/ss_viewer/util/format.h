@@ -4,13 +4,13 @@
  */
 #pragma once
 
+#include "stout/types.h"
+#include "stout/util/guid.h"
+
 #include <chrono>
 #include <cstdint>
 #include <format>
 #include <string>
-
-#include "stout/types.h"
-#include "stout/util/guid.h"
 
 namespace ssv {
 
@@ -34,32 +34,34 @@ namespace ssv {
 }
 
 /// @brief Format a GUID as "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}".
-[[nodiscard]] inline std::string format_guid(const stout::guid& g) {
-    return std::format("{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
-        g.data1, g.data2, g.data3,
-        g.data4[0], g.data4[1], g.data4[2], g.data4[3],
-        g.data4[4], g.data4[5], g.data4[6], g.data4[7]);
+[[nodiscard]] inline std::string format_guid(const stout::guid &g) {
+    return std::format("{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}", g.data1, g.data2,
+                       g.data3, g.data4[0], g.data4[1], g.data4[2], g.data4[3], g.data4[4], g.data4[5], g.data4[6],
+                       g.data4[7]);
 }
 
 /// @brief Return a human-readable name for an entry_type.
 [[nodiscard]] inline std::string entry_type_str(stout::entry_type t) {
     switch (t) {
-        case stout::entry_type::root:    return "Root Storage";
-        case stout::entry_type::storage: return "Storage";
-        case stout::entry_type::stream:  return "Stream";
-        default:                         return "Unknown";
+    case stout::entry_type::root:
+        return "Root Storage";
+    case stout::entry_type::storage:
+        return "Storage";
+    case stout::entry_type::stream:
+        return "Stream";
+    default:
+        return "Unknown";
     }
 }
 
 /// @brief Check whether a GUID is all zeros.
-[[nodiscard]] inline bool is_null_guid(const stout::guid& g) {
-    return g.data1 == 0 && g.data2 == 0 && g.data3 == 0 &&
-           g.data4[0] == 0 && g.data4[1] == 0 && g.data4[2] == 0 && g.data4[3] == 0 &&
-           g.data4[4] == 0 && g.data4[5] == 0 && g.data4[6] == 0 && g.data4[7] == 0;
+[[nodiscard]] inline bool is_null_guid(const stout::guid &g) {
+    return g.data1 == 0 && g.data2 == 0 && g.data3 == 0 && g.data4[0] == 0 && g.data4[1] == 0 && g.data4[2] == 0 &&
+           g.data4[3] == 0 && g.data4[4] == 0 && g.data4[5] == 0 && g.data4[6] == 0 && g.data4[7] == 0;
 }
 
 /// @brief Check whether a stream name is a property stream (starts with 0x05).
-[[nodiscard]] inline bool is_property_stream(const std::string& name) {
+[[nodiscard]] inline bool is_property_stream(const std::string &name) {
     return !name.empty() && name[0] == '\x05';
 }
 

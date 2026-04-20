@@ -1,14 +1,15 @@
 #include "stout/compound_file.h"
 #include "stout/ole/property_set_storage.h"
-#include <print>
-#include <filesystem>
-#include <vector>
-#include <cstdint>
+
 #include <chrono>
+#include <cstdint>
+#include <filesystem>
+#include <print>
+#include <vector>
 
 namespace fs = std::filesystem;
 
-static void print_separator(const char* title) {
+static void print_separator(const char *title) {
     std::println("\n--- {} ---", title);
 }
 
@@ -54,15 +55,20 @@ int main() {
 
     // A regular-sized stream
     auto readme = docs->create_stream("readme.txt");
-    if (!readme) { std::println("  ERROR: {}", stout::error_message(readme.error())); return 1; }
+    if (!readme) {
+        std::println("  ERROR: {}", stout::error_message(readme.error()));
+        return 1;
+    }
     std::string text = "Hello from Stout! This is a compound document stream.";
-    auto wr = readme->write(0, std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t*>(text.data()), text.size()));
+    auto wr = readme->write(0, std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(text.data()), text.size()));
     std::println("  readme.txt: wrote {} bytes", wr.has_value() ? *wr : 0);
 
     // A mini stream (< 4096 bytes)
     auto icon = imgs->create_stream("icon.bin");
-    if (!icon) { std::println("  ERROR: {}", stout::error_message(icon.error())); return 1; }
+    if (!icon) {
+        std::println("  ERROR: {}", stout::error_message(icon.error()));
+        return 1;
+    }
     std::vector<uint8_t> icon_data(256);
     for (size_t i = 0; i < icon_data.size(); ++i) icon_data[i] = static_cast<uint8_t>(i);
     icon->write(0, std::span<const uint8_t>(icon_data));
@@ -70,7 +76,10 @@ int main() {
 
     // A large stream that starts mini and gets resized to regular
     auto log_stream = docs->create_stream("activity.log");
-    if (!log_stream) { std::println("  ERROR: {}", stout::error_message(log_stream.error())); return 1; }
+    if (!log_stream) {
+        std::println("  ERROR: {}", stout::error_message(log_stream.error()));
+        return 1;
+    }
     std::vector<uint8_t> small_data(100, 0xAA);
     log_stream->write(0, std::span<const uint8_t>(small_data));
     std::println("  activity.log: wrote 100 bytes (mini)");
@@ -101,7 +110,9 @@ int main() {
     print_separator("Flush and close");
     auto fl = cf->flush();
     std::println("  Flush: {}", fl.has_value() ? "OK" : "FAIL");
-    { auto _ = std::move(cf); }  // close the file so we can reopen it
+    {
+        auto _ = std::move(cf);
+    } // close the file so we can reopen it
     std::println("  Closed");
 
     // ── Reopen and read back ────────────────────────────────────────────
@@ -119,8 +130,8 @@ int main() {
     // Enumerate children
     auto children = root2.children();
     std::println("  Root children ({}):", children.size());
-    for (auto& c : children) {
-        const char* type_str = c.type == stout::entry_type::storage ? "storage" : "stream";
+    for (auto &c : children) {
+        const char *type_str = c.type == stout::entry_type::storage ? "storage" : "stream";
         std::println("    {} [{}] size={}", c.name, type_str, c.size);
     }
 
@@ -129,7 +140,7 @@ int main() {
     if (files) {
         auto file_children = files->children();
         std::println("  Files/ children ({}):", file_children.size());
-        for (auto& c : file_children) {
+        for (auto &c : file_children) {
             std::println("    {} size={}", c.name, c.size);
         }
 
@@ -146,7 +157,7 @@ int main() {
     // Read property set back
     auto ps_rd = stout::ole::read_summary_info(root2);
     if (ps_rd) {
-        auto* sec = ps_rd->section(stout::ole::fmtid_summary_information());
+        auto *sec = ps_rd->section(stout::ole::fmtid_summary_information());
         if (sec) {
             std::println("  SummaryInfo.Title:   \"{}\"", sec->get_string(stout::ole::pid::title));
             std::println("  SummaryInfo.Author:  \"{}\"", sec->get_string(stout::ole::pid::author));
@@ -157,7 +168,10 @@ int main() {
     // ── In-memory compound file ─────────────────────────────────────────
     print_separator("In-memory compound file");
     auto mem_cf = stout::compound_file::create_in_memory(stout::cfb_version::v4);
-    if (!mem_cf) { std::println("  ERROR"); return 1; }
+    if (!mem_cf) {
+        std::println("  ERROR");
+        return 1;
+    }
     auto mem_root = mem_cf->root_storage();
     auto ms = mem_root.create_stream("data");
     if (ms) {
@@ -165,7 +179,7 @@ int main() {
         ms->write(0, std::span<const uint8_t>(payload));
     }
     mem_cf->flush();
-    auto* raw = mem_cf->data();
+    auto *raw = mem_cf->data();
     std::println("  In-memory file size: {} bytes", raw ? raw->size() : 0);
 
     // ── Cleanup ─────────────────────────────────────────────────────────

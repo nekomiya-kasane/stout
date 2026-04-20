@@ -1,15 +1,16 @@
 #pragma once
 
-#include "stout/exports.h"
-#include "stout/types.h"
-#include "stout/cfb/header.h"
-#include "stout/cfb/fat.h"
 #include "stout/cfb/difat.h"
-#include "stout/cfb/mini_fat.h"
 #include "stout/cfb/directory.h"
+#include "stout/cfb/fat.h"
+#include "stout/cfb/header.h"
+#include "stout/cfb/mini_fat.h"
 #include "stout/cfb/sector_io.h"
-#include "stout/io/memory_lock_bytes.h"
+#include "stout/exports.h"
 #include "stout/io/file_lock_bytes.h"
+#include "stout/io/memory_lock_bytes.h"
+#include "stout/types.h"
+
 #include <cstdint>
 #include <expected>
 #include <filesystem>
@@ -25,20 +26,19 @@ class stream;
 
 // The main compound file class. Owns the I/O backend and all internal structures.
 class STOUT_API compound_file {
-public:
+  public:
     ~compound_file();
-    compound_file(compound_file&&) noexcept;
-    compound_file& operator=(compound_file&&) noexcept;
-    compound_file(const compound_file&) = delete;
-    compound_file& operator=(const compound_file&) = delete;
+    compound_file(compound_file &&) noexcept;
+    compound_file &operator=(compound_file &&) noexcept;
+    compound_file(const compound_file &) = delete;
+    compound_file &operator=(const compound_file &) = delete;
 
     // Open an existing compound file from disk
-    [[nodiscard]] static auto open(const std::filesystem::path& path, open_mode mode = open_mode::read)
+    [[nodiscard]] static auto open(const std::filesystem::path &path, open_mode mode = open_mode::read)
         -> std::expected<compound_file, error>;
 
     // Create a new compound file on disk
-    [[nodiscard]] static auto create(const std::filesystem::path& path,
-                                      cfb_version version = cfb_version::v4)
+    [[nodiscard]] static auto create(const std::filesystem::path &path, cfb_version version = cfb_version::v4)
         -> std::expected<compound_file, error>;
 
     // Create a new in-memory compound file
@@ -46,8 +46,7 @@ public:
         -> std::expected<compound_file, error>;
 
     // Open an existing compound file from a memory buffer
-    [[nodiscard]] static auto open_from_memory(std::vector<uint8_t> data)
-        -> std::expected<compound_file, error>;
+    [[nodiscard]] static auto open_from_memory(std::vector<uint8_t> data) -> std::expected<compound_file, error>;
 
     // Get the root storage
     [[nodiscard]] auto root_storage() -> storage;
@@ -59,7 +58,7 @@ public:
     [[nodiscard]] auto version() const noexcept -> cfb_version;
 
     // Get the raw bytes (only for in-memory files)
-    [[nodiscard]] auto data() const -> const std::vector<uint8_t>*;
+    [[nodiscard]] auto data() const -> const std::vector<uint8_t> *;
 
     // Transaction support
     auto begin_transaction() -> std::expected<void, error>;
@@ -69,9 +68,9 @@ public:
 
     // Internal access (for storage/stream)
     struct internal;
-    [[nodiscard]] auto internals() -> internal&;
+    [[nodiscard]] auto internals() -> internal &;
 
-private:
+  private:
     compound_file();
     struct impl;
     std::unique_ptr<impl> impl_;
@@ -79,8 +78,8 @@ private:
 
 // A storage (folder) within a compound file
 class STOUT_API storage {
-public:
-    storage(compound_file::internal& cf, uint32_t dir_id);
+  public:
+    storage(compound_file::internal &cf, uint32_t dir_id);
 
     // Create or open a child stream
     [[nodiscard]] auto create_stream(std::string_view name) -> std::expected<stream, error>;
@@ -110,7 +109,7 @@ public:
 
     // CLSID
     [[nodiscard]] auto clsid() const -> guid;
-    auto set_clsid(const guid& id) -> void;
+    auto set_clsid(const guid &id) -> void;
 
     // State bits
     [[nodiscard]] auto state_bits() const -> uint32_t;
@@ -124,23 +123,22 @@ public:
     auto set_modified_time(file_time t) -> void;
 
     // Set timestamps on a child entry by name
-    auto set_element_times(std::string_view name, file_time ctime, file_time mtime)
-        -> std::expected<void, error>;
+    auto set_element_times(std::string_view name, file_time ctime, file_time mtime) -> std::expected<void, error>;
 
     // Copy a child entry to another storage
-    auto copy_to(storage& dest, std::string_view name) -> std::expected<void, error>;
+    auto copy_to(storage &dest, std::string_view name) -> std::expected<void, error>;
 
     [[nodiscard]] auto dir_id() const noexcept -> uint32_t { return dir_id_; }
 
-private:
-    compound_file::internal* cf_;
+  private:
+    compound_file::internal *cf_;
     uint32_t dir_id_;
 };
 
 // A stream (data) within a compound file
 class STOUT_API stream {
-public:
-    stream(compound_file::internal& cf, uint32_t dir_id);
+  public:
+    stream(compound_file::internal &cf, uint32_t dir_id);
 
     // Read data from the stream
     auto read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size_t, error>;
@@ -164,12 +162,12 @@ public:
     auto rename(std::string_view new_name) -> std::expected<void, error>;
 
     // Copy data to another stream
-    auto copy_to(stream& dest, uint64_t bytes) -> std::expected<uint64_t, error>;
+    auto copy_to(stream &dest, uint64_t bytes) -> std::expected<uint64_t, error>;
 
     [[nodiscard]] auto dir_id() const noexcept -> uint32_t { return dir_id_; }
 
-private:
-    compound_file::internal* cf_;
+  private:
+    compound_file::internal *cf_;
     uint32_t dir_id_;
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stout/exports.h"
+
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -17,12 +18,12 @@ namespace stout::util {
 
 // Convert UTF-16LE raw bytes (as stored in directory entry) to UTF-8
 // byte_count includes the null terminator bytes
-[[nodiscard]] STOUT_API auto dir_name_to_utf8(const uint8_t* name_bytes, uint16_t byte_count) -> std::string;
+[[nodiscard]] STOUT_API auto dir_name_to_utf8(const uint8_t *name_bytes, uint16_t byte_count) -> std::string;
 
 // Convert UTF-8 name to directory entry format (UTF-16LE bytes + byte count)
 // Returns false if name is too long (> 31 chars) or contains illegal chars
 struct dir_name_result {
-    uint8_t  bytes[64] = {};
+    uint8_t bytes[64] = {};
     uint16_t byte_count = 0;
 };
 [[nodiscard]] STOUT_API auto utf8_to_dir_name(std::string_view name) -> std::optional<dir_name_result>;

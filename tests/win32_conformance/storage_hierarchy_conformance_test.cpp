@@ -1,16 +1,17 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <set>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class StorageHierarchyConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -31,8 +32,7 @@ TEST_F(StorageHierarchyConformance, SingleSubStorage) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     storage_ptr sub;
-    HRESULT hr = stg->OpenStorage(L"Sub1", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put());
+    HRESULT hr = stg->OpenStorage(L"Sub1", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put());
     ASSERT_TRUE(SUCCEEDED(hr)) << "Win32 failed to open Sub1, hr=0x" << std::hex << hr;
 }
 
@@ -56,12 +56,9 @@ TEST_F(StorageHierarchyConformance, NestedThreeLevels) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     storage_ptr a, b, c;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"A", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, a.put())));
-    ASSERT_TRUE(SUCCEEDED(a->OpenStorage(L"B", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, b.put())));
-    ASSERT_TRUE(SUCCEEDED(b->OpenStorage(L"C", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, c.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"A", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, a.put())));
+    ASSERT_TRUE(SUCCEEDED(a->OpenStorage(L"B", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, b.put())));
+    ASSERT_TRUE(SUCCEEDED(b->OpenStorage(L"C", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, c.put())));
 }
 
 // ── StorageAndStream: root has both sub-storage and stream ──────────────
@@ -86,13 +83,12 @@ TEST_F(StorageHierarchyConformance, StorageAndStream) {
 
     // Open sub-storage
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"SubStorage", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"SubStorage", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
 
     // Open stream
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"DataStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"DataStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 50u);
 }
 
@@ -118,7 +114,7 @@ TEST_F(StorageHierarchyConformance, TenSiblings) {
     // Enumerate and verify all 10 exist
     auto entries = win32_enumerate(stg.get());
     std::set<std::wstring> names;
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         if (e.pwcsName) {
             names.insert(e.pwcsName);
             free_statstg_name(e);
@@ -156,9 +152,11 @@ TEST_F(StorageHierarchyConformance, MixedChildren) {
     EXPECT_EQ(entries.size(), 10u);
 
     int storage_count = 0, stream_count = 0;
-    for (auto& e : entries) {
-        if (e.type == STGTY_STORAGE) ++storage_count;
-        else if (e.type == STGTY_STREAM) ++stream_count;
+    for (auto &e : entries) {
+        if (e.type == STGTY_STORAGE)
+            ++storage_count;
+        else if (e.type == STGTY_STREAM)
+            ++stream_count;
         free_statstg_name(e);
     }
     EXPECT_EQ(storage_count, 5);
@@ -190,22 +188,22 @@ TEST_F(StorageHierarchyConformance, DeepNesting) {
     // Win32 traverses all 10 levels
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
-    IStorage* cur = stg.get();
+    IStorage *cur = stg.get();
     std::vector<storage_ptr> holders; // keep alive
     for (int i = 0; i < 10; ++i) {
         // Read stream at this level
         auto strm_name = L"Data" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(cur->OpenStream(strm_name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())))
+        ASSERT_TRUE(
+            SUCCEEDED(cur->OpenStream(strm_name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())))
             << "Failed to open Data" << i;
         EXPECT_EQ(win32_stream_size(strm.get()), 32u);
 
         // Open next level storage
         auto stg_name = L"Level" + std::to_wstring(i);
         holders.emplace_back();
-        ASSERT_TRUE(SUCCEEDED(cur->OpenStorage(stg_name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, holders.back().put())))
+        ASSERT_TRUE(SUCCEEDED(cur->OpenStorage(stg_name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0,
+                                               holders.back().put())))
             << "Failed to open Level" << i;
         cur = holders.back().get();
     }
@@ -221,11 +219,11 @@ TEST_F(StorageHierarchyConformance, Win32CreateStoutRead) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStorage(L"SubA",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStorage(L"SubA", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"DataStream",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"DataStream", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         auto data = make_test_data(200);
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 200)));
     }

@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/cfb/constants.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout::cfb;
 

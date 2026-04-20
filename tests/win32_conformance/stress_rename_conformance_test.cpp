@@ -1,9 +1,10 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
 #include <set>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -14,7 +15,7 @@ struct VPRen {
 };
 
 class StressRenameConformance : public ::testing::TestWithParam<VPRen> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -22,12 +23,13 @@ protected:
 static const VPRen vp_ren[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressRenameConformance, ::testing::ValuesIn(vp_ren),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Storage rename ──────────────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, RenameStorageSimple) {
-    auto p = temp_file("sr_simple"); guard_.add(p);
+    auto p = temp_file("sr_simple");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -39,12 +41,12 @@ TEST_P(StressRenameConformance, RenameStorageSimple) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"New", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"New", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
 }
 
 TEST_P(StressRenameConformance, RenameStorageWithChildren) {
-    auto p = temp_file("sr_wchild"); guard_.add(p);
+    auto p = temp_file("sr_wchild");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -57,15 +59,15 @@ TEST_P(StressRenameConformance, RenameStorageWithChildren) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Renamed", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"Renamed", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Child", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Child", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
 }
 
 TEST_P(StressRenameConformance, RenameDeepNested) {
-    auto p = temp_file("sr_deep"); guard_.add(p);
+    auto p = temp_file("sr_deep");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -87,7 +89,8 @@ TEST_P(StressRenameConformance, RenameDeepNested) {
 // ── Stream rename (NEW API) ─────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, RenameStreamSimple) {
-    auto p = temp_file("sr_strm"); guard_.add(p);
+    auto p = temp_file("sr_strm");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -101,8 +104,7 @@ TEST_P(StressRenameConformance, RenameStreamSimple) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"NewStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"NewStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
     std::vector<uint8_t> buf(200);
     ULONG rc = 0;
@@ -111,7 +113,8 @@ TEST_P(StressRenameConformance, RenameStreamSimple) {
 }
 
 TEST_P(StressRenameConformance, RenameStreamPreservesData) {
-    auto p = temp_file("sr_sdata"); guard_.add(p);
+    auto p = temp_file("sr_sdata");
+    guard_.add(p);
     auto data = make_test_data(500, 0xBB);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -138,7 +141,8 @@ TEST_P(StressRenameConformance, RenameStreamPreservesData) {
 // ── Rename edge cases ───────────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, RenameEmptyNameFails) {
-    auto p = temp_file("sr_empty"); guard_.add(p);
+    auto p = temp_file("sr_empty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto sub = cf->root_storage().create_storage("X");
@@ -148,7 +152,8 @@ TEST_P(StressRenameConformance, RenameEmptyNameFails) {
 }
 
 TEST_P(StressRenameConformance, RenameTooLongFails) {
-    auto p = temp_file("sr_long"); guard_.add(p);
+    auto p = temp_file("sr_long");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto sub = cf->root_storage().create_storage("X");
@@ -159,7 +164,8 @@ TEST_P(StressRenameConformance, RenameTooLongFails) {
 }
 
 TEST_P(StressRenameConformance, RenameMaxLength31) {
-    auto p = temp_file("sr_max31"); guard_.add(p);
+    auto p = temp_file("sr_max31");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -179,14 +185,17 @@ TEST_P(StressRenameConformance, RenameMaxLength31) {
 // ── Win32 renames, Stout reads ──────────────────────────────────────────
 
 TEST_P(StressRenameConformance, Win32RenameStoutReads) {
-    auto p = temp_file("sr_w32ren"); guard_.add(p);
+    auto p = temp_file("sr_w32ren");
+    guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"Original",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"Original", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         strm.reset();
         ASSERT_TRUE(SUCCEEDED(stg->RenameElement(L"Original", L"Renamed")));
     }
@@ -200,7 +209,8 @@ TEST_P(StressRenameConformance, Win32RenameStoutReads) {
 // ── Rename then enumerate ───────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, RenameOldGoneNewPresent) {
-    auto p = temp_file("sr_enum"); guard_.add(p);
+    auto p = temp_file("sr_enum");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -219,7 +229,8 @@ TEST_P(StressRenameConformance, RenameOldGoneNewPresent) {
 // ── Rename preserves CLSID/state bits ───────────────────────────────────
 
 TEST_P(StressRenameConformance, RenamePreservesClsid) {
-    auto p = temp_file("sr_clsid"); guard_.add(p);
+    auto p = temp_file("sr_clsid");
+    guard_.add(p);
     stout::guid test_id{0x11223344, 0x5566, 0x7788, {0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -238,7 +249,8 @@ TEST_P(StressRenameConformance, RenamePreservesClsid) {
 }
 
 TEST_P(StressRenameConformance, RenamePreservesStateBits) {
-    auto p = temp_file("sr_bits"); guard_.add(p);
+    auto p = temp_file("sr_bits");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -258,7 +270,8 @@ TEST_P(StressRenameConformance, RenamePreservesStateBits) {
 // ── Multiple renames ────────────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, MultipleRenames) {
-    auto p = temp_file("sr_multi"); guard_.add(p);
+    auto p = temp_file("sr_multi");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -279,7 +292,8 @@ TEST_P(StressRenameConformance, MultipleRenames) {
 // ── Rename after delete ─────────────────────────────────────────────────
 
 TEST_P(StressRenameConformance, RenameAfterDeleteOther) {
-    auto p = temp_file("sr_dren"); guard_.add(p);
+    auto p = temp_file("sr_dren");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -301,7 +315,8 @@ TEST_P(StressRenameConformance, RenameAfterDeleteOther) {
 // ── Stream rename empty name fails ──────────────────────────────────────
 
 TEST_P(StressRenameConformance, StreamRenameEmptyFails) {
-    auto p = temp_file("sr_sempty"); guard_.add(p);
+    auto p = temp_file("sr_sempty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("X");
@@ -310,7 +325,8 @@ TEST_P(StressRenameConformance, StreamRenameEmptyFails) {
 }
 
 TEST_P(StressRenameConformance, StreamRenameTooLongFails) {
-    auto p = temp_file("sr_slong"); guard_.add(p);
+    auto p = temp_file("sr_slong");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("X");

@@ -1,8 +1,9 @@
-#include <gtest/gtest.h>
 #include "stout/cfb/directory.h"
 #include "stout/io/memory_lock_bytes.h"
-#include <array>
+
 #include <algorithm>
+#include <array>
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::cfb;
@@ -105,7 +106,7 @@ TEST(DirEntryTest, ToStat) {
 // ── directory class tests ──────────────────────────────────────────────
 
 class DirectoryTest : public ::testing::Test {
-protected:
+  protected:
     directory dir;
 
     void SetUp() override {
@@ -162,7 +163,7 @@ TEST_F(DirectoryTest, MultipleChildren) {
 
 TEST_F(DirectoryTest, EnumerateChildren) {
     std::vector<std::u16string> names = {u"Delta", u"Alpha", u"Charlie", u"Beta"};
-    for (auto& n : names) {
+    for (auto &n : names) {
         auto id = dir.add_entry();
         dir.entry(id).name = n;
         dir.entry(id).type = entry_type::stream;
@@ -170,9 +171,7 @@ TEST_F(DirectoryTest, EnumerateChildren) {
     }
 
     std::vector<std::u16string> collected;
-    dir.enumerate_children(0, [&](uint32_t, const dir_entry& e) {
-        collected.push_back(e.name);
-    });
+    dir.enumerate_children(0, [&](uint32_t, const dir_entry &e) { collected.push_back(e.name); });
 
     // Should be sorted by CFB name ordering (in-order traversal of BST)
     ASSERT_EQ(collected.size(), 4u);
@@ -216,9 +215,7 @@ TEST_F(DirectoryTest, ManyChildren) {
 
     // Enumerate should give sorted order
     std::vector<std::string> collected;
-    dir.enumerate_children(0, [&](uint32_t, const dir_entry& e) {
-        collected.push_back(e.utf8_name());
-    });
+    dir.enumerate_children(0, [&](uint32_t, const dir_entry &e) { collected.push_back(e.utf8_name()); });
     ASSERT_EQ(collected.size(), 20u);
     for (size_t i = 1; i < collected.size(); ++i) {
         EXPECT_LE(collected[i - 1], collected[i]);

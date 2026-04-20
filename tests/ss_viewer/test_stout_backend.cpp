@@ -3,14 +3,12 @@
  * @brief Unit tests for stout backend: build_stout_tree, build_stout_tree_shallow,
  *        load_stout_children, read_stout_stream.
  */
-#include <gtest/gtest.h>
-
-#include <filesystem>
-
-#include "stout/compound_file.h"
-
 #include "ss_viewer/model/entry_info.h"
 #include "ss_viewer/model/stout_backend.h"
+#include "stout/compound_file.h"
+
+#include <filesystem>
+#include <gtest/gtest.h>
 
 using namespace ssv;
 
@@ -25,7 +23,7 @@ static std::filesystem::path test_cfb_path() {
 }
 
 class StoutBackendTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path)) << "Test file not found: " << path;
@@ -60,7 +58,7 @@ TEST_F(StoutBackendTest, BuildTreeHasRoot) {
 TEST_F(StoutBackendTest, BuildTreeHasStreams) {
     auto root = build_tree();
     bool has_stream = false;
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         if (c.type == stout::entry_type::stream) {
             has_stream = true;
             EXPECT_FALSE(c.name.empty());
@@ -74,7 +72,7 @@ TEST_F(StoutBackendTest, BuildTreeHasStreams) {
 TEST_F(StoutBackendTest, BuildTreeFullPathsCorrect) {
     auto root = build_tree();
     EXPECT_EQ(root.full_path, "Root Entry");
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         EXPECT_TRUE(c.full_path.starts_with("Root Entry/"));
         EXPECT_EQ(c.full_path, "Root Entry/" + c.name);
     }
@@ -91,7 +89,7 @@ TEST_F(StoutBackendTest, ShallowTreeRootLoaded) {
 
 TEST_F(StoutBackendTest, ShallowTreeSubStoragesNotLoaded) {
     auto root = build_tree_shallow();
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         if (c.type == stout::entry_type::storage) {
             EXPECT_FALSE(c.children_loaded);
             EXPECT_TRUE(c.children.empty());
@@ -103,7 +101,7 @@ TEST_F(StoutBackendTest, ShallowTreeSubStoragesNotLoaded) {
 
 TEST_F(StoutBackendTest, LoadChildrenPopulatesStorage) {
     auto root = build_tree_shallow();
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         if (c.type == stout::entry_type::storage && !c.children_loaded) {
             load_stout_children(*cf, c);
             EXPECT_TRUE(c.children_loaded);
@@ -116,7 +114,7 @@ TEST_F(StoutBackendTest, LoadChildrenPopulatesStorage) {
 
 TEST_F(StoutBackendTest, ReadStreamReturnsData) {
     auto root = build_tree();
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         if (c.type == stout::entry_type::stream && c.size > 0) {
             auto data = read_stout_stream(*cf, c);
             EXPECT_FALSE(data.empty());
@@ -128,7 +126,7 @@ TEST_F(StoutBackendTest, ReadStreamReturnsData) {
 
 TEST_F(StoutBackendTest, OpenStoutReaderValid) {
     auto root = build_tree();
-    for (auto& c : root.children) {
+    for (auto &c : root.children) {
         if (c.type == stout::entry_type::stream && c.size > 0) {
             auto reader = open_stout_reader(*cf, c);
             EXPECT_TRUE(reader.valid());

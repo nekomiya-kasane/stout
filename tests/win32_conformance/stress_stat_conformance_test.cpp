@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPStat {
 };
 
 class StressStatConformance : public ::testing::TestWithParam<VPStat> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPStat vp_stat[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressStatConformance, ::testing::ValuesIn(vp_stat),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Root storage stat ───────────────────────────────────────────────────
 
 TEST_P(StressStatConformance, RootStorageStat) {
-    auto p = temp_file("st_root"); guard_.add(p);
+    auto p = temp_file("st_root");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -44,7 +46,8 @@ TEST_P(StressStatConformance, RootStorageStat) {
 // ── Stream stat size matches ────────────────────────────────────────────
 
 TEST_P(StressStatConformance, StreamStatSizeMatches) {
-    auto p = temp_file("st_size"); guard_.add(p);
+    auto p = temp_file("st_size");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -57,8 +60,7 @@ TEST_P(StressStatConformance, StreamStatSizeMatches) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"S", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"S", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     STATSTG stat{};
     ASSERT_TRUE(SUCCEEDED(strm->Stat(&stat, STATFLAG_NONAME)));
     EXPECT_EQ(stat.cbSize.QuadPart, 777u);
@@ -68,7 +70,8 @@ TEST_P(StressStatConformance, StreamStatSizeMatches) {
 // ── Empty stream stat ───────────────────────────────────────────────────
 
 TEST_P(StressStatConformance, EmptyStreamStat) {
-    auto p = temp_file("st_empty"); guard_.add(p);
+    auto p = temp_file("st_empty");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -78,8 +81,7 @@ TEST_P(StressStatConformance, EmptyStreamStat) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"E", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"E", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     STATSTG stat{};
     ASSERT_TRUE(SUCCEEDED(strm->Stat(&stat, STATFLAG_NONAME)));
     EXPECT_EQ(stat.cbSize.QuadPart, 0u);
@@ -88,7 +90,8 @@ TEST_P(StressStatConformance, EmptyStreamStat) {
 // ── Sub-storage stat type ───────────────────────────────────────────────
 
 TEST_P(StressStatConformance, SubStorageStatType) {
-    auto p = temp_file("st_substg"); guard_.add(p);
+    auto p = temp_file("st_substg");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -98,8 +101,7 @@ TEST_P(StressStatConformance, SubStorageStatType) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Dir", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Dir", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     STATSTG stat{};
     ASSERT_TRUE(SUCCEEDED(sub->Stat(&stat, STATFLAG_DEFAULT)));
     EXPECT_EQ(stat.type, static_cast<DWORD>(STGTY_STORAGE));
@@ -112,12 +114,13 @@ TEST_P(StressStatConformance, SubStorageStatType) {
 // ── Enumerate names match Stout children ────────────────────────────────
 
 TEST_P(StressStatConformance, EnumerateNamesMatch) {
-    auto p = temp_file("st_names"); guard_.add(p);
+    auto p = temp_file("st_names");
+    guard_.add(p);
     std::vector<std::string> names = {"Alpha", "Beta", "Gamma", "Delta", "Epsilon"};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (auto& n : names) {
+        for (auto &n : names) {
             auto s = cf->root_storage().create_stream(n);
             ASSERT_TRUE(s.has_value());
         }
@@ -128,11 +131,11 @@ TEST_P(StressStatConformance, EnumerateNamesMatch) {
     auto entries = win32_enumerate(stg.get());
     ASSERT_EQ(entries.size(), 5u);
     std::set<std::wstring> win32_names;
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         if (e.pwcsName) win32_names.insert(e.pwcsName);
         free_statstg_name(e);
     }
-    for (auto& n : names) {
+    for (auto &n : names) {
         std::wstring wn(n.begin(), n.end());
         EXPECT_TRUE(win32_names.count(wn) > 0) << "Missing: " << n;
     }
@@ -141,7 +144,8 @@ TEST_P(StressStatConformance, EnumerateNamesMatch) {
 // ── Enumerate types match ───────────────────────────────────────────────
 
 TEST_P(StressStatConformance, EnumerateTypesMatch) {
-    auto p = temp_file("st_types"); guard_.add(p);
+    auto p = temp_file("st_types");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -155,9 +159,11 @@ TEST_P(StressStatConformance, EnumerateTypesMatch) {
     auto entries = win32_enumerate(stg.get());
     ASSERT_EQ(entries.size(), 3u);
     int streams = 0, storages = 0;
-    for (auto& e : entries) {
-        if (e.type == STGTY_STREAM) ++streams;
-        else if (e.type == STGTY_STORAGE) ++storages;
+    for (auto &e : entries) {
+        if (e.type == STGTY_STREAM)
+            ++streams;
+        else if (e.type == STGTY_STORAGE)
+            ++storages;
         free_statstg_name(e);
     }
     EXPECT_EQ(streams, 2);
@@ -167,7 +173,8 @@ TEST_P(StressStatConformance, EnumerateTypesMatch) {
 // ── Enumerate sizes match ───────────────────────────────────────────────
 
 TEST_P(StressStatConformance, EnumerateSizesMatch) {
-    auto p = temp_file("st_sizes"); guard_.add(p);
+    auto p = temp_file("st_sizes");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -184,8 +191,7 @@ TEST_P(StressStatConformance, EnumerateSizesMatch) {
     for (int i = 0; i < 5; ++i) {
         auto name = L"S" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         STATSTG stat{};
         ASSERT_TRUE(SUCCEEDED(strm->Stat(&stat, STATFLAG_NONAME)));
         EXPECT_EQ(stat.cbSize.QuadPart, static_cast<uint64_t>(100 * (i + 1)));
@@ -195,12 +201,12 @@ TEST_P(StressStatConformance, EnumerateSizesMatch) {
 // ── Stout children match Win32 enumerate count ──────────────────────────
 
 TEST_P(StressStatConformance, ChildrenCountMatch) {
-    auto p = temp_file("st_count"); guard_.add(p);
+    auto p = temp_file("st_count");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 8; ++i)
-            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 8; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(cf->flush().has_value());
     }
     // Stout count
@@ -215,13 +221,14 @@ TEST_P(StressStatConformance, ChildrenCountMatch) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), stout_count);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── Stout stream size matches Win32 stat ────────────────────────────────
 
 TEST_P(StressStatConformance, StoutSizeMatchesWin32Stat) {
-    auto p = temp_file("st_szmatch"); guard_.add(p);
+    auto p = temp_file("st_szmatch");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -242,8 +249,7 @@ TEST_P(StressStatConformance, StoutSizeMatchesWin32Stat) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"S", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"S", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), stout_size);
 }
 

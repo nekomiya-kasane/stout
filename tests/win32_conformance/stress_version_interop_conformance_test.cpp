@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class StressVersionInteropConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -16,7 +17,8 @@ protected:
 // ── V3 file readable by Win32 ───────────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3BasicWin32Readable) {
-    auto p = temp_file("vi_v3basic"); guard_.add(p);
+    auto p = temp_file("vi_v3basic");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v3);
         ASSERT_TRUE(cf.has_value());
@@ -29,13 +31,13 @@ TEST_F(StressVersionInteropConformance, V3BasicWin32Readable) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 500u);
 }
 
 TEST_F(StressVersionInteropConformance, V4BasicWin32Readable) {
-    auto p = temp_file("vi_v4basic"); guard_.add(p);
+    auto p = temp_file("vi_v4basic");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v4);
         ASSERT_TRUE(cf.has_value());
@@ -48,21 +50,21 @@ TEST_F(StressVersionInteropConformance, V4BasicWin32Readable) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 500u);
 }
 
 // ── Win32 V3 file readable by Stout ─────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, Win32V3StoutReadable) {
-    auto p = temp_file("vi_w32v3"); guard_.add(p);
+    auto p = temp_file("vi_w32v3");
+    guard_.add(p);
     {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"Data",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"Data", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         auto d = make_test_data(300, 0x33);
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), d.data(), 300)));
     }
@@ -74,13 +76,14 @@ TEST_F(StressVersionInteropConformance, Win32V3StoutReadable) {
 }
 
 TEST_F(StressVersionInteropConformance, Win32V4StoutReadable) {
-    auto p = temp_file("vi_w32v4"); guard_.add(p);
+    auto p = temp_file("vi_w32v4");
+    guard_.add(p);
     {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"Data",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"Data", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         auto d = make_test_data(300, 0x44);
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), d.data(), 300)));
     }
@@ -94,8 +97,10 @@ TEST_F(StressVersionInteropConformance, Win32V4StoutReadable) {
 // ── V3 and V4 produce different sector sizes ────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3SmallerFileThanV4ForSameData) {
-    auto p3 = temp_file("vi_sz3"); guard_.add(p3);
-    auto p4 = temp_file("vi_sz4"); guard_.add(p4);
+    auto p3 = temp_file("vi_sz3");
+    guard_.add(p3);
+    auto p4 = temp_file("vi_sz4");
+    guard_.add(p4);
     auto d = make_test_data(100, 0x55);
     {
         auto cf3 = compound_file::create(p3, cfb_version::v3);
@@ -124,7 +129,8 @@ TEST_F(StressVersionInteropConformance, V3SmallerFileThanV4ForSameData) {
 // ── V3 mini stream threshold ────────────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3MiniStreamThreshold) {
-    auto p = temp_file("vi_v3mini"); guard_.add(p);
+    auto p = temp_file("vi_v3mini");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v3);
         ASSERT_TRUE(cf.has_value());
@@ -143,17 +149,16 @@ TEST_F(StressVersionInteropConformance, V3MiniStreamThreshold) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr s1;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
     EXPECT_EQ(win32_stream_size(s1.get()), 100u);
     stream_ptr s2;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Big", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Big", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
     EXPECT_EQ(win32_stream_size(s2.get()), 5000u);
 }
 
 TEST_F(StressVersionInteropConformance, V4MiniStreamThreshold) {
-    auto p = temp_file("vi_v4mini"); guard_.add(p);
+    auto p = temp_file("vi_v4mini");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v4);
         ASSERT_TRUE(cf.has_value());
@@ -170,28 +175,36 @@ TEST_F(StressVersionInteropConformance, V4MiniStreamThreshold) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr s1;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
     EXPECT_EQ(win32_stream_size(s1.get()), 100u);
     stream_ptr s2;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Big", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Big", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
     EXPECT_EQ(win32_stream_size(s2.get()), 5000u);
 }
 
 // ── Both versions handle empty file ─────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3EmptyFile) {
-    auto p = temp_file("vi_v3empty"); guard_.add(p);
-    { auto cf = compound_file::create(p, cfb_version::v3); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("vi_v3empty");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, cfb_version::v3);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 0u);
 }
 
 TEST_F(StressVersionInteropConformance, V4EmptyFile) {
-    auto p = temp_file("vi_v4empty"); guard_.add(p);
-    { auto cf = compound_file::create(p, cfb_version::v4); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("vi_v4empty");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, cfb_version::v4);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 0u);
@@ -200,7 +213,8 @@ TEST_F(StressVersionInteropConformance, V4EmptyFile) {
 // ── Both versions handle hierarchy ──────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3HierarchyWin32Reads) {
-    auto p = temp_file("vi_v3hier"); guard_.add(p);
+    auto p = temp_file("vi_v3hier");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v3);
         ASSERT_TRUE(cf.has_value());
@@ -212,15 +226,14 @@ TEST_F(StressVersionInteropConformance, V3HierarchyWin32Reads) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     stream_ptr inner;
-    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, inner.put())));
+    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, inner.put())));
 }
 
 TEST_F(StressVersionInteropConformance, V4HierarchyWin32Reads) {
-    auto p = temp_file("vi_v4hier"); guard_.add(p);
+    auto p = temp_file("vi_v4hier");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, cfb_version::v4);
         ASSERT_TRUE(cf.has_value());
@@ -232,17 +245,16 @@ TEST_F(StressVersionInteropConformance, V4HierarchyWin32Reads) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     stream_ptr inner;
-    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, inner.put())));
+    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, inner.put())));
 }
 
 // ── Data integrity across versions ──────────────────────────────────────
 
 TEST_F(StressVersionInteropConformance, V3DataIntegrity) {
-    auto p = temp_file("vi_v3data"); guard_.add(p);
+    auto p = temp_file("vi_v3data");
+    guard_.add(p);
     auto d = make_test_data(1000, 0xAA);
     {
         auto cf = compound_file::create(p, cfb_version::v3);
@@ -255,8 +267,7 @@ TEST_F(StressVersionInteropConformance, V3DataIntegrity) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(1000);
     ULONG rc = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 1000, &rc)));
@@ -264,7 +275,8 @@ TEST_F(StressVersionInteropConformance, V3DataIntegrity) {
 }
 
 TEST_F(StressVersionInteropConformance, V4DataIntegrity) {
-    auto p = temp_file("vi_v4data"); guard_.add(p);
+    auto p = temp_file("vi_v4data");
+    guard_.add(p);
     auto d = make_test_data(1000, 0xBB);
     {
         auto cf = compound_file::create(p, cfb_version::v4);
@@ -277,8 +289,7 @@ TEST_F(StressVersionInteropConformance, V4DataIntegrity) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(1000);
     ULONG rc = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 1000, &rc)));

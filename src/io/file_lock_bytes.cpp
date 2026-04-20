@@ -1,4 +1,5 @@
 #include "stout/io/file_lock_bytes.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -10,7 +11,7 @@ namespace stout::io {
 
 // ── impl helpers ─────────────────────────────────────────────────────
 
-static auto raw_seek(std::FILE* f, int64_t offset) -> bool {
+static auto raw_seek(std::FILE *f, int64_t offset) -> bool {
 #if defined(_MSC_VER)
     return _fseeki64(f, offset, SEEK_SET) == 0;
 #else
@@ -18,7 +19,7 @@ static auto raw_seek(std::FILE* f, int64_t offset) -> bool {
 #endif
 }
 
-static auto raw_tell_end(std::FILE* f) -> int64_t {
+static auto raw_tell_end(std::FILE *f) -> int64_t {
 #if defined(_MSC_VER)
     auto cur = _ftelli64(f);
     _fseeki64(f, 0, SEEK_END);
@@ -35,10 +36,9 @@ static auto raw_tell_end(std::FILE* f) -> int64_t {
 }
 
 // Load a page from disk (or zero-fill if beyond file end)
-auto file_lock_bytes::impl::ensure_page(uint64_t page_id) -> std::expected<page*, error> {
+auto file_lock_bytes::impl::ensure_page(uint64_t page_id) -> std::expected<page *, error> {
     // Fast path: last accessed page
-    if (page_id == last_page_id && last_page_ptr)
-        return last_page_ptr;
+    if (page_id == last_page_id && last_page_ptr) return last_page_ptr;
 
     auto it = cache.find(page_id);
     if (it != cache.end()) {
@@ -69,7 +69,7 @@ auto file_lock_bytes::impl::flush_dirty() -> std::expected<void, error> {
 
     // Collect dirty page IDs and sort for sequential I/O
     std::vector<uint64_t> dirty_ids;
-    for (auto& [page_id, pg] : cache) {
+    for (auto &[page_id, pg] : cache) {
         if (pg.dirty) dirty_ids.push_back(page_id);
     }
     if (dirty_ids.empty()) return {};
@@ -93,12 +93,11 @@ auto file_lock_bytes::impl::flush_dirty() -> std::expected<void, error> {
         if (run_end > logical_size) run_end = logical_size;
         if (file_off >= run_end) continue;
 
-        if (!raw_seek(file, static_cast<int64_t>(file_off)))
-            return std::unexpected(error::io_error);
+        if (!raw_seek(file, static_cast<int64_t>(file_off))) return std::unexpected(error::io_error);
 
         // Write each page in the run sequentially (already seeked to start)
         for (uint64_t pid = start_id; pid <= end_id; ++pid) {
-            auto& pg = cache[pid];
+            auto &pg = cache[pid];
             uint64_t pg_off = pid * page_size;
             uint64_t pg_end = pg_off + page_size;
             if (pg_end > logical_size) pg_end = logical_size;
@@ -125,22 +124,26 @@ file_lock_bytes::impl::~impl() {
 
 file_lock_bytes::~file_lock_bytes() = default;
 
-file_lock_bytes::file_lock_bytes(file_lock_bytes&& other) noexcept
-    : impl_(std::move(other.impl_)) {}
+file_lock_bytes::file_lock_bytes(file_lock_bytes &&other) noexcept : impl_(std::move(other.impl_)) {}
 
-file_lock_bytes& file_lock_bytes::operator=(file_lock_bytes&& other) noexcept {
+file_lock_bytes &file_lock_bytes::operator=(file_lock_bytes &&other) noexcept {
     if (this != &other) impl_ = std::move(other.impl_);
     return *this;
 }
 
-auto file_lock_bytes::open(const std::filesystem::path& path, open_mode mode)
-    -> std::expected<file_lock_bytes, error> {
+auto file_lock_bytes::open(const std::filesystem::path &path, open_mode mode) -> std::expected<file_lock_bytes, error> {
 
-    const wchar_t* wmode = nullptr;
+    const wchar_t *wmode = nullptr;
     switch (mode) {
-        case open_mode::read:       wmode = L"rb";  break;
-        case open_mode::write:      wmode = L"r+b"; break;
-        case open_mode::read_write: wmode = L"r+b"; break;
+    case open_mode::read:
+        wmode = L"rb";
+        break;
+    case open_mode::write:
+        wmode = L"r+b";
+        break;
+    case open_mode::read_write:
+        wmode = L"r+b";
+        break;
     }
 
     file_lock_bytes lb;
@@ -153,8 +156,7 @@ auto file_lock_bytes::open(const std::filesystem::path& path, open_mode mode)
     if (err != 0 || !lb.impl_->file) {
         if (mode != open_mode::read) {
             err = _wfopen_s(&lb.impl_->file, path.c_str(), L"w+b");
-            if (err != 0 || !lb.impl_->file)
-                return std::unexpected(error::io_error);
+            if (err != 0 || !lb.impl_->file) return std::unexpected(error::io_error);
             created_new = true;
         } else {
             return std::unexpected(error::io_error);
@@ -162,27 +164,31 @@ auto file_lock_bytes::open(const std::filesystem::path& path, open_mode mode)
     }
 #else
     auto narrow = path.string();
-    const char* cmode = nullptr;
+    const char *cmode = nullptr;
     switch (mode) {
-        case open_mode::read:       cmode = "rb";  break;
-        case open_mode::write:      cmode = "r+b"; break;
-        case open_mode::read_write: cmode = "r+b"; break;
+    case open_mode::read:
+        cmode = "rb";
+        break;
+    case open_mode::write:
+        cmode = "r+b";
+        break;
+    case open_mode::read_write:
+        cmode = "r+b";
+        break;
     }
     lb.impl_->file = std::fopen(narrow.c_str(), cmode);
     if (!lb.impl_->file && mode != open_mode::read) {
         lb.impl_->file = std::fopen(narrow.c_str(), "w+b");
         created_new = true;
     }
-    if (!lb.impl_->file)
-        return std::unexpected(error::io_error);
+    if (!lb.impl_->file) return std::unexpected(error::io_error);
 #endif
 
     // Disable CRT buffering — we do our own caching
     std::setvbuf(lb.impl_->file, nullptr, _IONBF, 0);
 
     // Record initial file size (skip seek for newly created files)
-    lb.impl_->logical_size = created_new ? 0
-        : static_cast<uint64_t>(raw_tell_end(lb.impl_->file));
+    lb.impl_->logical_size = created_new ? 0 : static_cast<uint64_t>(raw_tell_end(lb.impl_->file));
 
     return lb;
 }
@@ -239,8 +245,7 @@ auto file_lock_bytes::write_at(uint64_t offset, std::span<const uint8_t> buf) ->
     }
 
     uint64_t end = offset + total;
-    if (end > impl_->logical_size)
-        impl_->logical_size = end;
+    if (end > impl_->logical_size) impl_->logical_size = end;
 
     return total;
 }
@@ -259,21 +264,17 @@ auto file_lock_bytes::set_size(uint64_t new_size) -> std::expected<void, error> 
 
     // Evict cached pages beyond new_size
     uint64_t max_page = (new_size + impl::page_size - 1) >> impl::page_bits;
-    std::erase_if(impl_->cache, [max_page](const auto& kv) {
-        return kv.first >= max_page;
-    });
+    std::erase_if(impl_->cache, [max_page](const auto &kv) { return kv.first >= max_page; });
     // Invalidate fast-path pointer (map may have rehashed)
     impl_->last_page_id = UINT64_MAX;
     impl_->last_page_ptr = nullptr;
 
 #if defined(_MSC_VER)
     auto fd = _fileno(impl_->file);
-    if (_chsize_s(fd, static_cast<int64_t>(new_size)) != 0)
-        return std::unexpected(error::io_error);
+    if (_chsize_s(fd, static_cast<int64_t>(new_size)) != 0) return std::unexpected(error::io_error);
 #else
     auto fd = fileno(impl_->file);
-    if (ftruncate(fd, static_cast<off_t>(new_size)) != 0)
-        return std::unexpected(error::io_error);
+    if (ftruncate(fd, static_cast<off_t>(new_size)) != 0) return std::unexpected(error::io_error);
 #endif
 
     impl_->logical_size = new_size;

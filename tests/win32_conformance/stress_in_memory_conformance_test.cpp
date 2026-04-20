@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPMem {
 };
 
 class StressInMemoryConformance : public ::testing::TestWithParam<VPMem> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPMem vp_mem[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressInMemoryConformance, ::testing::ValuesIn(vp_mem),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Create, flush, reopen, verify ───────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, CreateFlushReopenVerify) {
-    auto p = temp_file("im_basic"); guard_.add(p);
+    auto p = temp_file("im_basic");
+    guard_.add(p);
     auto d = make_test_data(1000, 0x11);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -51,7 +53,8 @@ TEST_P(StressInMemoryConformance, CreateFlushReopenVerify) {
 // ── Multiple flush cycles ───────────────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, MultipleFlushCycles) {
-    auto p = temp_file("im_multiflush"); guard_.add(p);
+    auto p = temp_file("im_multiflush");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -71,7 +74,8 @@ TEST_P(StressInMemoryConformance, MultipleFlushCycles) {
 // ── Read-write mode modifications ───────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, ReadWriteModify) {
-    auto p = temp_file("im_rw"); guard_.add(p);
+    auto p = temp_file("im_rw");
+    guard_.add(p);
     auto d1 = make_test_data(500, 0x22);
     auto d2 = make_test_data(300, 0x33);
     {
@@ -94,13 +98,14 @@ TEST_P(StressInMemoryConformance, ReadWriteModify) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 2u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── Large number of small streams ───────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, FiftySmallStreams) {
-    auto p = temp_file("im_50small"); guard_.add(p);
+    auto p = temp_file("im_50small");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -116,13 +121,14 @@ TEST_P(StressInMemoryConformance, FiftySmallStreams) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 50u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── Deep nesting ────────────────────────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, DeepNesting5Levels) {
-    auto p = temp_file("im_deep"); guard_.add(p);
+    auto p = temp_file("im_deep");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -140,19 +146,26 @@ TEST_P(StressInMemoryConformance, DeepNesting5Levels) {
     }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
-    auto l0 = cf->root_storage().open_storage("L0"); ASSERT_TRUE(l0.has_value());
-    auto l1 = l0->open_storage("L1"); ASSERT_TRUE(l1.has_value());
-    auto l2 = l1->open_storage("L2"); ASSERT_TRUE(l2.has_value());
-    auto l3 = l2->open_storage("L3"); ASSERT_TRUE(l3.has_value());
-    auto l4 = l3->open_storage("L4"); ASSERT_TRUE(l4.has_value());
-    auto leaf = l4->open_stream("Leaf"); ASSERT_TRUE(leaf.has_value());
+    auto l0 = cf->root_storage().open_storage("L0");
+    ASSERT_TRUE(l0.has_value());
+    auto l1 = l0->open_storage("L1");
+    ASSERT_TRUE(l1.has_value());
+    auto l2 = l1->open_storage("L2");
+    ASSERT_TRUE(l2.has_value());
+    auto l3 = l2->open_storage("L3");
+    ASSERT_TRUE(l3.has_value());
+    auto l4 = l3->open_storage("L4");
+    ASSERT_TRUE(l4.has_value());
+    auto leaf = l4->open_stream("Leaf");
+    ASSERT_TRUE(leaf.has_value());
     EXPECT_EQ(leaf->size(), 100u);
 }
 
 // ── Reopen after delete ─────────────────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, ReopenAfterDelete) {
-    auto p = temp_file("im_reodel"); guard_.add(p);
+    auto p = temp_file("im_reodel");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -174,7 +187,8 @@ TEST_P(StressInMemoryConformance, ReopenAfterDelete) {
 // ── Empty storage persists ──────────────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, EmptyStoragePersists) {
-    auto p = temp_file("im_emptystg"); guard_.add(p);
+    auto p = temp_file("im_emptystg");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -184,15 +198,16 @@ TEST_P(StressInMemoryConformance, EmptyStoragePersists) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Empty", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"Empty", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     EXPECT_EQ(win32_enumerate(sub.get()).size(), 0u);
 }
 
 // ── Overwrite then reopen ───────────────────────────────────────────────
 
 TEST_P(StressInMemoryConformance, OverwriteThenReopen) {
-    auto p = temp_file("im_overwrite"); guard_.add(p);
+    auto p = temp_file("im_overwrite");
+    guard_.add(p);
     auto d1 = make_test_data(500, 0x55);
     auto d2 = make_test_data(500, 0x66);
     {
@@ -216,7 +231,8 @@ TEST_P(StressInMemoryConformance, OverwriteThenReopen) {
 // ── Mixed mini and regular after reopen ─────────────────────────────────
 
 TEST_P(StressInMemoryConformance, MixedMiniRegularReopen) {
-    auto p = temp_file("im_mixed"); guard_.add(p);
+    auto p = temp_file("im_mixed");
+    guard_.add(p);
     auto mini = make_test_data(100, 0x77);
     auto reg = make_test_data(5000, 0x88);
     {

@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class CrossReadConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -27,17 +28,17 @@ TEST_F(CrossReadConformance, Win32CreateStoutRead) {
 
         // Create sub-storage with a stream
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStorage(L"SubDir",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStorage(L"SubDir", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
         stream_ptr s1;
-        ASSERT_TRUE(SUCCEEDED(sub->CreateStream(L"NestedStream",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, s1.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            sub->CreateStream(L"NestedStream", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, s1.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(s1.get(), data1.data(), 300)));
 
         // Create root-level stream
         stream_ptr s2;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"BigStream",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, s2.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"BigStream", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, s2.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(s2.get(), data2.data(), 8000)));
     }
 
@@ -101,8 +102,7 @@ TEST_F(CrossReadConformance, StoutCreateWin32Read) {
 
     // Read outer stream
     stream_ptr s2;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Outer", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Outer", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
     EXPECT_EQ(win32_stream_size(s2.get()), 6000u);
     std::vector<uint8_t> buf2(6000);
     ULONG rc = 0;
@@ -111,11 +111,10 @@ TEST_F(CrossReadConformance, StoutCreateWin32Read) {
 
     // Read nested stream
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Folder", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"Folder", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     stream_ptr s1;
-    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
+    ASSERT_TRUE(SUCCEEDED(sub->OpenStream(L"Inner", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
     EXPECT_EQ(win32_stream_size(s1.get()), 500u);
     std::vector<uint8_t> buf1(500);
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(s1.get(), buf1.data(), 500, &rc)));
@@ -145,8 +144,8 @@ TEST_F(CrossReadConformance, RoundtripStoutWin32Stout) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_open_rw(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"Added",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"Added", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), added_data.data(), 400)));
     }
 
@@ -185,8 +184,8 @@ TEST_F(CrossReadConformance, RoundtripWin32StoutWin32) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"First",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"First", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), orig_data.data(), 300)));
     }
 
@@ -205,8 +204,7 @@ TEST_F(CrossReadConformance, RoundtripWin32StoutWin32) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
 
     stream_ptr s1;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"First", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"First", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s1.put())));
     EXPECT_EQ(win32_stream_size(s1.get()), 300u);
     std::vector<uint8_t> buf1(300);
     ULONG rc = 0;
@@ -214,8 +212,7 @@ TEST_F(CrossReadConformance, RoundtripWin32StoutWin32) {
     EXPECT_EQ(buf1, orig_data);
 
     stream_ptr s2;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Second", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Second", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, s2.put())));
     EXPECT_EQ(win32_stream_size(s2.get()), 150u);
     std::vector<uint8_t> buf2(150);
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(s2.get(), buf2.data(), 150, &rc)));

@@ -1,5 +1,7 @@
 #include "stout/util/guid.h"
+
 #include "stout/util/endian.h"
+
 #include <algorithm>
 #include <charconv>
 #include <random>
@@ -54,8 +56,7 @@ auto guid_parse(std::string_view str) noexcept -> std::optional<guid> {
 
     // Expected: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX (36 chars)
     if (str.size() != 36) return std::nullopt;
-    if (str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-')
-        return std::nullopt;
+    if (str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-') return std::nullopt;
 
     auto d1 = parse_hex_u32(str.substr(0, 8));
     auto d2 = parse_hex_u16(str.substr(9, 4));
@@ -86,7 +87,7 @@ auto guid_parse(std::string_view str) noexcept -> std::optional<guid> {
     return g;
 }
 
-auto guid_to_string(const guid& g) -> std::string {
+auto guid_to_string(const guid &g) -> std::string {
     return std::format("{}", g);
 }
 
@@ -100,7 +101,7 @@ auto guid_generate() -> guid {
     g.data1 = dist32(rng);
     g.data2 = static_cast<uint16_t>(dist32(rng));
     g.data3 = static_cast<uint16_t>((dist32(rng) & 0x0FFF) | 0x4000); // version 4
-    g.data4[0] = static_cast<uint8_t>((dist8(rng) & 0x3F) | 0x80);   // variant 1
+    g.data4[0] = static_cast<uint8_t>((dist8(rng) & 0x3F) | 0x80);    // variant 1
     for (int i = 1; i < 8; ++i) {
         g.data4[i] = static_cast<uint8_t>(dist8(rng));
     }
@@ -108,14 +109,14 @@ auto guid_generate() -> guid {
     return g;
 }
 
-void guid_write_le(uint8_t* dst, const guid& g) noexcept {
+void guid_write_le(uint8_t *dst, const guid &g) noexcept {
     util::write_u32_le(dst, g.data1);
     util::write_u16_le(dst + 4, g.data2);
     util::write_u16_le(dst + 6, g.data3);
     std::copy_n(g.data4.begin(), 8, dst + 8);
 }
 
-auto guid_read_le(const uint8_t* src) noexcept -> guid {
+auto guid_read_le(const uint8_t *src) noexcept -> guid {
     guid g;
     g.data1 = util::read_u32_le(src);
     g.data2 = util::read_u16_le(src + 4);

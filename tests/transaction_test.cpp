@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/compound_file.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 

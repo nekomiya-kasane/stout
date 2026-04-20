@@ -6,30 +6,27 @@
  * structural invariants: canvas dimensions, presence of key UI elements,
  * row count, and absence of blank/corrupt output.
  */
-#include <gtest/gtest.h>
-
-#include <filesystem>
-#include <sstream>
-
-#include "stout/compound_file.h"
-#include "tapiru/testing/test_harness.h"
-
 #include "ss_viewer/model/entry_info.h"
 #include "ss_viewer/model/stout_backend.h"
 #include "ss_viewer/model/viewer_state.h"
 #include "ss_viewer/ui/frame_builder.h"
+#include "stout/compound_file.h"
+#include "tapiru/testing/test_harness.h"
+
+#include <filesystem>
+#include <gtest/gtest.h>
+#include <sstream>
 
 using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p))
-        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
     return p;
 }
 
 class DumpCanvasTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path));
@@ -92,9 +89,8 @@ TEST_F(DumpCanvasTest, StatusBarPresent) {
 TEST_F(DumpCanvasTest, StatusBarIsLastRow) {
     int last = static_cast<int>(vs.row_count()) - 1;
     ASSERT_GE(last, 0);
-    auto& row = vs.row_text(last);
-    EXPECT_TRUE(row.find("stout_demo.cfb") != std::string::npos ||
-                row.find("CFB v4") != std::string::npos);
+    auto &row = vs.row_text(last);
+    EXPECT_TRUE(row.find("stout_demo.cfb") != std::string::npos || row.find("CFB v4") != std::string::npos);
 }
 
 // ── Tree panel ──────────────────────────────────────────────────────────
@@ -135,10 +131,13 @@ TEST_F(DumpCanvasTest, NoCompletelyBlankRows) {
     // (except possibly padding rows in the detail pane)
     int blank_count = 0;
     for (uint32_t i = 0; i < vs.row_count(); ++i) {
-        auto& row = vs.row_text(i);
+        auto &row = vs.row_text(i);
         bool all_space = true;
         for (char c : row) {
-            if (c != ' ' && c != '\0') { all_space = false; break; }
+            if (c != ' ' && c != '\0') {
+                all_space = false;
+                break;
+            }
         }
         if (all_space) ++blank_count;
     }

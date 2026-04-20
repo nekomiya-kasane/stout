@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPCopy {
 };
 
 class StressCopyConformance : public ::testing::TestWithParam<VPCopy> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPCopy vp_copy[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressCopyConformance, ::testing::ValuesIn(vp_copy),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── stream::copy_to basic ───────────────────────────────────────────────
 
 TEST_P(StressCopyConformance, StreamCopyToBasic) {
-    auto p = temp_file("sc_basic"); guard_.add(p);
+    auto p = temp_file("sc_basic");
+    guard_.add(p);
     auto data = make_test_data(500, 0x11);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -52,7 +54,8 @@ TEST_P(StressCopyConformance, StreamCopyToBasic) {
 }
 
 TEST_P(StressCopyConformance, StreamCopyToPartial) {
-    auto p = temp_file("sc_partial"); guard_.add(p);
+    auto p = temp_file("sc_partial");
+    guard_.add(p);
     auto data = make_test_data(1000, 0x22);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -79,7 +82,8 @@ TEST_P(StressCopyConformance, StreamCopyToPartial) {
 }
 
 TEST_P(StressCopyConformance, StreamCopyToZeroBytes) {
-    auto p = temp_file("sc_zero"); guard_.add(p);
+    auto p = temp_file("sc_zero");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -95,7 +99,8 @@ TEST_P(StressCopyConformance, StreamCopyToZeroBytes) {
 }
 
 TEST_P(StressCopyConformance, StreamCopyToMoreThanAvailable) {
-    auto p = temp_file("sc_more"); guard_.add(p);
+    auto p = temp_file("sc_more");
+    guard_.add(p);
     auto data = make_test_data(200, 0x33);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -120,7 +125,8 @@ TEST_P(StressCopyConformance, StreamCopyToMoreThanAvailable) {
 // ── stream::copy_to cross-validated with Win32 ──────────────────────────
 
 TEST_P(StressCopyConformance, StreamCopyToWin32Reads) {
-    auto p = temp_file("sc_w32"); guard_.add(p);
+    auto p = temp_file("sc_w32");
+    guard_.add(p);
     auto data = make_test_data(800, 0x44);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -136,8 +142,7 @@ TEST_P(StressCopyConformance, StreamCopyToWin32Reads) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Dst", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Dst", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 800u);
     std::vector<uint8_t> buf(800);
     ULONG rc = 0;
@@ -148,7 +153,8 @@ TEST_P(StressCopyConformance, StreamCopyToWin32Reads) {
 // ── stream::copy_to mini stream ─────────────────────────────────────────
 
 TEST_P(StressCopyConformance, StreamCopyToMiniStream) {
-    auto p = temp_file("sc_mini"); guard_.add(p);
+    auto p = temp_file("sc_mini");
+    guard_.add(p);
     auto data = make_test_data(100, 0x55);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -174,7 +180,8 @@ TEST_P(StressCopyConformance, StreamCopyToMiniStream) {
 // ── stream::copy_to regular stream ──────────────────────────────────────
 
 TEST_P(StressCopyConformance, StreamCopyToRegularStream) {
-    auto p = temp_file("sc_reg"); guard_.add(p);
+    auto p = temp_file("sc_reg");
+    guard_.add(p);
     auto data = make_test_data(5000, 0x66);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -200,7 +207,8 @@ TEST_P(StressCopyConformance, StreamCopyToRegularStream) {
 // ── storage::copy_to ────────────────────────────────────────────────────
 
 TEST_P(StressCopyConformance, StorageCopyToStream) {
-    auto p = temp_file("sc_stgstrm"); guard_.add(p);
+    auto p = temp_file("sc_stgstrm");
+    guard_.add(p);
     auto data = make_test_data(300, 0x77);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -228,7 +236,8 @@ TEST_P(StressCopyConformance, StorageCopyToStream) {
 }
 
 TEST_P(StressCopyConformance, StorageCopyToNotFound) {
-    auto p = temp_file("sc_stgnf"); guard_.add(p);
+    auto p = temp_file("sc_stgnf");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto dest = cf->root_storage().create_storage("Dest");
@@ -240,7 +249,8 @@ TEST_P(StressCopyConformance, StorageCopyToNotFound) {
 // ── Copy preserves data integrity ───────────────────────────────────────
 
 TEST_P(StressCopyConformance, CopyDoesNotAffectSource) {
-    auto p = temp_file("sc_srcok"); guard_.add(p);
+    auto p = temp_file("sc_srcok");
+    guard_.add(p);
     auto data = make_test_data(400, 0x88);
     {
         auto cf = compound_file::create(p, GetParam().ver);

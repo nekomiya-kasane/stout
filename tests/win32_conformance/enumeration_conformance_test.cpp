@@ -1,15 +1,16 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
 #include <set>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class EnumerationConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -62,7 +63,7 @@ TEST_F(EnumerationConformance, EnumStreamsOnly) {
     EXPECT_EQ(entries.size(), 5u);
 
     std::set<std::wstring> names;
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         EXPECT_EQ(e.type, STGTY_STREAM);
         if (e.pwcsName) names.insert(e.pwcsName);
         free_statstg_name(e);
@@ -91,7 +92,7 @@ TEST_F(EnumerationConformance, EnumStoragesOnly) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 5u);
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         EXPECT_EQ(e.type, STGTY_STORAGE);
         free_statstg_name(e);
     }
@@ -120,9 +121,11 @@ TEST_F(EnumerationConformance, EnumMixed) {
     EXPECT_EQ(entries.size(), 6u);
 
     int stg_count = 0, strm_count = 0;
-    for (auto& e : entries) {
-        if (e.type == STGTY_STORAGE) ++stg_count;
-        else if (e.type == STGTY_STREAM) ++strm_count;
+    for (auto &e : entries) {
+        if (e.type == STGTY_STORAGE)
+            ++stg_count;
+        else if (e.type == STGTY_STREAM)
+            ++strm_count;
         free_statstg_name(e);
     }
     EXPECT_EQ(stg_count, 3);
@@ -155,7 +158,7 @@ TEST_F(EnumerationConformance, EnumAfterDelete) {
     EXPECT_EQ(entries.size(), 3u);
 
     std::set<std::wstring> names;
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         if (e.pwcsName) names.insert(e.pwcsName);
         free_statstg_name(e);
     }
@@ -189,11 +192,10 @@ TEST_F(EnumerationConformance, EnumNestedStorage) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     auto entries = win32_enumerate(sub.get());
     EXPECT_EQ(entries.size(), 3u);
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         free_statstg_name(e);
     }
 }
@@ -209,8 +211,8 @@ TEST_F(EnumerationConformance, Win32CreateStoutEnum) {
         for (int i = 0; i < 4; ++i) {
             stream_ptr strm;
             auto name = L"Data" + std::to_wstring(i);
-            ASSERT_TRUE(SUCCEEDED(stg->CreateStream(name.c_str(),
-                STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+            ASSERT_TRUE(SUCCEEDED(stg->CreateStream(name.c_str(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+                                                    0, 0, strm.put())));
             auto data = make_test_data(80, static_cast<uint8_t>(i));
             ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 80)));
         }
@@ -222,7 +224,7 @@ TEST_F(EnumerationConformance, Win32CreateStoutEnum) {
     EXPECT_EQ(children.size(), 4u);
 
     std::set<std::string> names;
-    for (auto& c : children) {
+    for (auto &c : children) {
         names.insert(c.name);
         EXPECT_EQ(c.type, entry_type::stream);
     }

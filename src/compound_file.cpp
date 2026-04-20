@@ -1,6 +1,8 @@
 #include "stout/compound_file.h"
+
 #include "stout/util/filetime.h"
 #include "stout/version.h"
+
 #include <algorithm>
 #include <cstring>
 #include <variant>
@@ -11,7 +13,7 @@ auto library_version() noexcept -> version_info {
     return {0, 1, 0};
 }
 
-auto library_version_string() noexcept -> const char* {
+auto library_version_string() noexcept -> const char * {
     return "0.1.0";
 }
 
@@ -44,14 +46,13 @@ struct compound_file::internal {
     auto sector_size() const noexcept -> uint32_t { return header.sector_size(); }
 
     // Dispatch sector_io operations through the variant
-    template<typename Fn>
-    auto with_sio(Fn&& fn) {
+    template <typename Fn> auto with_sio(Fn &&fn) {
         if (is_memory) {
-            auto& mlb = std::get<io::memory_lock_bytes>(backend);
+            auto &mlb = std::get<io::memory_lock_bytes>(backend);
             cfb::sector_io sio(mlb, sector_size());
             return fn(sio);
         } else {
-            auto& flb = std::get<io::file_lock_bytes>(backend);
+            auto &flb = std::get<io::file_lock_bytes>(backend);
             cfb::sector_io sio(flb, sector_size());
             return fn(sio);
         }
@@ -65,8 +66,7 @@ struct compound_file::internal {
     // Walk a FAT chain to find its length and tail sector (avoids heap alloc)
     auto chain_length_and_tail(uint32_t start) const -> std::pair<uint32_t, uint32_t> {
         uint32_t len = 0, tail = cfb::endofchain;
-        for (uint32_t cur = start;
-             cur != cfb::endofchain && cur != cfb::freesect && cur < fat.size();
+        for (uint32_t cur = start; cur != cfb::endofchain && cur != cfb::freesect && cur < fat.size();
              cur = fat.next(cur)) {
             tail = cur;
             ++len;
@@ -93,7 +93,7 @@ struct compound_file::internal {
             header.total_mini_fat_sectors = 1;
         }
 
-        auto& root = dir.root();
+        auto &root = dir.root();
         auto [current_sectors, tail] = chain_length_and_tail(root.start_sector);
 
         // Grow the root entry's sector chain if needed
@@ -143,13 +143,13 @@ struct compound_file::internal {
         auto max_sector = fat.size();
         uint64_t min_file_size = ss + max_sector * static_cast<uint64_t>(ss);
         if (is_memory) {
-            auto& mlb = std::get<io::memory_lock_bytes>(backend);
+            auto &mlb = std::get<io::memory_lock_bytes>(backend);
             auto cur = mlb.size();
             if (cur && *cur < min_file_size) {
                 mlb.set_size(min_file_size);
             }
         } else {
-            auto& flb = std::get<io::file_lock_bytes>(backend);
+            auto &flb = std::get<io::file_lock_bytes>(backend);
             auto cur_size = flb.size();
             if (cur_size && *cur_size < min_file_size) {
                 flb.set_size(min_file_size);
@@ -166,16 +166,18 @@ struct compound_file::impl {
 
 compound_file::compound_file() : impl_(std::make_unique<impl>()) {}
 compound_file::~compound_file() = default;
-compound_file::compound_file(compound_file&&) noexcept = default;
-compound_file& compound_file::operator=(compound_file&&) noexcept = default;
+compound_file::compound_file(compound_file &&) noexcept = default;
+compound_file &compound_file::operator=(compound_file &&) noexcept = default;
 
-auto compound_file::internals() -> internal& { return impl_->state; }
+auto compound_file::internals() -> internal & {
+    return impl_->state;
+}
 
 auto compound_file::version() const noexcept -> cfb_version {
     return impl_->state.header.is_v3() ? cfb_version::v3 : cfb_version::v4;
 }
 
-auto compound_file::data() const -> const std::vector<uint8_t>* {
+auto compound_file::data() const -> const std::vector<uint8_t> * {
     if (impl_->state.is_memory) {
         return &std::get<io::memory_lock_bytes>(impl_->state.backend).data();
     }
@@ -189,7 +191,7 @@ auto compound_file::in_transaction() const noexcept -> bool {
 }
 
 auto compound_file::begin_transaction() -> std::expected<void, error> {
-    auto& s = impl_->state;
+    auto &s = impl_->state;
     if (s.in_txn) return std::unexpected(error::transaction_failed);
 
     auto snap = std::make_unique<internal::snapshot>();
@@ -210,7 +212,7 @@ auto compound_file::begin_transaction() -> std::expected<void, error> {
 }
 
 auto compound_file::commit() -> std::expected<void, error> {
-    auto& s = impl_->state;
+    auto &s = impl_->state;
     if (!s.in_txn) return std::unexpected(error::transaction_failed);
 
     // Flush all changes to the backing store
@@ -224,7 +226,7 @@ auto compound_file::commit() -> std::expected<void, error> {
 }
 
 auto compound_file::revert() -> std::expected<void, error> {
-    auto& s = impl_->state;
+    auto &s = impl_->state;
     if (!s.in_txn || !s.txn_snapshot) return std::unexpected(error::transaction_failed);
 
     // Restore metadata from snapshot
@@ -254,7 +256,7 @@ auto compound_file::revert() -> std::expected<void, error> {
 
 auto compound_file::create_in_memory(cfb_version version) -> std::expected<compound_file, error> {
     compound_file cf;
-    auto& s = cf.impl_->state;
+    auto &s = cf.impl_->state;
     s.is_memory = true;
     s.mode = open_mode::read_write;
     s.is_v3 = (version == cfb_version::v3);
@@ -264,12 +266,12 @@ auto compound_file::create_in_memory(cfb_version version) -> std::expected<compo
     auto ss = s.header.sector_size();
 
     // We need at minimum: header + 1 FAT sector + 1 directory sector
-    auto& mlb = s.backend.emplace<io::memory_lock_bytes>();
+    auto &mlb = s.backend.emplace<io::memory_lock_bytes>();
 
     // Allocate FAT: sector 0 = FAT, sector 1 = directory
     s.fat.resize(cfb::fat_entries_per_sector(ss));
-    s.fat.set(0, cfb::fatsect);      // sector 0 is a FAT sector
-    s.fat.set(1, cfb::endofchain);   // sector 1 is directory (single sector)
+    s.fat.set(0, cfb::fatsect);    // sector 0 is a FAT sector
+    s.fat.set(1, cfb::endofchain); // sector 1 is directory (single sector)
 
     s.header.total_fat_sectors = 1;
     s.header.first_dir_sector = 1;
@@ -317,11 +319,11 @@ auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected
     if (data.size() < cfb::header_size) return std::unexpected(error::invalid_header);
 
     compound_file cf;
-    auto& s = cf.impl_->state;
+    auto &s = cf.impl_->state;
     s.is_memory = true;
     s.mode = open_mode::read_write;
 
-    auto& mlb = s.backend.emplace<io::memory_lock_bytes>(std::move(data));
+    auto &mlb = s.backend.emplace<io::memory_lock_bytes>(std::move(data));
 
     // Parse header
     std::array<uint8_t, cfb::header_size> hdr_buf;
@@ -361,18 +363,17 @@ auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected
 
 // ── open (file) ────────────────────────────────────────────────────────
 
-auto compound_file::open(const std::filesystem::path& path, open_mode mode)
-    -> std::expected<compound_file, error> {
+auto compound_file::open(const std::filesystem::path &path, open_mode mode) -> std::expected<compound_file, error> {
     auto flb_result = io::file_lock_bytes::open(path, mode);
     if (!flb_result) return std::unexpected(flb_result.error());
 
     compound_file cf;
-    auto& s = cf.impl_->state;
+    auto &s = cf.impl_->state;
     s.is_memory = false;
     s.mode = mode;
     s.backend.emplace<io::file_lock_bytes>(std::move(*flb_result));
 
-    auto& flb = std::get<io::file_lock_bytes>(s.backend);
+    auto &flb = std::get<io::file_lock_bytes>(s.backend);
 
     // Parse header
     std::array<uint8_t, cfb::header_size> hdr_buf;
@@ -413,14 +414,14 @@ auto compound_file::open(const std::filesystem::path& path, open_mode mode)
 
 // ── create (file) ──────────────────────────────────────────────────────
 
-auto compound_file::create(const std::filesystem::path& path, cfb_version version)
+auto compound_file::create(const std::filesystem::path &path, cfb_version version)
     -> std::expected<compound_file, error> {
     // Open file handle directly
     auto flb_result = io::file_lock_bytes::open(path, open_mode::read_write);
     if (!flb_result) return std::unexpected(flb_result.error());
 
     compound_file cf;
-    auto& s = cf.impl_->state;
+    auto &s = cf.impl_->state;
     s.is_memory = false;
     s.mode = open_mode::read_write;
     s.is_v3 = (version == cfb_version::v3);
@@ -429,7 +430,7 @@ auto compound_file::create(const std::filesystem::path& path, cfb_version versio
     s.header = cfb::make_default_header(version);
     auto ss = s.header.sector_size();
 
-    auto& flb = s.backend.emplace<io::file_lock_bytes>(std::move(*flb_result));
+    auto &flb = s.backend.emplace<io::file_lock_bytes>(std::move(*flb_result));
 
     // Allocate FAT: sector 0 = FAT, sector 1 = directory
     s.fat.resize(cfb::fat_entries_per_sector(ss));
@@ -473,7 +474,7 @@ auto compound_file::create(const std::filesystem::path& path, cfb_version versio
 // ── flush ──────────────────────────────────────────────────────────────
 
 auto compound_file::flush() -> std::expected<void, error> {
-    auto& s = impl_->state;
+    auto &s = impl_->state;
 
     // Ensure directory chain and file size are adequate before flushing
     s.ensure_dir_chain();
@@ -485,7 +486,7 @@ auto compound_file::flush() -> std::expected<void, error> {
         s.header.total_dir_sectors = dir_count;
     }
 
-    return s.with_sio([&](auto& sio) -> std::expected<void, error> {
+    return s.with_sio([&](auto &sio) -> std::expected<void, error> {
         // Flush FAT
         auto fat_r = s.fat.flush(sio, std::span<const uint32_t>{s.difat.fat_sector_ids()});
         if (!fat_r) return std::unexpected(fat_r.error());
@@ -523,8 +524,7 @@ auto compound_file::root_storage() -> storage {
 
 // ── storage implementation ─────────────────────────────────────────────
 
-storage::storage(compound_file::internal& cf, uint32_t dir_id)
-    : cf_(&cf), dir_id_(dir_id) {}
+storage::storage(compound_file::internal &cf, uint32_t dir_id) : cf_(&cf), dir_id_(dir_id) {}
 
 auto storage::name() const -> std::string {
     return cf_->dir.entry(dir_id_).utf8_name();
@@ -541,9 +541,7 @@ auto storage::exists(std::string_view name) const -> bool {
 
 auto storage::children() const -> std::vector<entry_stat> {
     std::vector<entry_stat> result;
-    cf_->dir.enumerate_children(dir_id_, [&](uint32_t, const cfb::dir_entry& e) {
-        result.push_back(e.to_stat());
-    });
+    cf_->dir.enumerate_children(dir_id_, [&](uint32_t, const cfb::dir_entry &e) { result.push_back(e.to_stat()); });
     return result;
 }
 
@@ -610,7 +608,7 @@ auto storage::remove(std::string_view name) -> std::expected<void, error> {
     if (id == cfb::nostream) return std::unexpected(error::not_found);
 
     // Free the stream's sector chain
-    auto& entry = cf_->dir.entry(id);
+    auto &entry = cf_->dir.entry(id);
     if (entry.is_stream() && entry.start_sector != cfb::endofchain) {
         if (cfb::use_mini_stream(entry.stream_size)) {
             cf_->mini_fat.free_chain(entry.start_sector);
@@ -635,7 +633,7 @@ auto storage::clsid() const -> guid {
     return cf_->dir.entry(dir_id_).clsid;
 }
 
-auto storage::set_clsid(const guid& id) -> void {
+auto storage::set_clsid(const guid &id) -> void {
     cf_->dir.entry(dir_id_).clsid = id;
 }
 
@@ -648,7 +646,7 @@ auto storage::set_state_bits(uint32_t bits) -> void {
 }
 
 auto storage::set_state_bits(uint32_t bits, uint32_t mask) -> void {
-    auto& entry = cf_->dir.entry(dir_id_);
+    auto &entry = cf_->dir.entry(dir_id_);
     entry.state_bits = (entry.state_bits & ~mask) | (bits & mask);
 }
 
@@ -668,22 +666,21 @@ auto storage::set_modified_time(file_time t) -> void {
     cf_->dir.entry(dir_id_).modified_time = util::timepoint_to_filetime(t);
 }
 
-auto storage::set_element_times(std::string_view name, file_time ctime, file_time mtime)
-    -> std::expected<void, error> {
+auto storage::set_element_times(std::string_view name, file_time ctime, file_time mtime) -> std::expected<void, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
     if (id == cfb::nostream) return std::unexpected(error::not_found);
-    auto& entry = cf_->dir.entry(id);
+    auto &entry = cf_->dir.entry(id);
     entry.creation_time = util::timepoint_to_filetime(ctime);
     entry.modified_time = util::timepoint_to_filetime(mtime);
     return {};
 }
 
-auto storage::copy_to(storage& dest, std::string_view name) -> std::expected<void, error> {
+auto storage::copy_to(storage &dest, std::string_view name) -> std::expected<void, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
     if (id == cfb::nostream) return std::unexpected(error::not_found);
-    auto& src_entry = cf_->dir.entry(id);
+    auto &src_entry = cf_->dir.entry(id);
 
     if (src_entry.is_stream()) {
         // Copy stream data
@@ -704,7 +701,7 @@ auto storage::copy_to(storage& dest, std::string_view name) -> std::expected<voi
         if (!dst_sub) return std::unexpected(dst_sub.error());
         storage src_stg(*cf_, id);
         auto kids = src_stg.children();
-        for (auto& child : kids) {
+        for (auto &child : kids) {
             auto r = src_stg.copy_to(*dst_sub, child.name);
             if (!r) return std::unexpected(r.error());
         }
@@ -717,8 +714,7 @@ auto storage::copy_to(storage& dest, std::string_view name) -> std::expected<voi
 
 // ── stream implementation ──────────────────────────────────────────────
 
-stream::stream(compound_file::internal& cf, uint32_t dir_id)
-    : cf_(&cf), dir_id_(dir_id) {}
+stream::stream(compound_file::internal &cf, uint32_t dir_id) : cf_(&cf), dir_id_(dir_id) {}
 
 auto stream::name() const -> std::string {
     return cf_->dir.entry(dir_id_).utf8_name();
@@ -733,7 +729,7 @@ auto stream::size() const -> uint64_t {
 }
 
 auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size_t, error> {
-    auto& entry = cf_->dir.entry(dir_id_);
+    auto &entry = cf_->dir.entry(dir_id_);
     if (offset >= entry.stream_size) return size_t{0};
 
     auto available = entry.stream_size - offset;
@@ -741,15 +737,14 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
 
     if (cfb::use_mini_stream(entry.stream_size)) {
         // Read from mini stream — walk mini FAT chain directly
-        return cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+        return cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
             uint32_t mss = cf_->mini_sio.mini_sec_size();
             uint32_t skip = static_cast<uint32_t>(offset / mss);
             uint32_t off_in_sec = static_cast<uint32_t>(offset % mss);
 
             // Walk to the starting mini sector
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i)
-                cur = cf_->mini_fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->mini_fat.next(cur);
 
             size_t bytes_read = 0;
             uint8_t sec_buf[64]; // mini sector is always 64 bytes
@@ -769,15 +764,14 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
         });
     } else {
         // Read from regular sectors — walk FAT chain directly
-        return cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+        return cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
             auto ss = cf_->sector_size();
             uint32_t skip = static_cast<uint32_t>(offset / ss);
             uint32_t off_in_sec = static_cast<uint32_t>(offset % ss);
 
             // Walk to the starting sector
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i)
-                cur = cf_->fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->fat.next(cur);
 
             size_t bytes_read = 0;
             bool first = true;
@@ -798,7 +792,7 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
 }
 
 auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expected<size_t, error> {
-    auto& entry = cf_->dir.entry(dir_id_);
+    auto &entry = cf_->dir.entry(dir_id_);
 
     uint64_t end = offset + buf.size();
     if (end > entry.stream_size) {
@@ -808,14 +802,13 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
 
     if (cfb::use_mini_stream(entry.stream_size)) {
         // Write to mini stream — walk mini FAT chain directly
-        return cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+        return cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
             uint32_t mss = cf_->mini_sio.mini_sec_size();
             uint32_t skip = static_cast<uint32_t>(offset / mss);
             uint32_t off_in_sec = static_cast<uint32_t>(offset % mss);
 
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i)
-                cur = cf_->mini_fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->mini_fat.next(cur);
 
             size_t bytes_written = 0;
             uint8_t sec_buf[64];
@@ -841,14 +834,13 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
         });
     } else {
         // Write to regular sectors — walk FAT chain directly
-        return cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+        return cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
             auto ss = cf_->sector_size();
             uint32_t skip = static_cast<uint32_t>(offset / ss);
             uint32_t off_in_sec = static_cast<uint32_t>(offset % ss);
 
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i)
-                cur = cf_->fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->fat.next(cur);
 
             size_t bytes_written = 0;
             bool first = true;
@@ -869,7 +861,7 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
 }
 
 auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
-    auto& entry = cf_->dir.entry(dir_id_);
+    auto &entry = cf_->dir.entry(dir_id_);
     auto old_size = entry.stream_size;
 
     if (new_size == old_size) return {};
@@ -878,7 +870,7 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
     bool will_be_mini = cfb::use_mini_stream(new_size);
 
     // Helper: find tail of a FAT chain (avoids heap alloc)
-    auto find_tail = [](auto& fat_tbl, uint32_t start) -> uint32_t {
+    auto find_tail = [](auto &fat_tbl, uint32_t start) -> uint32_t {
         uint32_t tail = start;
         while (tail != cfb::endofchain && tail != cfb::freesect) {
             auto nxt = fat_tbl.next(tail);
@@ -889,10 +881,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
     };
 
     // Helper: walk to nth sector in chain (0-indexed), returns sector id
-    auto walk_to = [](auto& fat_tbl, uint32_t start, uint64_t n) -> uint32_t {
+    auto walk_to = [](auto &fat_tbl, uint32_t start, uint64_t n) -> uint32_t {
         uint32_t cur = start;
-        for (uint64_t i = 0; i < n && cur != cfb::endofchain && cur != cfb::freesect; ++i)
-            cur = fat_tbl.next(cur);
+        for (uint64_t i = 0; i < n && cur != cfb::endofchain && cur != cfb::freesect; ++i) cur = fat_tbl.next(cur);
         return cur;
     };
 
@@ -902,8 +893,8 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
 
         if (new_count > old_count) {
             // Extend mini chain — find tail once, then append
-            uint32_t tail = (entry.start_sector == cfb::endofchain)
-                ? cfb::endofchain : find_tail(cf_->mini_fat, entry.start_sector);
+            uint32_t tail = (entry.start_sector == cfb::endofchain) ? cfb::endofchain
+                                                                    : find_tail(cf_->mini_fat, entry.start_sector);
             for (uint64_t i = old_count; i < new_count; ++i) {
                 auto new_id = cf_->mini_fat.allocate();
                 if (entry.start_sector == cfb::endofchain) {
@@ -924,8 +915,7 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                 auto cut = walk_to(cf_->mini_fat, entry.start_sector, new_count - 1);
                 auto rest = cf_->mini_fat.next(cut);
                 cf_->mini_fat.set(cut, cfb::endofchain);
-                if (rest != cfb::endofchain && rest != cfb::freesect)
-                    cf_->mini_fat.free_chain(rest);
+                if (rest != cfb::endofchain && rest != cfb::freesect) cf_->mini_fat.free_chain(rest);
             }
         }
     } else if (!was_mini && !will_be_mini) {
@@ -934,8 +924,8 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
         auto new_count = (new_size + ss - 1) / ss;
 
         if (new_count > old_count) {
-            uint32_t tail = (entry.start_sector == cfb::endofchain)
-                ? cfb::endofchain : find_tail(cf_->fat, entry.start_sector);
+            uint32_t tail =
+                (entry.start_sector == cfb::endofchain) ? cfb::endofchain : find_tail(cf_->fat, entry.start_sector);
             for (uint64_t i = old_count; i < new_count; ++i) {
                 auto new_id = cf_->fat.allocate();
                 if (entry.start_sector == cfb::endofchain) {
@@ -954,8 +944,7 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                 auto cut = walk_to(cf_->fat, entry.start_sector, new_count - 1);
                 auto rest = cf_->fat.next(cut);
                 cf_->fat.set(cut, cfb::endofchain);
-                if (rest != cfb::endofchain && rest != cfb::freesect)
-                    cf_->fat.free_chain(rest);
+                if (rest != cfb::endofchain && rest != cfb::freesect) cf_->fat.free_chain(rest);
             }
         }
     } else {
@@ -989,13 +978,15 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
 
             // Write saved data to the new regular chain
             if (bytes_to_copy > 0) {
-                entry.stream_size = new_size;  // temporarily set so write sees correct type
-                auto write_r = cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+                entry.stream_size = new_size; // temporarily set so write sees correct type
+                auto write_r = cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
                     uint32_t cur = entry.start_sector;
                     size_t bytes_written = 0;
                     while (cur != cfb::endofchain && cur != cfb::freesect && bytes_written < bytes_to_copy) {
-                        auto copy_len = std::min(static_cast<size_t>(ss), static_cast<size_t>(bytes_to_copy) - bytes_written);
-                        auto w = sio.write_at(cur, 0, std::span<const uint8_t>(saved_data.data() + bytes_written, copy_len));
+                        auto copy_len =
+                            std::min(static_cast<size_t>(ss), static_cast<size_t>(bytes_to_copy) - bytes_written);
+                        auto w =
+                            sio.write_at(cur, 0, std::span<const uint8_t>(saved_data.data() + bytes_written, copy_len));
                         if (!w) return std::unexpected(w.error());
                         bytes_written += copy_len;
                         cur = cf_->fat.next(cur);
@@ -1030,14 +1021,15 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
 
             // Write saved data to the new mini chain
             if (bytes_to_copy > 0) {
-                entry.stream_size = new_size;  // temporarily set so write sees correct type
-                auto write_r = cf_->with_sio([&](auto& sio) -> std::expected<size_t, error> {
+                entry.stream_size = new_size; // temporarily set so write sees correct type
+                auto write_r = cf_->with_sio([&](auto &sio) -> std::expected<size_t, error> {
                     uint32_t mss = cf_->mini_sio.mini_sec_size();
                     uint32_t cur = entry.start_sector;
                     size_t bytes_written = 0;
                     uint8_t sec_buf[64];
                     while (cur != cfb::endofchain && cur != cfb::freesect && bytes_written < bytes_to_copy) {
-                        auto to_copy = std::min(static_cast<size_t>(mss), static_cast<size_t>(bytes_to_copy) - bytes_written);
+                        auto to_copy =
+                            std::min(static_cast<size_t>(mss), static_cast<size_t>(bytes_to_copy) - bytes_written);
                         if (to_copy < mss) std::memset(sec_buf, 0, mss);
                         std::copy_n(saved_data.data() + bytes_written, to_copy, sec_buf);
                         auto w = cf_->mini_sio.write_mini_sector(sio, cur, std::span<const uint8_t>(sec_buf, mss));
@@ -1064,7 +1056,7 @@ auto stream::rename(std::string_view new_name) -> std::expected<void, error> {
     return {};
 }
 
-auto stream::copy_to(stream& dest, uint64_t bytes) -> std::expected<uint64_t, error> {
+auto stream::copy_to(stream &dest, uint64_t bytes) -> std::expected<uint64_t, error> {
     auto src_size = size();
     auto to_copy = std::min(bytes, src_size);
     if (to_copy == 0) return uint64_t{0};

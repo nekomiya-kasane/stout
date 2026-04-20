@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPTxn {
 };
 
 class StressTransactionConformance : public ::testing::TestWithParam<VPTxn> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPTxn vp_txn[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressTransactionConformance, ::testing::ValuesIn(vp_txn),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Commit preserves data ───────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, CommitPreservesStream) {
-    auto p = temp_file("st_commit"); guard_.add(p);
+    auto p = temp_file("st_commit");
+    guard_.add(p);
     auto data = make_test_data(300, 0x11);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -46,7 +48,8 @@ TEST_P(StressTransactionConformance, CommitPreservesStream) {
 }
 
 TEST_P(StressTransactionConformance, CommitPreservesStorage) {
-    auto p = temp_file("st_cstg"); guard_.add(p);
+    auto p = temp_file("st_cstg");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -63,7 +66,8 @@ TEST_P(StressTransactionConformance, CommitPreservesStorage) {
 // ── Revert discards changes ─────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, RevertDiscardsStream) {
-    auto p = temp_file("st_revert"); guard_.add(p);
+    auto p = temp_file("st_revert");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -80,7 +84,8 @@ TEST_P(StressTransactionConformance, RevertDiscardsStream) {
 }
 
 TEST_P(StressTransactionConformance, RevertDiscardsStorage) {
-    auto p = temp_file("st_rvstg"); guard_.add(p);
+    auto p = temp_file("st_rvstg");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -98,7 +103,8 @@ TEST_P(StressTransactionConformance, RevertDiscardsStorage) {
 // ── Partial commit + revert ─────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, PartialCommitRevert) {
-    auto p = temp_file("st_partial"); guard_.add(p);
+    auto p = temp_file("st_partial");
+    guard_.add(p);
     auto data = make_test_data(200, 0x22);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -124,7 +130,8 @@ TEST_P(StressTransactionConformance, PartialCommitRevert) {
 // ── Transaction with multiple operations ────────────────────────────────
 
 TEST_P(StressTransactionConformance, MultipleOpsInTransaction) {
-    auto p = temp_file("st_multi"); guard_.add(p);
+    auto p = temp_file("st_multi");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -144,7 +151,8 @@ TEST_P(StressTransactionConformance, MultipleOpsInTransaction) {
 // ── Transaction with delete ─────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, TransactionDeleteRevert) {
-    auto p = temp_file("st_delrev"); guard_.add(p);
+    auto p = temp_file("st_delrev");
+    guard_.add(p);
     auto data = make_test_data(100, 0x33);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -165,7 +173,8 @@ TEST_P(StressTransactionConformance, TransactionDeleteRevert) {
 }
 
 TEST_P(StressTransactionConformance, TransactionDeleteCommit) {
-    auto p = temp_file("st_delcom"); guard_.add(p);
+    auto p = temp_file("st_delcom");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -184,7 +193,8 @@ TEST_P(StressTransactionConformance, TransactionDeleteCommit) {
 // ── Transaction with resize ─────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, TransactionResizeCommit) {
-    auto p = temp_file("st_rsz"); guard_.add(p);
+    auto p = temp_file("st_rsz");
+    guard_.add(p);
     auto data = make_test_data(100, 0x44);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -208,7 +218,8 @@ TEST_P(StressTransactionConformance, TransactionResizeCommit) {
 }
 
 TEST_P(StressTransactionConformance, TransactionResizeRevert) {
-    auto p = temp_file("st_rszrev"); guard_.add(p);
+    auto p = temp_file("st_rszrev");
+    guard_.add(p);
     auto data = make_test_data(100, 0x55);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -234,7 +245,8 @@ TEST_P(StressTransactionConformance, TransactionResizeRevert) {
 // ── Transaction + Win32 cross-read ──────────────────────────────────────
 
 TEST_P(StressTransactionConformance, CommitThenWin32Read) {
-    auto p = temp_file("st_w32"); guard_.add(p);
+    auto p = temp_file("st_w32");
+    guard_.add(p);
     auto data = make_test_data(500, 0x66);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -249,15 +261,15 @@ TEST_P(StressTransactionConformance, CommitThenWin32Read) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 500u);
 }
 
 // ── Double begin fails ──────────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, DoubleBeginFails) {
-    auto p = temp_file("st_dbl"); guard_.add(p);
+    auto p = temp_file("st_dbl");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->begin_transaction().has_value());
@@ -268,7 +280,8 @@ TEST_P(StressTransactionConformance, DoubleBeginFails) {
 // ── Commit/revert without transaction ───────────────────────────────────
 
 TEST_P(StressTransactionConformance, CommitWithoutTransactionFails) {
-    auto p = temp_file("st_nocom"); guard_.add(p);
+    auto p = temp_file("st_nocom");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->commit();
@@ -276,7 +289,8 @@ TEST_P(StressTransactionConformance, CommitWithoutTransactionFails) {
 }
 
 TEST_P(StressTransactionConformance, RevertWithoutTransactionFails) {
-    auto p = temp_file("st_norev"); guard_.add(p);
+    auto p = temp_file("st_norev");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->revert();
@@ -286,7 +300,8 @@ TEST_P(StressTransactionConformance, RevertWithoutTransactionFails) {
 // ── in_transaction query ────────────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, InTransactionQuery) {
-    auto p = temp_file("st_query"); guard_.add(p);
+    auto p = temp_file("st_query");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->in_transaction());
@@ -299,8 +314,9 @@ TEST_P(StressTransactionConformance, InTransactionQuery) {
 // ── Transaction with metadata ───────────────────────────────────────────
 
 TEST_P(StressTransactionConformance, TransactionMetadataCommit) {
-    auto p = temp_file("st_meta"); guard_.add(p);
-    stout::guid id{0xABCDEF01, 0x2345, 0x6789, {1,2,3,4,5,6,7,8}};
+    auto p = temp_file("st_meta");
+    guard_.add(p);
+    stout::guid id{0xABCDEF01, 0x2345, 0x6789, {1, 2, 3, 4, 5, 6, 7, 8}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -318,7 +334,8 @@ TEST_P(StressTransactionConformance, TransactionMetadataCommit) {
 }
 
 TEST_P(StressTransactionConformance, TransactionMetadataRevert) {
-    auto p = temp_file("st_metarev"); guard_.add(p);
+    auto p = temp_file("st_metarev");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());

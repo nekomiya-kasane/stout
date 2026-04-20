@@ -23,7 +23,7 @@ namespace ssv {
 /// fixed-size pages on demand via a user-supplied callback. Pages are cached
 /// so that scrolling through the hex view only reads each page once.
 class paged_reader {
-public:
+  public:
     /// @brief Page size in bytes (4 KB).
     static constexpr uint32_t page_size = 4096;
 
@@ -36,16 +36,13 @@ public:
     /// @brief Construct a paged reader for a stream of known size.
     /// @param total_size  Total stream size in bytes.
     /// @param reader      Callback that reads bytes from the stream.
-    paged_reader(uint64_t total_size, read_fn reader)
-        : total_size_(total_size), reader_(std::move(reader)) {}
+    paged_reader(uint64_t total_size, read_fn reader) : total_size_(total_size), reader_(std::move(reader)) {}
 
     /// @brief Total stream size in bytes.
     [[nodiscard]] uint64_t total_size() const noexcept { return total_size_; }
 
     /// @brief Total number of hex lines (16 bytes per line).
-    [[nodiscard]] uint32_t total_lines() const noexcept {
-        return static_cast<uint32_t>((total_size_ + 15) / 16);
-    }
+    [[nodiscard]] uint32_t total_lines() const noexcept { return static_cast<uint32_t>((total_size_ + 15) / 16); }
 
     /// @brief Whether the reader has been initialized with a stream.
     [[nodiscard]] bool valid() const noexcept { return reader_ != nullptr; }
@@ -53,7 +50,7 @@ public:
     /// @brief Read a single byte at the given offset. Returns 0 if out of range.
     [[nodiscard]] uint8_t byte_at(uint64_t offset) {
         if (offset >= total_size_) return 0;
-        auto& page = ensure_page(offset / page_size);
+        auto &page = ensure_page(offset / page_size);
         uint32_t off_in_page = static_cast<uint32_t>(offset % page_size);
         if (off_in_page >= page.size()) return 0;
         return page[off_in_page];
@@ -66,10 +63,9 @@ public:
             uint64_t abs_off = offset + copied;
             uint64_t page_idx = abs_off / page_size;
             uint32_t off_in_page = static_cast<uint32_t>(abs_off % page_size);
-            auto& page = ensure_page(page_idx);
+            auto &page = ensure_page(page_idx);
             uint32_t avail = static_cast<uint32_t>(page.size()) - off_in_page;
-            uint32_t to_copy = static_cast<uint32_t>(
-                std::min<size_t>(avail, out.size() - copied));
+            uint32_t to_copy = static_cast<uint32_t>(std::min<size_t>(avail, out.size() - copied));
             std::copy_n(page.data() + off_in_page, to_copy, out.data() + copied);
             copied += to_copy;
         }
@@ -81,8 +77,7 @@ public:
     uint32_t read_hex_line(uint32_t line_idx, uint8_t out[16]) {
         uint64_t offset = static_cast<uint64_t>(line_idx) * 16;
         if (offset >= total_size_) return 0;
-        uint32_t avail = static_cast<uint32_t>(
-            std::min<uint64_t>(16, total_size_ - offset));
+        uint32_t avail = static_cast<uint32_t>(std::min<uint64_t>(16, total_size_ - offset));
         std::span<uint8_t> buf(out, avail);
         read_range(offset, buf);
         return avail;
@@ -98,13 +93,13 @@ public:
     /// @brief Number of pages currently cached.
     [[nodiscard]] size_t cached_pages() const noexcept { return pages_.size(); }
 
-private:
+  private:
     uint64_t total_size_ = 0;
     read_fn reader_;
     std::unordered_map<uint64_t, std::vector<uint8_t>> pages_;
 
     /// @brief Ensure a page is loaded and return a reference to its data.
-    std::vector<uint8_t>& ensure_page(uint64_t page_idx) {
+    std::vector<uint8_t> &ensure_page(uint64_t page_idx) {
         auto it = pages_.find(page_idx);
         if (it != pages_.end()) return it->second;
 

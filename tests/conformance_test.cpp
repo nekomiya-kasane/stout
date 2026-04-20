@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/compound_file.h"
 #include "stout/ole/property_set.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::ole;
@@ -188,7 +189,7 @@ TEST(ConformanceTest, PropertySetInStream) {
 
     // Build a SummaryInformation property set
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_string(pid::title, "Conformance Test");
     sec.set_string(pid::author, "Stout Library");
     sec.set_i4(pid::page_count, 42);
@@ -216,7 +217,7 @@ TEST(ConformanceTest, PropertySetInStream) {
 
     auto ps2 = parse_property_set(buf);
     ASSERT_TRUE(ps2.has_value());
-    auto* summary = ps2->section(fmtid_summary_information());
+    auto *summary = ps2->section(fmtid_summary_information());
     ASSERT_NE(summary, nullptr);
     EXPECT_EQ(summary->get_string(pid::title), "Conformance Test");
     EXPECT_EQ(summary->get_string(pid::author), "Stout Library");

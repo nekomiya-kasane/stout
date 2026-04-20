@@ -1,9 +1,10 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <gtest/gtest.h>
+
 #include <chrono>
+#include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -14,7 +15,7 @@ struct VPMeta {
 };
 
 class StressMetadataConformance : public ::testing::TestWithParam<VPMeta> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -22,21 +23,27 @@ protected:
 static const VPMeta vp_meta[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressMetadataConformance, ::testing::ValuesIn(vp_meta),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── CLSID ───────────────────────────────────────────────────────────────
 
 TEST_P(StressMetadataConformance, ClsidNullByDefault) {
-    auto p = temp_file("sm_clsnull"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("sm_clsnull");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_TRUE(cf->root_storage().clsid().is_null());
 }
 
 TEST_P(StressMetadataConformance, ClsidSetGetRoot) {
-    auto p = temp_file("sm_clsroot"); guard_.add(p);
-    stout::guid id{0xAABBCCDD, 0x1122, 0x3344, {1,2,3,4,5,6,7,8}};
+    auto p = temp_file("sm_clsroot");
+    guard_.add(p);
+    stout::guid id{0xAABBCCDD, 0x1122, 0x3344, {1, 2, 3, 4, 5, 6, 7, 8}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -49,8 +56,9 @@ TEST_P(StressMetadataConformance, ClsidSetGetRoot) {
 }
 
 TEST_P(StressMetadataConformance, ClsidSetGetSubStorage) {
-    auto p = temp_file("sm_clssub"); guard_.add(p);
-    stout::guid id{0x11111111, 0x2222, 0x3333, {4,5,6,7,8,9,10,11}};
+    auto p = temp_file("sm_clssub");
+    guard_.add(p);
+    stout::guid id{0x11111111, 0x2222, 0x3333, {4, 5, 6, 7, 8, 9, 10, 11}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -67,8 +75,9 @@ TEST_P(StressMetadataConformance, ClsidSetGetSubStorage) {
 }
 
 TEST_P(StressMetadataConformance, ClsidStoutWriteWin32Read) {
-    auto p = temp_file("sm_cls_s2w"); guard_.add(p);
-    stout::guid id{0xDEADBEEF, 0xCAFE, 0xBABE, {0x12,0x34,0x56,0x78,0x9A,0xBC,0xDE,0xF0}};
+    auto p = temp_file("sm_cls_s2w");
+    guard_.add(p);
+    stout::guid id{0xDEADBEEF, 0xCAFE, 0xBABE, {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -77,20 +86,24 @@ TEST_P(StressMetadataConformance, ClsidStoutWriteWin32Read) {
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
-    STATSTG st{}; ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
+    STATSTG st{};
+    ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
     EXPECT_EQ(st.clsid.Data1, id.data1);
     EXPECT_EQ(st.clsid.Data2, id.data2);
     EXPECT_EQ(st.clsid.Data3, id.data3);
 }
 
 TEST_P(StressMetadataConformance, ClsidWin32WriteStoutRead) {
-    auto p = temp_file("sm_cls_w2s"); guard_.add(p);
+    auto p = temp_file("sm_cls_w2s");
+    guard_.add(p);
     CLSID test_clsid;
     ASSERT_TRUE(SUCCEEDED(CoCreateGuid(&test_clsid)));
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         ASSERT_TRUE(SUCCEEDED(stg->SetClass(test_clsid)));
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -104,15 +117,21 @@ TEST_P(StressMetadataConformance, ClsidWin32WriteStoutRead) {
 // ── State bits ──────────────────────────────────────────────────────────
 
 TEST_P(StressMetadataConformance, StateBitsZeroByDefault) {
-    auto p = temp_file("sm_bits0"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("sm_bits0");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_EQ(cf->root_storage().state_bits(), 0u);
 }
 
 TEST_P(StressMetadataConformance, StateBitsAllOnes) {
-    auto p = temp_file("sm_bitsff"); guard_.add(p);
+    auto p = temp_file("sm_bitsff");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -125,7 +144,8 @@ TEST_P(StressMetadataConformance, StateBitsAllOnes) {
 }
 
 TEST_P(StressMetadataConformance, StateBitsWithMask) {
-    auto p = temp_file("sm_bitsmask"); guard_.add(p);
+    auto p = temp_file("sm_bitsmask");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -139,7 +159,8 @@ TEST_P(StressMetadataConformance, StateBitsWithMask) {
 }
 
 TEST_P(StressMetadataConformance, StateBitsStoutWriteWin32Read) {
-    auto p = temp_file("sm_bits_s2w"); guard_.add(p);
+    auto p = temp_file("sm_bits_s2w");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -148,16 +169,20 @@ TEST_P(StressMetadataConformance, StateBitsStoutWriteWin32Read) {
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
-    STATSTG st{}; ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
+    STATSTG st{};
+    ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
     EXPECT_EQ(st.grfStateBits, 0xDEADBEEFu);
 }
 
 TEST_P(StressMetadataConformance, StateBitsWin32WriteStoutRead) {
-    auto p = temp_file("sm_bits_w2s"); guard_.add(p);
+    auto p = temp_file("sm_bits_w2s");
+    guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         ASSERT_TRUE(SUCCEEDED(stg->SetStateBits(0xCAFEBABE, 0xFFFFFFFF)));
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -168,8 +193,9 @@ TEST_P(StressMetadataConformance, StateBitsWin32WriteStoutRead) {
 // ── Timestamps ──────────────────────────────────────────────────────────
 
 TEST_P(StressMetadataConformance, TimestampSetGet) {
-    auto p = temp_file("sm_ts"); guard_.add(p);
-    auto tp = std::chrono::sys_days{std::chrono::year{2020}/std::chrono::January/1};
+    auto p = temp_file("sm_ts");
+    guard_.add(p);
+    auto tp = std::chrono::sys_days{std::chrono::year{2020} / std::chrono::January / 1};
     auto ft = stout::file_time{tp};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -192,8 +218,9 @@ TEST_P(StressMetadataConformance, TimestampSetGet) {
 }
 
 TEST_P(StressMetadataConformance, TimestampStoutWriteWin32Read) {
-    auto p = temp_file("sm_ts_s2w"); guard_.add(p);
-    auto tp = std::chrono::sys_days{std::chrono::year{2023}/std::chrono::June/15};
+    auto p = temp_file("sm_ts_s2w");
+    guard_.add(p);
+    auto tp = std::chrono::sys_days{std::chrono::year{2023} / std::chrono::June / 15};
     auto ft = stout::file_time{tp};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -207,12 +234,14 @@ TEST_P(StressMetadataConformance, TimestampStoutWriteWin32Read) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"T", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
-    STATSTG st{}; ASSERT_TRUE(SUCCEEDED(sub->Stat(&st, STATFLAG_NONAME)));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"T", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    STATSTG st{};
+    ASSERT_TRUE(SUCCEEDED(sub->Stat(&st, STATFLAG_NONAME)));
     ULARGE_INTEGER ctime, mtime;
-    ctime.LowPart = st.ctime.dwLowDateTime; ctime.HighPart = st.ctime.dwHighDateTime;
-    mtime.LowPart = st.mtime.dwLowDateTime; mtime.HighPart = st.mtime.dwHighDateTime;
+    ctime.LowPart = st.ctime.dwLowDateTime;
+    ctime.HighPart = st.ctime.dwHighDateTime;
+    mtime.LowPart = st.mtime.dwLowDateTime;
+    mtime.HighPart = st.mtime.dwHighDateTime;
     EXPECT_GT(ctime.QuadPart, 0u);
     EXPECT_EQ(ctime.QuadPart, mtime.QuadPart);
 }
@@ -220,8 +249,9 @@ TEST_P(StressMetadataConformance, TimestampStoutWriteWin32Read) {
 // ── set_element_times (NEW API) ─────────────────────────────────────────
 
 TEST_P(StressMetadataConformance, SetElementTimesOnChild) {
-    auto p = temp_file("sm_elt"); guard_.add(p);
-    auto tp = std::chrono::sys_days{std::chrono::year{2025}/std::chrono::March/1};
+    auto p = temp_file("sm_elt");
+    guard_.add(p);
+    auto tp = std::chrono::sys_days{std::chrono::year{2025} / std::chrono::March / 1};
     auto ft = stout::file_time{tp};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -241,8 +271,9 @@ TEST_P(StressMetadataConformance, SetElementTimesOnChild) {
 }
 
 TEST_P(StressMetadataConformance, SetElementTimesNotFound) {
-    auto p = temp_file("sm_elt_nf"); guard_.add(p);
-    auto tp = std::chrono::sys_days{std::chrono::year{2020}/std::chrono::January/1};
+    auto p = temp_file("sm_elt_nf");
+    guard_.add(p);
+    auto tp = std::chrono::sys_days{std::chrono::year{2020} / std::chrono::January / 1};
     auto ft = stout::file_time{tp};
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
@@ -253,7 +284,8 @@ TEST_P(StressMetadataConformance, SetElementTimesNotFound) {
 // ── Entry stat cross-validation ─────────────────────────────────────────
 
 TEST_P(StressMetadataConformance, EntryStatNameMatch) {
-    auto p = temp_file("sm_statname"); guard_.add(p);
+    auto p = temp_file("sm_statname");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -284,7 +316,8 @@ TEST_P(StressMetadataConformance, EntryStatNameMatch) {
 }
 
 TEST_P(StressMetadataConformance, StorageStatTypeMatch) {
-    auto p = temp_file("sm_stgtype"); guard_.add(p);
+    auto p = temp_file("sm_stgtype");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -309,8 +342,9 @@ TEST_P(StressMetadataConformance, StorageStatTypeMatch) {
 // ── Metadata survives flush/reopen ──────────────────────────────────────
 
 TEST_P(StressMetadataConformance, MetadataSurvivesReopen) {
-    auto p = temp_file("sm_survive"); guard_.add(p);
-    stout::guid id{0xFEEDFACE, 0x1234, 0x5678, {9,10,11,12,13,14,15,16}};
+    auto p = temp_file("sm_survive");
+    guard_.add(p);
+    stout::guid id{0xFEEDFACE, 0x1234, 0x5678, {9, 10, 11, 12, 13, 14, 15, 16}};
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());

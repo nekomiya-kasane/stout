@@ -1,15 +1,16 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
 #include <set>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class RenameDestroyConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -36,7 +37,7 @@ TEST_F(RenameDestroyConformance, DestroyStream) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 
     // Stout also verifies
     auto cf = compound_file::open(path, open_mode::read);
@@ -62,7 +63,7 @@ TEST_F(RenameDestroyConformance, DestroyStorage) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── DestroyNonExistent: destroy something that doesn't exist ────────────
@@ -99,7 +100,7 @@ TEST_F(RenameDestroyConformance, DestroyWithChildren) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── DestroyAndRecreate: destroy then recreate same name ─────────────────
@@ -132,8 +133,7 @@ TEST_F(RenameDestroyConformance, DestroyAndRecreate) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Reused", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Reused", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
     std::vector<uint8_t> buf(200);
     ULONG rc = 0;
@@ -166,7 +166,7 @@ TEST_F(RenameDestroyConformance, DestroyMiddle) {
     EXPECT_EQ(entries.size(), 4u);
 
     std::set<std::wstring> names;
-    for (auto& e : entries) {
+    for (auto &e : entries) {
         if (e.pwcsName) names.insert(e.pwcsName);
         free_statstg_name(e);
     }
@@ -189,8 +189,8 @@ TEST_F(RenameDestroyConformance, Win32DestroyStoutRead) {
         for (int i = 0; i < 3; ++i) {
             stream_ptr strm;
             auto name = L"Item" + std::to_wstring(i);
-            ASSERT_TRUE(SUCCEEDED(stg->CreateStream(name.c_str(),
-                STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+            ASSERT_TRUE(SUCCEEDED(stg->CreateStream(name.c_str(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+                                                    0, 0, strm.put())));
             auto data = make_test_data(80, static_cast<uint8_t>(i));
             ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 80)));
         }
@@ -204,7 +204,7 @@ TEST_F(RenameDestroyConformance, Win32DestroyStoutRead) {
     EXPECT_EQ(children.size(), 2u);
 
     std::set<std::string> names;
-    for (auto& c : children) names.insert(c.name);
+    for (auto &c : children) names.insert(c.name);
     EXPECT_TRUE(names.count("Item0"));
     EXPECT_FALSE(names.count("Item1"));
     EXPECT_TRUE(names.count("Item2"));

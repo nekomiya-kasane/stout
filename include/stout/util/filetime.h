@@ -2,6 +2,7 @@
 
 #include "stout/exports.h"
 #include "stout/types.h"
+
 #include <chrono>
 #include <cstdint>
 

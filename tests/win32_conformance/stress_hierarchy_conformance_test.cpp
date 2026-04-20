@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPHier {
 };
 
 class StressHierarchyConformance : public ::testing::TestWithParam<VPHier> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPHier vp_hier[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressHierarchyConformance, ::testing::ValuesIn(vp_hier),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Single level with many children ─────────────────────────────────────
 
 TEST_P(StressHierarchyConformance, SingleLevel20Children) {
-    auto p = temp_file("hi_20ch"); guard_.add(p);
+    auto p = temp_file("hi_20ch");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -46,7 +48,8 @@ TEST_P(StressHierarchyConformance, SingleLevel20Children) {
 // ── Two levels: 5 storages × 4 streams ──────────────────────────────────
 
 TEST_P(StressHierarchyConformance, TwoLevels5x4) {
-    auto p = temp_file("hi_5x4"); guard_.add(p);
+    auto p = temp_file("hi_5x4");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -66,22 +69,23 @@ TEST_P(StressHierarchyConformance, TwoLevels5x4) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto root_entries = win32_enumerate(stg.get());
     EXPECT_EQ(root_entries.size(), 5u);
-    for (auto& e : root_entries) free_statstg_name(e);
+    for (auto &e : root_entries) free_statstg_name(e);
     for (int i = 0; i < 5; ++i) {
         auto name = L"D" + std::to_wstring(i);
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->OpenStorage(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
         auto sub_entries = win32_enumerate(sub.get());
         EXPECT_EQ(sub_entries.size(), 4u);
-        for (auto& e : sub_entries) free_statstg_name(e);
+        for (auto &e : sub_entries) free_statstg_name(e);
     }
 }
 
 // ── Three levels deep ───────────────────────────────────────────────────
 
 TEST_P(StressHierarchyConformance, ThreeLevelsDeep) {
-    auto p = temp_file("hi_3deep"); guard_.add(p);
+    auto p = temp_file("hi_3deep");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -111,7 +115,8 @@ TEST_P(StressHierarchyConformance, ThreeLevelsDeep) {
 // ── Mixed streams and storages at each level ────────────────────────────
 
 TEST_P(StressHierarchyConformance, MixedAtEachLevel) {
-    auto p = temp_file("hi_mixed"); guard_.add(p);
+    auto p = temp_file("hi_mixed");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -141,7 +146,8 @@ TEST_P(StressHierarchyConformance, MixedAtEachLevel) {
 // ── Empty storages at multiple levels ───────────────────────────────────
 
 TEST_P(StressHierarchyConformance, EmptyStoragesMultipleLevels) {
-    auto p = temp_file("hi_empty"); guard_.add(p);
+    auto p = temp_file("hi_empty");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -165,7 +171,8 @@ TEST_P(StressHierarchyConformance, EmptyStoragesMultipleLevels) {
 // ── Sibling storages with streams ───────────────────────────────────────
 
 TEST_P(StressHierarchyConformance, SiblingStoragesWithStreams) {
-    auto p = temp_file("hi_sibling"); guard_.add(p);
+    auto p = temp_file("hi_sibling");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -186,13 +193,13 @@ TEST_P(StressHierarchyConformance, SiblingStoragesWithStreams) {
     for (int i = 0; i < 3; ++i) {
         auto dname = L"Dir" + std::to_wstring(i);
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(dname.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->OpenStorage(dname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
         for (int j = 0; j < 3; ++j) {
             auto sname = L"F" + std::to_wstring(j);
             stream_ptr strm;
-            ASSERT_TRUE(SUCCEEDED(sub->OpenStream(sname.c_str(), nullptr,
-                STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+            ASSERT_TRUE(
+                SUCCEEDED(sub->OpenStream(sname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
             EXPECT_EQ(win32_stream_size(strm.get()), static_cast<uint64_t>(100 + j * 50));
         }
     }
@@ -201,17 +208,20 @@ TEST_P(StressHierarchyConformance, SiblingStoragesWithStreams) {
 // ── Win32 creates hierarchy, Stout reads ────────────────────────────────
 
 TEST_P(StressHierarchyConformance, Win32HierarchyStoutReads) {
-    auto p = temp_file("hi_w32"); guard_.add(p);
+    auto p = temp_file("hi_w32");
+    guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStorage(L"Sub",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStorage(L"Sub", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(sub->CreateStream(L"Data",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            sub->CreateStream(L"Data", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         auto d = make_test_data(300, 0xDD);
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), d.data(), 300)));
     }
@@ -230,7 +240,8 @@ TEST_P(StressHierarchyConformance, Win32HierarchyStoutReads) {
 // ── Storage with stream and sub-storage same name prefix ────────────────
 
 TEST_P(StressHierarchyConformance, SameNamePrefixDifferentTypes) {
-    auto p = temp_file("hi_prefix"); guard_.add(p);
+    auto p = temp_file("hi_prefix");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -243,13 +254,14 @@ TEST_P(StressHierarchyConformance, SameNamePrefixDifferentTypes) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 3u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── Delete sub-storage, verify parent ───────────────────────────────────
 
 TEST_P(StressHierarchyConformance, DeleteSubStorageVerifyParent) {
-    auto p = temp_file("hi_delsub"); guard_.add(p);
+    auto p = temp_file("hi_delsub");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());

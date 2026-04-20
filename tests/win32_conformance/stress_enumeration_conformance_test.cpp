@@ -1,10 +1,11 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <set>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -15,7 +16,7 @@ struct VPEnum {
 };
 
 class StressEnumerationConformance : public ::testing::TestWithParam<VPEnum> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -26,74 +27,92 @@ static const VPEnum vp_enum[] = {
 };
 
 INSTANTIATE_TEST_SUITE_P(V, StressEnumerationConformance, ::testing::ValuesIn(vp_enum),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Count-based enumeration ─────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, ZeroChildren) {
-    auto p = temp_file("se_0"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
-    { auto cf = compound_file::open(p, open_mode::read);
-      ASSERT_TRUE(cf.has_value());
-      EXPECT_EQ(cf->root_storage().children().size(), 0u); }
+    auto p = temp_file("se_0");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
+    {
+        auto cf = compound_file::open(p, open_mode::read);
+        ASSERT_TRUE(cf.has_value());
+        EXPECT_EQ(cf->root_storage().children().size(), 0u);
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 0u);
 }
 
 TEST_P(StressEnumerationConformance, OneChild) {
-    auto p = temp_file("se_1"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value());
-      ASSERT_TRUE(cf->root_storage().create_stream("A").has_value()); ASSERT_TRUE(cf->flush().has_value()); }
-    { auto cf = compound_file::open(p, open_mode::read);
-      ASSERT_TRUE(cf.has_value());
-      EXPECT_EQ(cf->root_storage().children().size(), 1u); }
+    auto p = temp_file("se_1");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->root_storage().create_stream("A").has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
+    {
+        auto cf = compound_file::open(p, open_mode::read);
+        ASSERT_TRUE(cf.has_value());
+        EXPECT_EQ(cf->root_storage().children().size(), 1u);
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 1u);
 }
 
 TEST_P(StressEnumerationConformance, FiveChildren) {
-    auto p = temp_file("se_5"); guard_.add(p);
+    auto p = temp_file("se_5");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 5; ++i)
-            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(cf->flush().has_value());
     }
-    { auto cf = compound_file::open(p, open_mode::read);
-      ASSERT_TRUE(cf.has_value());
-      EXPECT_EQ(cf->root_storage().children().size(), 5u); }
+    {
+        auto cf = compound_file::open(p, open_mode::read);
+        ASSERT_TRUE(cf.has_value());
+        EXPECT_EQ(cf->root_storage().children().size(), 5u);
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 5u);
 }
 
 TEST_P(StressEnumerationConformance, TwentyChildren) {
-    auto p = temp_file("se_20"); guard_.add(p);
+    auto p = temp_file("se_20");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 20; ++i)
-            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 20; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(cf->flush().has_value());
     }
-    { auto cf = compound_file::open(p, open_mode::read);
-      ASSERT_TRUE(cf.has_value());
-      EXPECT_EQ(cf->root_storage().children().size(), 20u); }
+    {
+        auto cf = compound_file::open(p, open_mode::read);
+        ASSERT_TRUE(cf.has_value());
+        EXPECT_EQ(cf->root_storage().children().size(), 20u);
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     EXPECT_EQ(win32_enumerate(stg.get()).size(), 20u);
 }
 
 TEST_P(StressEnumerationConformance, FiftyChildren) {
-    auto p = temp_file("se_50"); guard_.add(p);
+    auto p = temp_file("se_50");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 50; ++i)
-            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 50; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(cf->flush().has_value());
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -104,7 +123,8 @@ TEST_P(StressEnumerationConformance, FiftyChildren) {
 // ── Name matching ───────────────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, NamesMatchBetweenAPIs) {
-    auto p = temp_file("se_names"); guard_.add(p);
+    auto p = temp_file("se_names");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -120,7 +140,7 @@ TEST_P(StressEnumerationConformance, NamesMatchBetweenAPIs) {
         ASSERT_TRUE(cf.has_value());
         auto stout_kids = cf->root_storage().children();
         std::set<std::string> stout_names;
-        for (auto& c : stout_kids) stout_names.insert(c.name);
+        for (auto &c : stout_kids) stout_names.insert(c.name);
         EXPECT_TRUE(stout_names.count("Alpha"));
         EXPECT_TRUE(stout_names.count("Beta"));
         EXPECT_TRUE(stout_names.count("Gamma"));
@@ -130,7 +150,10 @@ TEST_P(StressEnumerationConformance, NamesMatchBetweenAPIs) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto w32_kids = win32_enumerate(stg.get());
     std::set<std::wstring> w32_names;
-    for (auto& e : w32_kids) { w32_names.insert(e.pwcsName); free_statstg_name(e); }
+    for (auto &e : w32_kids) {
+        w32_names.insert(e.pwcsName);
+        free_statstg_name(e);
+    }
     EXPECT_TRUE(w32_names.count(L"Alpha"));
     EXPECT_TRUE(w32_names.count(L"Beta"));
     EXPECT_TRUE(w32_names.count(L"Gamma"));
@@ -139,7 +162,8 @@ TEST_P(StressEnumerationConformance, NamesMatchBetweenAPIs) {
 // ── Type matching ───────────────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, TypesMatchBetweenAPIs) {
-    auto p = temp_file("se_types"); guard_.add(p);
+    auto p = temp_file("se_types");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -152,7 +176,7 @@ TEST_P(StressEnumerationConformance, TypesMatchBetweenAPIs) {
         auto cf = compound_file::open(p, open_mode::read);
         ASSERT_TRUE(cf.has_value());
         auto kids = cf->root_storage().children();
-        for (auto& c : kids) {
+        for (auto &c : kids) {
             if (c.name == "File") EXPECT_EQ(c.type, entry_type::stream);
             if (c.name == "Dir") EXPECT_EQ(c.type, entry_type::storage);
         }
@@ -160,7 +184,7 @@ TEST_P(StressEnumerationConformance, TypesMatchBetweenAPIs) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto w32 = win32_enumerate(stg.get());
-    for (auto& e : w32) {
+    for (auto &e : w32) {
         if (std::wstring(e.pwcsName) == L"File") EXPECT_EQ(e.type, STGTY_STREAM);
         if (std::wstring(e.pwcsName) == L"Dir") EXPECT_EQ(e.type, STGTY_STORAGE);
         free_statstg_name(e);
@@ -170,7 +194,8 @@ TEST_P(StressEnumerationConformance, TypesMatchBetweenAPIs) {
 // ── Size matching ───────────────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, SizesMatchBetweenAPIs) {
-    auto p = temp_file("se_sizes"); guard_.add(p);
+    auto p = temp_file("se_sizes");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -189,7 +214,7 @@ TEST_P(StressEnumerationConformance, SizesMatchBetweenAPIs) {
         auto cf = compound_file::open(p, open_mode::read);
         ASSERT_TRUE(cf.has_value());
         auto kids = cf->root_storage().children();
-        for (auto& c : kids) {
+        for (auto &c : kids) {
             if (c.name == "Small") EXPECT_EQ(c.size, 100u);
             if (c.name == "Big") EXPECT_EQ(c.size, 5000u);
         }
@@ -197,7 +222,7 @@ TEST_P(StressEnumerationConformance, SizesMatchBetweenAPIs) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto w32 = win32_enumerate(stg.get());
-    for (auto& e : w32) {
+    for (auto &e : w32) {
         if (std::wstring(e.pwcsName) == L"Small") EXPECT_EQ(e.cbSize.QuadPart, 100u);
         if (std::wstring(e.pwcsName) == L"Big") EXPECT_EQ(e.cbSize.QuadPart, 5000u);
         free_statstg_name(e);
@@ -207,7 +232,8 @@ TEST_P(StressEnumerationConformance, SizesMatchBetweenAPIs) {
 // ── Enumerate after add/delete ──────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, EnumerateAfterDelete) {
-    auto p = temp_file("se_del"); guard_.add(p);
+    auto p = temp_file("se_del");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -223,20 +249,20 @@ TEST_P(StressEnumerationConformance, EnumerateAfterDelete) {
     auto kids = cf->root_storage().children();
     EXPECT_EQ(kids.size(), 2u);
     std::set<std::string> names;
-    for (auto& c : kids) names.insert(c.name);
+    for (auto &c : kids) names.insert(c.name);
     EXPECT_TRUE(names.count("A"));
     EXPECT_TRUE(names.count("C"));
     EXPECT_FALSE(names.count("B"));
 }
 
 TEST_P(StressEnumerationConformance, EnumerateAfterAddAndDelete) {
-    auto p = temp_file("se_adddel"); guard_.add(p);
+    auto p = temp_file("se_adddel");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 10; ++i)
-            ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 10; ++i) ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
         ASSERT_TRUE(root.remove("S3").has_value());
         ASSERT_TRUE(root.remove("S7").has_value());
         ASSERT_TRUE(root.create_stream("New").has_value());
@@ -251,7 +277,8 @@ TEST_P(StressEnumerationConformance, EnumerateAfterAddAndDelete) {
 // ── Enumerate sub-storage children ──────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, SubStorageChildren) {
-    auto p = temp_file("se_sub"); guard_.add(p);
+    auto p = temp_file("se_sub");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -271,15 +298,16 @@ TEST_P(StressEnumerationConformance, SubStorageChildren) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     storage_ptr w32sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, w32sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"Sub", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, w32sub.put())));
     EXPECT_EQ(win32_enumerate(w32sub.get()).size(), 2u);
 }
 
 // ── Enumerate deeply nested ─────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, DeepNestedEnumerate) {
-    auto p = temp_file("se_deep"); guard_.add(p);
+    auto p = temp_file("se_deep");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -304,7 +332,8 @@ TEST_P(StressEnumerationConformance, DeepNestedEnumerate) {
 // ── Enumerate after rename ──────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, EnumerateAfterRename) {
-    auto p = temp_file("se_ren"); guard_.add(p);
+    auto p = temp_file("se_ren");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -324,7 +353,8 @@ TEST_P(StressEnumerationConformance, EnumerateAfterRename) {
 // ── Enumerate after resize ──────────────────────────────────────────────
 
 TEST_P(StressEnumerationConformance, EnumerateAfterResize) {
-    auto p = temp_file("se_rsz"); guard_.add(p);
+    auto p = temp_file("se_rsz");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());

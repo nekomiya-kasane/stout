@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPExists {
 };
 
 class StressExistsConformance : public ::testing::TestWithParam<VPExists> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPExists vp_exists[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressExistsConformance, ::testing::ValuesIn(vp_exists),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── exists on stream ────────────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, StreamExists) {
-    auto p = temp_file("ex_strm"); guard_.add(p);
+    auto p = temp_file("ex_strm");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("A").has_value());
@@ -34,7 +36,8 @@ TEST_P(StressExistsConformance, StreamExists) {
 }
 
 TEST_P(StressExistsConformance, StreamNotExists) {
-    auto p = temp_file("ex_nostrm"); guard_.add(p);
+    auto p = temp_file("ex_nostrm");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->root_storage().exists("A"));
@@ -43,7 +46,8 @@ TEST_P(StressExistsConformance, StreamNotExists) {
 // ── exists on storage ───────────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, StorageExists) {
-    auto p = temp_file("ex_stg"); guard_.add(p);
+    auto p = temp_file("ex_stg");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_storage("D").has_value());
@@ -51,7 +55,8 @@ TEST_P(StressExistsConformance, StorageExists) {
 }
 
 TEST_P(StressExistsConformance, StorageNotExists) {
-    auto p = temp_file("ex_nostg"); guard_.add(p);
+    auto p = temp_file("ex_nostg");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->root_storage().exists("D"));
@@ -60,7 +65,8 @@ TEST_P(StressExistsConformance, StorageNotExists) {
 // ── exists after create and delete ──────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsAfterDelete) {
-    auto p = temp_file("ex_del"); guard_.add(p);
+    auto p = temp_file("ex_del");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("X").has_value());
@@ -72,20 +78,20 @@ TEST_P(StressExistsConformance, ExistsAfterDelete) {
 // ── exists with multiple entries ────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsMultipleEntries) {
-    auto p = temp_file("ex_multi"); guard_.add(p);
+    auto p = temp_file("ex_multi");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 10; ++i)
-        ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
-    for (int i = 0; i < 10; ++i)
-        EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
+    for (int i = 0; i < 10; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+    for (int i = 0; i < 10; ++i) EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
     EXPECT_FALSE(cf->root_storage().exists("S10"));
 }
 
 // ── exists in sub-storage ───────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsInSubStorage) {
-    auto p = temp_file("ex_sub"); guard_.add(p);
+    auto p = temp_file("ex_sub");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto sub = cf->root_storage().create_storage("Dir");
@@ -98,7 +104,8 @@ TEST_P(StressExistsConformance, ExistsInSubStorage) {
 // ── exists after reopen ─────────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsAfterReopen) {
-    auto p = temp_file("ex_reopen"); guard_.add(p);
+    auto p = temp_file("ex_reopen");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -114,7 +121,8 @@ TEST_P(StressExistsConformance, ExistsAfterReopen) {
 // ── exists on empty file ────────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsOnEmptyFile) {
-    auto p = temp_file("ex_empty"); guard_.add(p);
+    auto p = temp_file("ex_empty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->root_storage().exists("Anything"));
@@ -123,7 +131,8 @@ TEST_P(StressExistsConformance, ExistsOnEmptyFile) {
 // ── exists with mixed types ─────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsMixedTypes) {
-    auto p = temp_file("ex_mixed"); guard_.add(p);
+    auto p = temp_file("ex_mixed");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("S").has_value());
@@ -136,7 +145,8 @@ TEST_P(StressExistsConformance, ExistsMixedTypes) {
 // ── exists after rename ─────────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsAfterRename) {
-    auto p = temp_file("ex_rename"); guard_.add(p);
+    auto p = temp_file("ex_rename");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("Old");
@@ -149,7 +159,8 @@ TEST_P(StressExistsConformance, ExistsAfterRename) {
 // ── exists cross-validated with Win32 ───────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsCrossValidated) {
-    auto p = temp_file("ex_cross"); guard_.add(p);
+    auto p = temp_file("ex_cross");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -170,30 +181,29 @@ TEST_P(StressExistsConformance, ExistsCrossValidated) {
 // ── exists for 20 entries ───────────────────────────────────────────────
 
 TEST_P(StressExistsConformance, Exists20Entries) {
-    auto p = temp_file("ex_20"); guard_.add(p);
+    auto p = temp_file("ex_20");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 20; ++i)
-        ASSERT_TRUE(cf->root_storage().create_stream("E" + std::to_string(i)).has_value());
-    for (int i = 0; i < 20; ++i)
-        EXPECT_TRUE(cf->root_storage().exists("E" + std::to_string(i)));
-    for (int i = 20; i < 25; ++i)
-        EXPECT_FALSE(cf->root_storage().exists("E" + std::to_string(i)));
+    for (int i = 0; i < 20; ++i) ASSERT_TRUE(cf->root_storage().create_stream("E" + std::to_string(i)).has_value());
+    for (int i = 0; i < 20; ++i) EXPECT_TRUE(cf->root_storage().exists("E" + std::to_string(i)));
+    for (int i = 20; i < 25; ++i) EXPECT_FALSE(cf->root_storage().exists("E" + std::to_string(i)));
 }
 
 // ── exists after partial delete ─────────────────────────────────────────
 
 TEST_P(StressExistsConformance, ExistsAfterPartialDelete) {
-    auto p = temp_file("ex_partdel"); guard_.add(p);
+    auto p = temp_file("ex_partdel");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 10; ++i)
-        ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
-    for (int i = 0; i < 10; i += 2)
-        ASSERT_TRUE(cf->root_storage().remove("S" + std::to_string(i)).has_value());
+    for (int i = 0; i < 10; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+    for (int i = 0; i < 10; i += 2) ASSERT_TRUE(cf->root_storage().remove("S" + std::to_string(i)).has_value());
     for (int i = 0; i < 10; ++i) {
-        if (i % 2 == 0) EXPECT_FALSE(cf->root_storage().exists("S" + std::to_string(i)));
-        else EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
+        if (i % 2 == 0)
+            EXPECT_FALSE(cf->root_storage().exists("S" + std::to_string(i)));
+        else
+            EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
     }
 }
 

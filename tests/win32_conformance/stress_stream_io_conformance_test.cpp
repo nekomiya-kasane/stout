@@ -1,10 +1,11 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <numeric>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -16,7 +17,7 @@ struct VersionParam2 {
 };
 
 class StressStreamIOConformance : public ::testing::TestWithParam<VersionParam2> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -27,11 +28,11 @@ static const VersionParam2 versions2[] = {
 };
 
 INSTANTIATE_TEST_SUITE_P(V, StressStreamIOConformance, ::testing::ValuesIn(versions2),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // Helper: Stout writes N bytes, Win32 reads and verifies
-static void stout_write_win32_read(const std::filesystem::path& path, cfb_version ver,
-                                     const std::string& stream_name, size_t sz, uint8_t seed) {
+static void stout_write_win32_read(const std::filesystem::path &path, cfb_version ver, const std::string &stream_name,
+                                   size_t sz, uint8_t seed) {
     auto data = make_test_data(sz, seed);
     {
         auto cf = compound_file::create(path, ver);
@@ -45,8 +46,7 @@ static void stout_write_win32_read(const std::filesystem::path& path, cfb_versio
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto wname = std::wstring(stream_name.begin(), stream_name.end());
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(wname.c_str(), nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), static_cast<uint64_t>(sz));
     if (sz > 0) {
         std::vector<uint8_t> buf(sz);
@@ -58,17 +58,19 @@ static void stout_write_win32_read(const std::filesystem::path& path, cfb_versio
 }
 
 // Helper: Win32 writes N bytes, Stout reads and verifies
-static void win32_write_stout_read(const std::filesystem::path& path, cfb_version ver,
-                                     const std::string& stream_name, size_t sz, uint8_t seed) {
+static void win32_write_stout_read(const std::filesystem::path &path, cfb_version ver, const std::string &stream_name,
+                                   size_t sz, uint8_t seed) {
     auto data = make_test_data(sz, seed);
     {
         storage_ptr stg;
-        if (ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        if (ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
         auto wname = std::wstring(stream_name.begin(), stream_name.end());
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(wname.c_str(),
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(wname.c_str(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         if (sz > 0) ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), static_cast<ULONG>(sz))));
     }
     auto cf = compound_file::open(path, open_mode::read);
@@ -87,83 +89,103 @@ static void win32_write_stout_read(const std::filesystem::path& path, cfb_versio
 // ── Size sweep: Stout writes, Win32 reads ───────────────────────────────
 
 TEST_P(StressStreamIOConformance, Size0) {
-    auto p = temp_file("sio_0"); guard_.add(p);
+    auto p = temp_file("sio_0");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 0, 0);
 }
 TEST_P(StressStreamIOConformance, Size1) {
-    auto p = temp_file("sio_1"); guard_.add(p);
+    auto p = temp_file("sio_1");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 1, 1);
 }
 TEST_P(StressStreamIOConformance, Size63) {
-    auto p = temp_file("sio_63"); guard_.add(p);
+    auto p = temp_file("sio_63");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 63, 2);
 }
 TEST_P(StressStreamIOConformance, Size64) {
-    auto p = temp_file("sio_64"); guard_.add(p);
+    auto p = temp_file("sio_64");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 64, 3);
 }
 TEST_P(StressStreamIOConformance, Size65) {
-    auto p = temp_file("sio_65"); guard_.add(p);
+    auto p = temp_file("sio_65");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 65, 4);
 }
 TEST_P(StressStreamIOConformance, Size255) {
-    auto p = temp_file("sio_255"); guard_.add(p);
+    auto p = temp_file("sio_255");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 255, 5);
 }
 TEST_P(StressStreamIOConformance, Size256) {
-    auto p = temp_file("sio_256"); guard_.add(p);
+    auto p = temp_file("sio_256");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 256, 6);
 }
 TEST_P(StressStreamIOConformance, Size511) {
-    auto p = temp_file("sio_511"); guard_.add(p);
+    auto p = temp_file("sio_511");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 511, 7);
 }
 TEST_P(StressStreamIOConformance, Size512) {
-    auto p = temp_file("sio_512"); guard_.add(p);
+    auto p = temp_file("sio_512");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 512, 8);
 }
 TEST_P(StressStreamIOConformance, Size513) {
-    auto p = temp_file("sio_513"); guard_.add(p);
+    auto p = temp_file("sio_513");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 513, 9);
 }
 TEST_P(StressStreamIOConformance, Size1023) {
-    auto p = temp_file("sio_1023"); guard_.add(p);
+    auto p = temp_file("sio_1023");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 1023, 10);
 }
 TEST_P(StressStreamIOConformance, Size1024) {
-    auto p = temp_file("sio_1024"); guard_.add(p);
+    auto p = temp_file("sio_1024");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 1024, 11);
 }
 TEST_P(StressStreamIOConformance, Size2048) {
-    auto p = temp_file("sio_2048"); guard_.add(p);
+    auto p = temp_file("sio_2048");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 2048, 12);
 }
 TEST_P(StressStreamIOConformance, Size4095) {
-    auto p = temp_file("sio_4095"); guard_.add(p);
+    auto p = temp_file("sio_4095");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 4095, 13);
 }
 TEST_P(StressStreamIOConformance, Size4096) {
-    auto p = temp_file("sio_4096"); guard_.add(p);
+    auto p = temp_file("sio_4096");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 4096, 14);
 }
 TEST_P(StressStreamIOConformance, Size4097) {
-    auto p = temp_file("sio_4097"); guard_.add(p);
+    auto p = temp_file("sio_4097");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 4097, 15);
 }
 TEST_P(StressStreamIOConformance, Size8191) {
-    auto p = temp_file("sio_8191"); guard_.add(p);
+    auto p = temp_file("sio_8191");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 8191, 16);
 }
 TEST_P(StressStreamIOConformance, Size8192) {
-    auto p = temp_file("sio_8192"); guard_.add(p);
+    auto p = temp_file("sio_8192");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 8192, 17);
 }
 TEST_P(StressStreamIOConformance, Size16384) {
-    auto p = temp_file("sio_16k"); guard_.add(p);
+    auto p = temp_file("sio_16k");
+    guard_.add(p);
     stout_write_win32_read(p, GetParam().ver, "S", 16384, 18);
 }
 TEST_P(StressStreamIOConformance, SizeLarge) {
-    auto p = temp_file("sio_lg"); guard_.add(p);
+    auto p = temp_file("sio_lg");
+    guard_.add(p);
     size_t sz = (GetParam().ver == cfb_version::v4) ? 65536 : 16384;
     stout_write_win32_read(p, GetParam().ver, "S", sz, 19);
 }
@@ -171,46 +193,56 @@ TEST_P(StressStreamIOConformance, SizeLarge) {
 // ── Size sweep: Win32 writes, Stout reads ───────────────────────────────
 
 TEST_P(StressStreamIOConformance, W32Size0) {
-    auto p = temp_file("siow_0"); guard_.add(p);
+    auto p = temp_file("siow_0");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 0, 0);
 }
 TEST_P(StressStreamIOConformance, W32Size1) {
-    auto p = temp_file("siow_1"); guard_.add(p);
+    auto p = temp_file("siow_1");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 1, 1);
 }
 TEST_P(StressStreamIOConformance, W32Size64) {
-    auto p = temp_file("siow_64"); guard_.add(p);
+    auto p = temp_file("siow_64");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 64, 3);
 }
 TEST_P(StressStreamIOConformance, W32Size512) {
-    auto p = temp_file("siow_512"); guard_.add(p);
+    auto p = temp_file("siow_512");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 512, 8);
 }
 TEST_P(StressStreamIOConformance, W32Size4095) {
-    auto p = temp_file("siow_4095"); guard_.add(p);
+    auto p = temp_file("siow_4095");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 4095, 13);
 }
 TEST_P(StressStreamIOConformance, W32Size4096) {
-    auto p = temp_file("siow_4096"); guard_.add(p);
+    auto p = temp_file("siow_4096");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 4096, 14);
 }
 TEST_P(StressStreamIOConformance, W32Size4097) {
-    auto p = temp_file("siow_4097"); guard_.add(p);
+    auto p = temp_file("siow_4097");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 4097, 15);
 }
 TEST_P(StressStreamIOConformance, W32Size8192) {
-    auto p = temp_file("siow_8192"); guard_.add(p);
+    auto p = temp_file("siow_8192");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 8192, 17);
 }
 TEST_P(StressStreamIOConformance, W32Size65536) {
-    auto p = temp_file("siow_64k"); guard_.add(p);
+    auto p = temp_file("siow_64k");
+    guard_.add(p);
     win32_write_stout_read(p, GetParam().ver, "S", 65536, 19);
 }
 
 // ── Partial read ────────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, PartialReadFirstHalf) {
-    auto p = temp_file("sio_ph1"); guard_.add(p);
+    auto p = temp_file("sio_ph1");
+    guard_.add(p);
     auto data = make_test_data(1000, 0xAA);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -232,7 +264,8 @@ TEST_P(StressStreamIOConformance, PartialReadFirstHalf) {
 }
 
 TEST_P(StressStreamIOConformance, PartialReadSecondHalf) {
-    auto p = temp_file("sio_ph2"); guard_.add(p);
+    auto p = temp_file("sio_ph2");
+    guard_.add(p);
     auto data = make_test_data(1000, 0xBB);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -254,7 +287,8 @@ TEST_P(StressStreamIOConformance, PartialReadSecondHalf) {
 }
 
 TEST_P(StressStreamIOConformance, PartialReadMiddle) {
-    auto p = temp_file("sio_pmid"); guard_.add(p);
+    auto p = temp_file("sio_pmid");
+    guard_.add(p);
     auto data = make_test_data(2000, 0xCC);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -278,7 +312,8 @@ TEST_P(StressStreamIOConformance, PartialReadMiddle) {
 // ── Read beyond EOF ─────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, ReadBeyondEOF) {
-    auto p = temp_file("sio_eof"); guard_.add(p);
+    auto p = temp_file("sio_eof");
+    guard_.add(p);
     auto data = make_test_data(100, 0xDD);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -301,7 +336,8 @@ TEST_P(StressStreamIOConformance, ReadBeyondEOF) {
 // ── Write at offset with gap ────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, WriteAtOffsetWithGap) {
-    auto p = temp_file("sio_gap"); guard_.add(p);
+    auto p = temp_file("sio_gap");
+    guard_.add(p);
     auto data = make_test_data(100, 0xEE);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -315,11 +351,11 @@ TEST_P(StressStreamIOConformance, WriteAtOffsetWithGap) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 500u);
     // Seek to 400 and read
-    LARGE_INTEGER li; li.QuadPart = 400;
+    LARGE_INTEGER li;
+    li.QuadPart = 400;
     ASSERT_TRUE(SUCCEEDED(strm->Seek(li, STREAM_SEEK_SET, nullptr)));
     std::vector<uint8_t> buf(100);
     ULONG rc = 0;
@@ -330,7 +366,8 @@ TEST_P(StressStreamIOConformance, WriteAtOffsetWithGap) {
 // ── Overwrite middle ────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, OverwriteMiddle) {
-    auto p = temp_file("sio_ovr"); guard_.add(p);
+    auto p = temp_file("sio_ovr");
+    guard_.add(p);
     auto data = make_test_data(500, 0x11);
     auto patch = make_test_data(100, 0xFF);
     {
@@ -355,14 +392,14 @@ TEST_P(StressStreamIOConformance, OverwriteMiddle) {
     // Middle 100 bytes patched
     EXPECT_EQ(std::vector<uint8_t>(buf.begin() + 200, buf.begin() + 300), patch);
     // Last 200 bytes original
-    EXPECT_EQ(std::vector<uint8_t>(buf.begin() + 300, buf.end()),
-              std::vector<uint8_t>(data.begin() + 300, data.end()));
+    EXPECT_EQ(std::vector<uint8_t>(buf.begin() + 300, buf.end()), std::vector<uint8_t>(data.begin() + 300, data.end()));
 }
 
 // ── Multiple sequential writes ──────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, MultipleSequentialWrites) {
-    auto p = temp_file("sio_seq"); guard_.add(p);
+    auto p = temp_file("sio_seq");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -377,11 +414,11 @@ TEST_P(StressStreamIOConformance, MultipleSequentialWrites) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 1000u);
     for (int i = 0; i < 10; ++i) {
-        LARGE_INTEGER li; li.QuadPart = i * 100;
+        LARGE_INTEGER li;
+        li.QuadPart = i * 100;
         ASSERT_TRUE(SUCCEEDED(strm->Seek(li, STREAM_SEEK_SET, nullptr)));
         std::vector<uint8_t> buf(100);
         ULONG rc = 0;
@@ -393,7 +430,8 @@ TEST_P(StressStreamIOConformance, MultipleSequentialWrites) {
 // ── Data patterns ───────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, AllZerosPattern) {
-    auto p = temp_file("sio_zeros"); guard_.add(p);
+    auto p = temp_file("sio_zeros");
+    guard_.add(p);
     std::vector<uint8_t> data(500, 0x00);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -406,8 +444,7 @@ TEST_P(StressStreamIOConformance, AllZerosPattern) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(500);
     ULONG rc = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 500, &rc)));
@@ -415,7 +452,8 @@ TEST_P(StressStreamIOConformance, AllZerosPattern) {
 }
 
 TEST_P(StressStreamIOConformance, AllOnesPattern) {
-    auto p = temp_file("sio_ones"); guard_.add(p);
+    auto p = temp_file("sio_ones");
+    guard_.add(p);
     std::vector<uint8_t> data(500, 0xFF);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -428,8 +466,7 @@ TEST_P(StressStreamIOConformance, AllOnesPattern) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(500);
     ULONG rc = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 500, &rc)));
@@ -437,7 +474,8 @@ TEST_P(StressStreamIOConformance, AllOnesPattern) {
 }
 
 TEST_P(StressStreamIOConformance, ByteValueSweep) {
-    auto p = temp_file("sio_sweep"); guard_.add(p);
+    auto p = temp_file("sio_sweep");
+    guard_.add(p);
     std::vector<uint8_t> data(256);
     std::iota(data.begin(), data.end(), uint8_t(0));
     {
@@ -451,8 +489,7 @@ TEST_P(StressStreamIOConformance, ByteValueSweep) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(256);
     ULONG rc = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 256, &rc)));
@@ -462,7 +499,8 @@ TEST_P(StressStreamIOConformance, ByteValueSweep) {
 // ── Large stream 1MB ────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, LargeStream) {
-    auto p = temp_file("sio_large"); guard_.add(p);
+    auto p = temp_file("sio_large");
+    guard_.add(p);
     // V3 with 512-byte sectors has FAT chain limits; use smaller size
     size_t sz = (GetParam().ver == cfb_version::v4) ? 1024 * 1024 : 32768;
     stout_write_win32_read(p, GetParam().ver, "Big", sz, 42);
@@ -471,7 +509,8 @@ TEST_P(StressStreamIOConformance, LargeStream) {
 // ── Write 0 bytes (no-op) ───────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, WriteZeroBytes) {
-    auto p = temp_file("sio_wz"); guard_.add(p);
+    auto p = temp_file("sio_wz");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -486,15 +525,15 @@ TEST_P(StressStreamIOConformance, WriteZeroBytes) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"D", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 0u);
 }
 
 // ── Append at end ───────────────────────────────────────────────────────
 
 TEST_P(StressStreamIOConformance, AppendAtEnd) {
-    auto p = temp_file("sio_append"); guard_.add(p);
+    auto p = temp_file("sio_append");
+    guard_.add(p);
     auto data1 = make_test_data(200, 0x11);
     auto data2 = make_test_data(300, 0x22);
     {

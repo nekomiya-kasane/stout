@@ -1,12 +1,13 @@
 #pragma once
 
-#include "stout/exports.h"
-#include "stout/types.h"
 #include "stout/cfb/constants.h"
 #include "stout/cfb/fat.h"
 #include "stout/cfb/sector_io.h"
+#include "stout/exports.h"
 #include "stout/io/lock_bytes.h"
+#include "stout/types.h"
 #include "stout/util/endian.h"
+
 #include <cstdint>
 #include <expected>
 #include <span>
@@ -18,16 +19,14 @@ namespace stout::cfb {
 // Works identically to fat_table but for 64-byte mini sectors.
 // The mini FAT itself is stored in regular sectors chained via the main FAT.
 class STOUT_API mini_fat_table {
-public:
+  public:
     mini_fat_table() = default;
 
     // Load the mini FAT from disk given the chain of sectors holding it
-    template<io::lock_bytes LB>
-    auto load(sector_io<LB>& sio, const fat_table& fat, uint32_t first_mini_fat_sector)
-        -> std::expected<void, error> {
+    template <io::lock_bytes LB>
+    auto load(sector_io<LB> &sio, const fat_table &fat, uint32_t first_mini_fat_sector) -> std::expected<void, error> {
         entries_.clear();
-        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect)
-            return {};
+        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) return {};
 
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss); // same layout as FAT
@@ -44,11 +43,9 @@ public:
     }
 
     // Flush the mini FAT back to disk
-    template<io::lock_bytes LB>
-    auto flush(sector_io<LB>& sio, const fat_table& fat, uint32_t first_mini_fat_sector)
-        -> std::expected<void, error> {
-        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect)
-            return {};
+    template <io::lock_bytes LB>
+    auto flush(sector_io<LB> &sio, const fat_table &fat, uint32_t first_mini_fat_sector) -> std::expected<void, error> {
+        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) return {};
 
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss);
@@ -121,7 +118,7 @@ public:
     [[nodiscard]] auto size() const noexcept -> size_t { return entries_.size(); }
     void resize(size_t count) { entries_.resize(count, freesect); }
 
-private:
+  private:
     std::vector<uint32_t> entries_;
 };
 
@@ -130,7 +127,7 @@ private:
 // stored as a chain of regular sectors. Mini sectors are 64-byte slices
 // within that container.
 class STOUT_API mini_stream_io {
-public:
+  public:
     mini_stream_io() = default;
 
     // Initialize with the root entry's stream chain (regular sectors)
@@ -143,9 +140,9 @@ public:
     }
 
     // Read data from a mini sector
-    template<io::lock_bytes LB>
-    auto read_mini_sector(sector_io<LB>& sio, uint32_t mini_sector_id,
-                          std::span<uint8_t> buf) -> std::expected<void, error> {
+    template <io::lock_bytes LB>
+    auto read_mini_sector(sector_io<LB> &sio, uint32_t mini_sector_id, std::span<uint8_t> buf)
+        -> std::expected<void, error> {
         if (buf.size() < mini_sector_size_) return std::unexpected(error::invalid_argument);
         auto [reg_sector, offset] = locate(mini_sector_id);
         if (reg_sector >= root_chain_.size()) return std::unexpected(error::io_error);
@@ -155,9 +152,9 @@ public:
     }
 
     // Write data to a mini sector
-    template<io::lock_bytes LB>
-    auto write_mini_sector(sector_io<LB>& sio, uint32_t mini_sector_id,
-                           std::span<const uint8_t> buf) -> std::expected<void, error> {
+    template <io::lock_bytes LB>
+    auto write_mini_sector(sector_io<LB> &sio, uint32_t mini_sector_id, std::span<const uint8_t> buf)
+        -> std::expected<void, error> {
         if (buf.size() < mini_sector_size_) return std::unexpected(error::invalid_argument);
         auto [reg_sector, offset] = locate(mini_sector_id);
         if (reg_sector >= root_chain_.size()) return std::unexpected(error::io_error);
@@ -167,9 +164,8 @@ public:
     }
 
     // Read arbitrary bytes from a mini stream chain
-    template<io::lock_bytes LB>
-    auto read_mini_stream(sector_io<LB>& sio, const mini_fat_table& mfat,
-                          uint32_t start_mini_sector, uint64_t offset,
+    template <io::lock_bytes LB>
+    auto read_mini_stream(sector_io<LB> &sio, const mini_fat_table &mfat, uint32_t start_mini_sector, uint64_t offset,
                           std::span<uint8_t> buf) -> std::expected<size_t, error> {
         auto chain = mfat.chain(start_mini_sector);
         if (chain.empty()) return size_t{0};
@@ -193,9 +189,8 @@ public:
     }
 
     // Write arbitrary bytes to a mini stream chain
-    template<io::lock_bytes LB>
-    auto write_mini_stream(sector_io<LB>& sio, const mini_fat_table& mfat,
-                           uint32_t start_mini_sector, uint64_t offset,
+    template <io::lock_bytes LB>
+    auto write_mini_stream(sector_io<LB> &sio, const mini_fat_table &mfat, uint32_t start_mini_sector, uint64_t offset,
                            std::span<const uint8_t> buf) -> std::expected<size_t, error> {
         auto chain = mfat.chain(start_mini_sector);
         if (chain.empty()) return size_t{0};
@@ -224,17 +219,14 @@ public:
         return bytes_written;
     }
 
-    [[nodiscard]] auto root_chain() const noexcept -> const std::vector<uint32_t>& {
-        return root_chain_;
-    }
+    [[nodiscard]] auto root_chain() const noexcept -> const std::vector<uint32_t> & { return root_chain_; }
 
     [[nodiscard]] auto mini_sec_size() const noexcept -> uint32_t { return mini_sector_size_; }
 
-private:
+  private:
     // Given a mini sector ID, compute which regular sector in the root chain
     // it falls in, and the byte offset within that sector.
-    [[nodiscard]] auto locate(uint32_t mini_sector_id) const noexcept
-        -> std::pair<uint32_t, uint32_t> {
+    [[nodiscard]] auto locate(uint32_t mini_sector_id) const noexcept -> std::pair<uint32_t, uint32_t> {
         uint64_t byte_offset = static_cast<uint64_t>(mini_sector_id) * mini_sector_size_;
         auto reg_sector = static_cast<uint32_t>(byte_offset / sector_size_);
         auto offset_in_sector = static_cast<uint32_t>(byte_offset % sector_size_);

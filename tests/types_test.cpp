@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/types.h"
 #include "stout/version.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 

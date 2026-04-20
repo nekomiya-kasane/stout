@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/cfb/fat.h"
 #include "stout/io/memory_lock_bytes.h"
+
+#include <gtest/gtest.h>
 #include <numeric>
 
 using namespace stout;
@@ -184,8 +185,8 @@ TEST(FatTableTest, LoadFlushRoundtrip) {
 
     // Build a FAT in memory
     fat_table fat_orig;
-    fat_orig.resize(128); // 512/4 = 128 entries per sector
-    fat_orig.set(0, fatsect);   // sector 0 is the FAT sector itself
+    fat_orig.resize(128);     // 512/4 = 128 entries per sector
+    fat_orig.set(0, fatsect); // sector 0 is the FAT sector itself
     fat_orig.set(1, 2);
     fat_orig.set(2, 3);
     fat_orig.set(3, endofchain);

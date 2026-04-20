@@ -8,9 +8,7 @@
 
 namespace ssv {
 
-void handle_menu(const std::string& label,
-                 viewer_state& st,
-                 tapiru::classic_app& app) {
+void handle_menu(const std::string &label, viewer_state &st, tapiru::classic_app &app) {
     if (label == "Quit") {
         app.quit();
     } else if (label == "Expand All") {
@@ -23,13 +21,17 @@ void handle_menu(const std::string& label,
         st.tree_cursor = 0;
         st.select_current();
     } else if (label == "Info Tab") {
-        st.active_tab = 0; st.dirty = true;
+        st.active_tab = 0;
+        st.dirty = true;
     } else if (label == "Hex Tab") {
-        st.active_tab = 1; st.dirty = true;
+        st.active_tab = 1;
+        st.dirty = true;
     } else if (label == "Properties Tab") {
-        st.active_tab = 2; st.dirty = true;
+        st.active_tab = 2;
+        st.dirty = true;
     } else if (label == "Stats Tab") {
-        st.active_tab = 3; st.dirty = true;
+        st.active_tab = 3;
+        st.dirty = true;
     } else if (label == "Toggle Theme") {
         st.use_dark_theme = !st.use_dark_theme;
         st.dirty = true;

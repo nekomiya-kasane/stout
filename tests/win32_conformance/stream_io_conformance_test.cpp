@@ -1,16 +1,17 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <numeric>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class StreamIOConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -40,8 +41,7 @@ TEST_F(StreamIOConformance, WriteSmallStream) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_open_read(stout_path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TestData", nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TestData", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         std::vector<uint8_t> buf(100);
         ULONG read_count = 0;
         ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 100, &read_count)));
@@ -54,8 +54,8 @@ TEST_F(StreamIOConformance, WriteSmallStream) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(win32_path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"TestData",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"TestData", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 100)));
     }
 
@@ -99,8 +99,7 @@ TEST_F(StreamIOConformance, WriteLargeStream) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_open_read(stout_path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"BigData", nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"BigData", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         EXPECT_EQ(win32_stream_size(strm.get()), 8192u);
         std::vector<uint8_t> buf(8192);
         ULONG read_count = 0;
@@ -114,8 +113,8 @@ TEST_F(StreamIOConformance, WriteLargeStream) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(win32_path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"BigData",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"BigData", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 8192)));
     }
     {
@@ -148,8 +147,7 @@ TEST_F(StreamIOConformance, EmptyStream) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Empty", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Empty", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 0u);
 }
 
@@ -173,8 +171,7 @@ TEST_F(StreamIOConformance, BinaryData) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Binary", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Binary", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     std::vector<uint8_t> buf(256);
     ULONG read_count = 0;
     ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 256, &read_count)));
@@ -201,14 +198,12 @@ TEST_F(StreamIOConformance, LargeStreamMultiSector) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"OneMB", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"OneMB", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 1024u * 1024u);
 
     std::vector<uint8_t> buf(1024 * 1024);
     ULONG read_count = 0;
-    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(),
-        static_cast<ULONG>(buf.size()), &read_count)));
+    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), static_cast<ULONG>(buf.size()), &read_count)));
     EXPECT_EQ(read_count, static_cast<ULONG>(data.size()));
     EXPECT_EQ(buf, data);
 }
@@ -234,8 +229,7 @@ TEST_F(StreamIOConformance, SetSizeGrow) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Grow", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Grow", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 8192u);
 
     // Seek to 4096 and read 100 bytes
@@ -275,16 +269,15 @@ TEST_F(StreamIOConformance, MultipleStreams) {
     for (int i = 0; i < 5; ++i) {
         auto name = L"Stream" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())))
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())))
             << "Win32 failed to open " << i;
         auto expected_size = 200 + i * 100;
         EXPECT_EQ(win32_stream_size(strm.get()), static_cast<uint64_t>(expected_size));
 
         std::vector<uint8_t> buf(expected_size);
         ULONG read_count = 0;
-        ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(),
-            static_cast<ULONG>(expected_size), &read_count)));
+        ASSERT_TRUE(
+            SUCCEEDED(win32_stream_read(strm.get(), buf.data(), static_cast<ULONG>(expected_size), &read_count)));
         auto expected = make_test_data(expected_size, static_cast<uint8_t>(i));
         EXPECT_EQ(buf, expected) << "Data mismatch for stream " << i;
     }

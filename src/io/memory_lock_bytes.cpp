@@ -1,4 +1,5 @@
 #include "stout/io/memory_lock_bytes.h"
+
 #include <algorithm>
 #include <cstring>
 

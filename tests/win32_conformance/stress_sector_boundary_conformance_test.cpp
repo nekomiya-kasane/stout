@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPSector {
 };
 
 class StressSectorBoundaryConformance : public ::testing::TestWithParam<VPSector> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPSector vp_sector[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressSectorBoundaryConformance, ::testing::ValuesIn(vp_sector),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Exactly 64 bytes (mini-stream sector) ───────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly64Bytes) {
-    auto p = temp_file("sb_64"); guard_.add(p);
+    auto p = temp_file("sb_64");
+    guard_.add(p);
     auto d = make_test_data(64, 0x11);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -50,7 +52,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly64Bytes) {
 // ── Exactly 512 bytes (V3 sector size) ──────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly512Bytes) {
-    auto p = temp_file("sb_512"); guard_.add(p);
+    auto p = temp_file("sb_512");
+    guard_.add(p);
     auto d = make_test_data(512, 0x22);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -74,7 +77,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly512Bytes) {
 // ── 511 bytes (one less than V3 sector) ─────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly511Bytes) {
-    auto p = temp_file("sb_511"); guard_.add(p);
+    auto p = temp_file("sb_511");
+    guard_.add(p);
     auto d = make_test_data(511, 0x33);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -94,7 +98,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly511Bytes) {
 // ── 513 bytes (one more than V3 sector) ─────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly513Bytes) {
-    auto p = temp_file("sb_513"); guard_.add(p);
+    auto p = temp_file("sb_513");
+    guard_.add(p);
     auto d = make_test_data(513, 0x44);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -114,7 +119,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly513Bytes) {
 // ── 4096 bytes (V4 sector / mini-stream cutoff) ─────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly4096Bytes) {
-    auto p = temp_file("sb_4096"); guard_.add(p);
+    auto p = temp_file("sb_4096");
+    guard_.add(p);
     auto d = make_test_data(4096, 0x55);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -138,7 +144,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly4096Bytes) {
 // ── 4095 bytes (one below cutoff) ───────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly4095Bytes) {
-    auto p = temp_file("sb_4095"); guard_.add(p);
+    auto p = temp_file("sb_4095");
+    guard_.add(p);
     auto d = make_test_data(4095, 0x66);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -158,7 +165,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly4095Bytes) {
 // ── 4097 bytes (one above cutoff) ───────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly4097Bytes) {
-    auto p = temp_file("sb_4097"); guard_.add(p);
+    auto p = temp_file("sb_4097");
+    guard_.add(p);
     auto d = make_test_data(4097, 0x77);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -178,7 +186,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly4097Bytes) {
 // ── 1024 bytes (two V3 sectors) ─────────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly1024Bytes) {
-    auto p = temp_file("sb_1024"); guard_.add(p);
+    auto p = temp_file("sb_1024");
+    guard_.add(p);
     auto d = make_test_data(1024, 0x88);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -202,7 +211,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly1024Bytes) {
 // ── 8192 bytes (two V4 sectors) ─────────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, Exactly8192Bytes) {
-    auto p = temp_file("sb_8192"); guard_.add(p);
+    auto p = temp_file("sb_8192");
+    guard_.add(p);
     auto d = make_test_data(8192, 0x99);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -226,7 +236,8 @@ TEST_P(StressSectorBoundaryConformance, Exactly8192Bytes) {
 // ── 1 byte stream ───────────────────────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, SingleByte) {
-    auto p = temp_file("sb_1"); guard_.add(p);
+    auto p = temp_file("sb_1");
+    guard_.add(p);
     auto d = make_test_data(1, 0xAA);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -246,7 +257,8 @@ TEST_P(StressSectorBoundaryConformance, SingleByte) {
 // ── 0 byte stream ───────────────────────────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, ZeroBytes) {
-    auto p = temp_file("sb_0"); guard_.add(p);
+    auto p = temp_file("sb_0");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -263,7 +275,8 @@ TEST_P(StressSectorBoundaryConformance, ZeroBytes) {
 // ── Multiple streams at boundary sizes ──────────────────────────────────
 
 TEST_P(StressSectorBoundaryConformance, MultipleBoundarySizes) {
-    auto p = temp_file("sb_multi"); guard_.add(p);
+    auto p = temp_file("sb_multi");
+    guard_.add(p);
     const uint32_t sizes[] = {0, 1, 63, 64, 65, 511, 512, 513, 4095, 4096, 4097};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -283,8 +296,7 @@ TEST_P(StressSectorBoundaryConformance, MultipleBoundarySizes) {
     for (int i = 0; i < 11; ++i) {
         auto name = L"S" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         EXPECT_EQ(win32_stream_size(strm.get()), static_cast<uint64_t>(sizes[i])) << "Stream S" << i;
     }
 }

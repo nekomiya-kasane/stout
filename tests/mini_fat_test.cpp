@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/cfb/mini_fat.h"
 #include "stout/io/memory_lock_bytes.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::cfb;

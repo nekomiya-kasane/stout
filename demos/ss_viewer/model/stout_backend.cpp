@@ -12,7 +12,7 @@
 namespace ssv {
 
 /// Helper: navigate to a storage by full_path from the compound_file root.
-static std::optional<stout::storage> navigate_to_storage(stout::compound_file& cf, const std::string& full_path) {
+static std::optional<stout::storage> navigate_to_storage(stout::compound_file &cf, const std::string &full_path) {
     std::vector<std::string> parts;
     {
         std::string s = full_path;
@@ -34,7 +34,7 @@ static std::optional<stout::storage> navigate_to_storage(stout::compound_file& c
 }
 
 /// Helper: fill an entry_info from an entry_stat.
-static entry_info stat_to_entry(const stout::entry_stat& st, const std::string& parent_path) {
+static entry_info stat_to_entry(const stout::entry_stat &st, const std::string &parent_path) {
     entry_info info;
     info.name = st.name;
     info.type = st.type;
@@ -47,38 +47,37 @@ static entry_info stat_to_entry(const stout::entry_stat& st, const std::string& 
     return info;
 }
 
-entry_info build_stout_tree(stout::storage& stg, const std::string& parent_path) {
+entry_info build_stout_tree(stout::storage &stg, const std::string &parent_path) {
     auto info = stat_to_entry(stg.stat(), parent_path);
     info.children_loaded = true;
 
-    for (auto& child : stg.children()) {
+    for (auto &child : stg.children()) {
         if (child.type == stout::entry_type::storage) {
             auto sub = stg.open_storage(child.name);
             if (sub) info.children.push_back(build_stout_tree(*sub, info.full_path));
         } else {
             auto ci = stat_to_entry(child, info.full_path);
-            ci.children_loaded = true;  // streams have no children
+            ci.children_loaded = true; // streams have no children
             info.children.push_back(std::move(ci));
         }
     }
     return info;
 }
 
-entry_info build_stout_tree_shallow(stout::storage& stg, const std::string& parent_path) {
+entry_info build_stout_tree_shallow(stout::storage &stg, const std::string &parent_path) {
     auto info = stat_to_entry(stg.stat(), parent_path);
-    info.children_loaded = true;  // first level is loaded
+    info.children_loaded = true; // first level is loaded
 
-    for (auto& child : stg.children()) {
+    for (auto &child : stg.children()) {
         auto ci = stat_to_entry(child, info.full_path);
-        if (child.type == stout::entry_type::stream)
-            ci.children_loaded = true;  // streams have no children
+        if (child.type == stout::entry_type::stream) ci.children_loaded = true; // streams have no children
         // storages left with children_loaded = false (lazy)
         info.children.push_back(std::move(ci));
     }
     return info;
 }
 
-void load_stout_children(stout::compound_file& cf, entry_info& ei) {
+void load_stout_children(stout::compound_file &cf, entry_info &ei) {
     if (ei.children_loaded) return;
     if (ei.type != stout::entry_type::storage && ei.type != stout::entry_type::root) {
         ei.children_loaded = true;
@@ -92,18 +91,15 @@ void load_stout_children(stout::compound_file& cf, entry_info& ei) {
     }
 
     ei.children.clear();
-    for (auto& child : stg_opt->children()) {
+    for (auto &child : stg_opt->children()) {
         auto ci = stat_to_entry(child, ei.full_path);
-        if (child.type == stout::entry_type::stream)
-            ci.children_loaded = true;
+        if (child.type == stout::entry_type::stream) ci.children_loaded = true;
         ei.children.push_back(std::move(ci));
     }
     ei.children_loaded = true;
 }
 
-std::vector<uint8_t> read_stout_stream(stout::compound_file& cf,
-                                        const entry_info& ei,
-                                        uint64_t max_bytes) {
+std::vector<uint8_t> read_stout_stream(stout::compound_file &cf, const entry_info &ei, uint64_t max_bytes) {
     auto root = cf.root_storage();
     // Parse path: "Root Entry/Storage1/Stream1"
     std::vector<std::string> parts;
@@ -133,7 +129,7 @@ std::vector<uint8_t> read_stout_stream(stout::compound_file& cf,
     return buf;
 }
 
-paged_reader open_stout_reader(stout::compound_file& cf, const entry_info& ei) {
+paged_reader open_stout_reader(stout::compound_file &cf, const entry_info &ei) {
     if (ei.type != stout::entry_type::stream) return {};
 
     // Navigate to the stream

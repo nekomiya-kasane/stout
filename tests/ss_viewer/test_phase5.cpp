@@ -3,25 +3,22 @@
  * @brief Tests for Phase 5 features: theme, tree resize, bookmarks,
  *        navigation history, goto overlay, export JSON, help popup updates.
  */
-#include <gtest/gtest.h>
-
-#include <filesystem>
-
-#include "stout/compound_file.h"
-#include "tapiru/testing/test_harness.h"
-
 #include "ss_viewer/model/entry_info.h"
 #include "ss_viewer/model/stout_backend.h"
 #include "ss_viewer/model/viewer_state.h"
 #include "ss_viewer/ui/frame_builder.h"
 #include "ss_viewer/ui/theme.h"
+#include "stout/compound_file.h"
+#include "tapiru/testing/test_harness.h"
+
+#include <filesystem>
+#include <gtest/gtest.h>
 
 using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p))
-        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
     return p;
 }
 
@@ -57,7 +54,7 @@ TEST(ThemeTest, ViewerThemeHasAllFields) {
 // ── Bookmark tests ──────────────────────────────────────────────────────
 
 class BookmarkTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path));
@@ -198,7 +195,7 @@ TEST_F(BookmarkTest, HexSelectionDefault) {
 // ── Frame rendering with theme ──────────────────────────────────────────
 
 class Phase5FrameTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path));

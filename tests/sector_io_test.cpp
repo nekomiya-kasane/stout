@@ -1,8 +1,9 @@
-#include <gtest/gtest.h>
-#include "stout/cfb/sector_io.h"
 #include "stout/cfb/header.h"
+#include "stout/cfb/sector_io.h"
 #include "stout/io/memory_lock_bytes.h"
+
 #include <array>
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::cfb;

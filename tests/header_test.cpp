@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/cfb/header.h"
+
 #include <array>
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::cfb;

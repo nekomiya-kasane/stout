@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPName {
 };
 
 class StressNamingConformance : public ::testing::TestWithParam<VPName> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPName vp_name[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressNamingConformance, ::testing::ValuesIn(vp_name),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Single character names ──────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, SingleCharName) {
-    auto p = temp_file("sn_1ch"); guard_.add(p);
+    auto p = temp_file("sn_1ch");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -40,7 +42,8 @@ TEST_P(StressNamingConformance, SingleCharName) {
 }
 
 TEST_P(StressNamingConformance, SingleDigitName) {
-    auto p = temp_file("sn_1dig"); guard_.add(p);
+    auto p = temp_file("sn_1dig");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -56,7 +59,8 @@ TEST_P(StressNamingConformance, SingleDigitName) {
 // ── Max length name (31 chars) ──────────────────────────────────────────
 
 TEST_P(StressNamingConformance, MaxLengthName31) {
-    auto p = temp_file("sn_max"); guard_.add(p);
+    auto p = temp_file("sn_max");
+    guard_.add(p);
     std::string name31(31, 'M');
     std::wstring wname31(31, L'M');
     {
@@ -74,7 +78,8 @@ TEST_P(StressNamingConformance, MaxLengthName31) {
 // ── Names with spaces ───────────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, NameWithLeadingSpace) {
-    auto p = temp_file("sn_lspace"); guard_.add(p);
+    auto p = temp_file("sn_lspace");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -88,7 +93,8 @@ TEST_P(StressNamingConformance, NameWithLeadingSpace) {
 }
 
 TEST_P(StressNamingConformance, NameWithTrailingSpace) {
-    auto p = temp_file("sn_tspace"); guard_.add(p);
+    auto p = temp_file("sn_tspace");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -102,7 +108,8 @@ TEST_P(StressNamingConformance, NameWithTrailingSpace) {
 }
 
 TEST_P(StressNamingConformance, NameAllSpaces) {
-    auto p = temp_file("sn_spaces"); guard_.add(p);
+    auto p = temp_file("sn_spaces");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -118,7 +125,8 @@ TEST_P(StressNamingConformance, NameAllSpaces) {
 // ── Names with special characters ───────────────────────────────────────
 
 TEST_P(StressNamingConformance, NameWithDot) {
-    auto p = temp_file("sn_dot"); guard_.add(p);
+    auto p = temp_file("sn_dot");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -132,7 +140,8 @@ TEST_P(StressNamingConformance, NameWithDot) {
 }
 
 TEST_P(StressNamingConformance, NameWithHyphen) {
-    auto p = temp_file("sn_hyph"); guard_.add(p);
+    auto p = temp_file("sn_hyph");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -146,7 +155,8 @@ TEST_P(StressNamingConformance, NameWithHyphen) {
 }
 
 TEST_P(StressNamingConformance, NameWithUnderscore) {
-    auto p = temp_file("sn_under"); guard_.add(p);
+    auto p = temp_file("sn_under");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -160,7 +170,8 @@ TEST_P(StressNamingConformance, NameWithUnderscore) {
 }
 
 TEST_P(StressNamingConformance, NameWithParentheses) {
-    auto p = temp_file("sn_paren"); guard_.add(p);
+    auto p = temp_file("sn_paren");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -174,7 +185,8 @@ TEST_P(StressNamingConformance, NameWithParentheses) {
 }
 
 TEST_P(StressNamingConformance, NameWithNumbers) {
-    auto p = temp_file("sn_num"); guard_.add(p);
+    auto p = temp_file("sn_num");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -190,7 +202,8 @@ TEST_P(StressNamingConformance, NameWithNumbers) {
 // ── Case sensitivity ────────────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, CaseSensitiveNames) {
-    auto p = temp_file("sn_case"); guard_.add(p);
+    auto p = temp_file("sn_case");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -207,7 +220,8 @@ TEST_P(StressNamingConformance, CaseSensitiveNames) {
 // ── Empty name rejected ─────────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, EmptyNameHandled) {
-    auto p = temp_file("sn_empty"); guard_.add(p);
+    auto p = temp_file("sn_empty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().create_stream("");
@@ -218,7 +232,8 @@ TEST_P(StressNamingConformance, EmptyNameHandled) {
 // ── Too long name rejected ──────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, TooLongNameHandled) {
-    auto p = temp_file("sn_toolong"); guard_.add(p);
+    auto p = temp_file("sn_toolong");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     std::string name32(32, 'X');
@@ -230,7 +245,8 @@ TEST_P(StressNamingConformance, TooLongNameHandled) {
 // ── Duplicate name rejected ─────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, DuplicateNameHandled) {
-    auto p = temp_file("sn_dup"); guard_.add(p);
+    auto p = temp_file("sn_dup");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("X").has_value());
@@ -242,14 +258,17 @@ TEST_P(StressNamingConformance, DuplicateNameHandled) {
 // ── Win32 creates with special names, Stout reads ───────────────────────
 
 TEST_P(StressNamingConformance, Win32SpecialNameStoutReads) {
-    auto p = temp_file("sn_w32spec"); guard_.add(p);
+    auto p = temp_file("sn_w32spec");
+    guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"My File (v2).dat",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(
+            L"My File (v2).dat", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
     }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
@@ -261,7 +280,8 @@ TEST_P(StressNamingConformance, Win32SpecialNameStoutReads) {
 // ── Many unique names ───────────────────────────────────────────────────
 
 TEST_P(StressNamingConformance, ThirtyUniqueNames) {
-    auto p = temp_file("sn_30"); guard_.add(p);
+    auto p = temp_file("sn_30");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -273,7 +293,7 @@ TEST_P(StressNamingConformance, ThirtyUniqueNames) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 30u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 #endif // _WIN32

@@ -3,9 +3,9 @@
  * @brief Unit tests for entry_info tree helpers: tree_label, to_tree_node,
  *        flatten_paths, find_entry, expand_all.
  */
-#include <gtest/gtest.h>
-
 #include "ss_viewer/model/entry_info.h"
+
+#include <gtest/gtest.h>
 
 using namespace ssv;
 
@@ -141,14 +141,14 @@ TEST(EntryInfo, FlattenPathsFullyExpanded) {
 
 TEST(EntryInfo, FindEntryRoot) {
     auto root = make_root();
-    auto* found = find_entry(root, "Root Entry");
+    auto *found = find_entry(root, "Root Entry");
     ASSERT_NE(found, nullptr);
     EXPECT_EQ(found->name, "Root Entry");
 }
 
 TEST(EntryInfo, FindEntryDeep) {
     auto root = make_root();
-    auto* found = find_entry(root, "Root Entry/Storage1/StreamA");
+    auto *found = find_entry(root, "Root Entry/Storage1/StreamA");
     ASSERT_NE(found, nullptr);
     EXPECT_EQ(found->name, "StreamA");
     EXPECT_EQ(found->size, 256u);
@@ -156,13 +156,13 @@ TEST(EntryInfo, FindEntryDeep) {
 
 TEST(EntryInfo, FindEntryNotFound) {
     auto root = make_root();
-    auto* found = find_entry(root, "Root Entry/NonExistent");
+    auto *found = find_entry(root, "Root Entry/NonExistent");
     EXPECT_EQ(found, nullptr);
 }
 
 TEST(EntryInfo, FindEntryPropertyStream) {
     auto root = make_root();
-    auto* found = find_entry(root, "Root Entry/\x05SummaryInformation");
+    auto *found = find_entry(root, "Root Entry/\x05SummaryInformation");
     ASSERT_NE(found, nullptr);
     EXPECT_EQ(found->size, 128u);
 }
@@ -176,7 +176,7 @@ TEST(EntryInfo, ExpandAllAddsAllStorages) {
 
     EXPECT_TRUE(expanded.count("[+] Root Entry"));
     EXPECT_TRUE(expanded.count("[+] Storage1"));
-    EXPECT_EQ(expanded.size(), 2u);  // only storages, not streams
+    EXPECT_EQ(expanded.size(), 2u); // only storages, not streams
 }
 
 TEST(EntryInfo, ExpandAllThenFlattenGivesAll) {

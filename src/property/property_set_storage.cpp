@@ -1,10 +1,10 @@
 #include "stout/ole/property_set_storage.h"
+
 #include <vector>
 
 namespace stout::ole {
 
-auto read_property_set(storage& stg, std::string_view stream_name)
-    -> std::expected<property_set, error> {
+auto read_property_set(storage &stg, std::string_view stream_name) -> std::expected<property_set, error> {
     auto strm = stg.open_stream(stream_name);
     if (!strm) return std::unexpected(strm.error());
 
@@ -18,16 +18,13 @@ auto read_property_set(storage& stg, std::string_view stream_name)
     return parse_property_set(std::span<const uint8_t>(buf.data(), static_cast<size_t>(*read_r)));
 }
 
-auto write_property_set(storage& stg, std::string_view stream_name,
-                         const property_set& ps)
+auto write_property_set(storage &stg, std::string_view stream_name, const property_set &ps)
     -> std::expected<void, error> {
     auto serialized = serialize_property_set(ps);
     if (!serialized) return std::unexpected(serialized.error());
 
     // Create or open the stream
-    auto strm = stg.exists(stream_name)
-        ? stg.open_stream(stream_name)
-        : stg.create_stream(stream_name);
+    auto strm = stg.exists(stream_name) ? stg.open_stream(stream_name) : stg.create_stream(stream_name);
     if (!strm) return std::unexpected(strm.error());
 
     // Resize to fit the serialized data
@@ -41,23 +38,19 @@ auto write_property_set(storage& stg, std::string_view stream_name,
     return {};
 }
 
-auto read_summary_info(storage& stg)
-    -> std::expected<property_set, error> {
+auto read_summary_info(storage &stg) -> std::expected<property_set, error> {
     return read_property_set(stg, summary_info_stream);
 }
 
-auto write_summary_info(storage& stg, const property_set& ps)
-    -> std::expected<void, error> {
+auto write_summary_info(storage &stg, const property_set &ps) -> std::expected<void, error> {
     return write_property_set(stg, summary_info_stream, ps);
 }
 
-auto read_doc_summary_info(storage& stg)
-    -> std::expected<property_set, error> {
+auto read_doc_summary_info(storage &stg) -> std::expected<property_set, error> {
     return read_property_set(stg, doc_summary_info_stream);
 }
 
-auto write_doc_summary_info(storage& stg, const property_set& ps)
-    -> std::expected<void, error> {
+auto write_doc_summary_info(storage &stg, const property_set &ps) -> std::expected<void, error> {
     return write_property_set(stg, doc_summary_info_stream, ps);
 }
 

@@ -1,24 +1,25 @@
 #include "stout/ole/property_set.h"
+
 #include <cstring>
 
 namespace stout::ole {
 
 // ── Well-known FMTIDs ──────────────────────────────────────────────────
 
-static const guid s_fmtid_summary = {
-    0xF29F85E0, 0x4FF9, 0x1068, {0xAB, 0x91, 0x08, 0x00, 0x2B, 0x27, 0xB3, 0xD9}
-};
+static const guid s_fmtid_summary = {0xF29F85E0, 0x4FF9, 0x1068, {0xAB, 0x91, 0x08, 0x00, 0x2B, 0x27, 0xB3, 0xD9}};
 
-static const guid s_fmtid_doc_summary = {
-    0xD5CDD502, 0x2E9C, 0x101B, {0x93, 0x97, 0x08, 0x00, 0x2B, 0x2C, 0xF9, 0xAE}
-};
+static const guid s_fmtid_doc_summary = {0xD5CDD502, 0x2E9C, 0x101B, {0x93, 0x97, 0x08, 0x00, 0x2B, 0x2C, 0xF9, 0xAE}};
 
-auto fmtid_summary_information() noexcept -> const guid& { return s_fmtid_summary; }
-auto fmtid_doc_summary_information() noexcept -> const guid& { return s_fmtid_doc_summary; }
+auto fmtid_summary_information() noexcept -> const guid & {
+    return s_fmtid_summary;
+}
+auto fmtid_doc_summary_information() noexcept -> const guid & {
+    return s_fmtid_doc_summary;
+}
 
 // ── property_section methods ───────────────────────────────────────────
 
-auto property_section::get(uint32_t id) const -> const property* {
+auto property_section::get(uint32_t id) const -> const property * {
     auto it = properties.find(id);
     return it != properties.end() ? &it->second : nullptr;
 }
@@ -34,35 +35,35 @@ void property_section::remove(uint32_t id) {
 auto property_section::get_string(uint32_t id) const -> std::string {
     auto p = get(id);
     if (!p) return {};
-    if (auto* s = std::get_if<std::string>(&p->value)) return *s;
+    if (auto *s = std::get_if<std::string>(&p->value)) return *s;
     return {};
 }
 
 auto property_section::get_i4(uint32_t id) const -> int32_t {
     auto p = get(id);
     if (!p) return 0;
-    if (auto* v = std::get_if<int32_t>(&p->value)) return *v;
+    if (auto *v = std::get_if<int32_t>(&p->value)) return *v;
     return 0;
 }
 
 auto property_section::get_u4(uint32_t id) const -> uint32_t {
     auto p = get(id);
     if (!p) return 0;
-    if (auto* v = std::get_if<uint32_t>(&p->value)) return *v;
+    if (auto *v = std::get_if<uint32_t>(&p->value)) return *v;
     return 0;
 }
 
 auto property_section::get_filetime(uint32_t id) const -> uint64_t {
     auto p = get(id);
     if (!p) return 0;
-    if (auto* v = std::get_if<uint64_t>(&p->value)) return *v;
+    if (auto *v = std::get_if<uint64_t>(&p->value)) return *v;
     return 0;
 }
 
 auto property_section::get_bool(uint32_t id) const -> bool {
     auto p = get(id);
     if (!p) return false;
-    if (auto* v = std::get_if<int16_t>(&p->value)) return *v != 0;
+    if (auto *v = std::get_if<int16_t>(&p->value)) return *v != 0;
     return false;
 }
 
@@ -88,22 +89,22 @@ void property_section::set_bool(uint32_t id, bool val) {
 
 // ── property_set methods ───────────────────────────────────────────────
 
-auto property_set::section(const guid& fmtid) -> property_section* {
-    for (auto& s : sections) {
+auto property_set::section(const guid &fmtid) -> property_section * {
+    for (auto &s : sections) {
         if (s.fmtid == fmtid) return &s;
     }
     return nullptr;
 }
 
-auto property_set::section(const guid& fmtid) const -> const property_section* {
-    for (auto& s : sections) {
+auto property_set::section(const guid &fmtid) const -> const property_section * {
+    for (auto &s : sections) {
         if (s.fmtid == fmtid) return &s;
     }
     return nullptr;
 }
 
-auto property_set::add_section(const guid& fmtid) -> property_section& {
-    if (auto* s = section(fmtid)) return *s;
+auto property_set::add_section(const guid &fmtid) -> property_section & {
+    if (auto *s = section(fmtid)) return *s;
     sections.push_back({});
     sections.back().fmtid = fmtid;
     return sections.back();
@@ -111,20 +112,33 @@ auto property_set::add_section(const guid& fmtid) -> property_section& {
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-static auto read_u16(const uint8_t* p) -> uint16_t { return util::read_u16_le(p); }
-static auto read_u32(const uint8_t* p) -> uint32_t { return util::read_u32_le(p); }
-static auto read_u64(const uint8_t* p) -> uint64_t { return util::read_u64_le(p); }
+static auto read_u16(const uint8_t *p) -> uint16_t {
+    return util::read_u16_le(p);
+}
+static auto read_u32(const uint8_t *p) -> uint32_t {
+    return util::read_u32_le(p);
+}
+static auto read_u64(const uint8_t *p) -> uint64_t {
+    return util::read_u64_le(p);
+}
 
-static void write_u16(uint8_t* p, uint16_t v) { util::write_u16_le(p, v); }
-static void write_u32(uint8_t* p, uint32_t v) { util::write_u32_le(p, v); }
-static void write_u64(uint8_t* p, uint64_t v) { util::write_u64_le(p, v); }
+static void write_u16(uint8_t *p, uint16_t v) {
+    util::write_u16_le(p, v);
+}
+static void write_u32(uint8_t *p, uint32_t v) {
+    util::write_u32_le(p, v);
+}
+static void write_u64(uint8_t *p, uint64_t v) {
+    util::write_u64_le(p, v);
+}
 
-static auto pad4(uint32_t n) -> uint32_t { return (n + 3) & ~3u; }
+static auto pad4(uint32_t n) -> uint32_t {
+    return (n + 3) & ~3u;
+}
 
 // ── Parse a single typed value ─────────────────────────────────────────
 
-static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset,
-                              uint16_t codepage = 1252)
+static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, uint16_t codepage = 1252)
     -> std::expected<property, error> {
     if (offset + 4 > data.size()) return std::unexpected(error::corrupt_file);
 
@@ -216,7 +230,7 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset,
                 // Strip trailing null if present
                 auto str_len = len;
                 while (str_len > 0 && data[val_off + 4 + str_len - 1] == 0) --str_len;
-                prop.value = std::string(reinterpret_cast<const char*>(data.data() + val_off + 4), str_len);
+                prop.value = std::string(reinterpret_cast<const char *>(data.data() + val_off + 4), str_len);
             }
         }
         break;
@@ -243,8 +257,7 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset,
         {
             uint32_t len = read_u32(data.data() + val_off);
             if (val_off + 4 + len > data.size()) return std::unexpected(error::corrupt_file);
-            prop.value = std::vector<uint8_t>(data.data() + val_off + 4,
-                                               data.data() + val_off + 4 + len);
+            prop.value = std::vector<uint8_t>(data.data() + val_off + 4, data.data() + val_off + 4 + len);
         }
         break;
 
@@ -264,8 +277,7 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset,
 
 // ── Parse a property section ───────────────────────────────────────────
 
-static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset,
-                           const guid& fmtid)
+static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset, const guid &fmtid)
     -> std::expected<property_section, error> {
     if (section_offset + 8 > data.size()) return std::unexpected(error::corrupt_file);
 
@@ -275,8 +287,7 @@ static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset
     uint32_t section_size = read_u32(data.data() + section_offset);
     uint32_t num_props = read_u32(data.data() + section_offset + 4);
 
-    if (section_offset + 8 + num_props * 8 > data.size())
-        return std::unexpected(error::corrupt_file);
+    if (section_offset + 8 + num_props * 8 > data.size()) return std::unexpected(error::corrupt_file);
 
     // First pass: find codepage so string properties are decoded correctly
     for (uint32_t i = 0; i < num_props; ++i) {
@@ -309,8 +320,7 @@ static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset
 
 // ── parse_property_set ─────────────────────────────────────────────────
 
-auto parse_property_set(std::span<const uint8_t> data)
-    -> std::expected<property_set, error> {
+auto parse_property_set(std::span<const uint8_t> data) -> std::expected<property_set, error> {
     // Minimum: header (28 bytes) + at least 1 section entry (20 bytes)
     if (data.size() < 28) return std::unexpected(error::corrupt_file);
 
@@ -321,11 +331,9 @@ auto parse_property_set(std::span<const uint8_t> data)
     ps.clsid = guid_read_le(data.data() + 8);
     uint32_t num_sections = read_u32(data.data() + 24);
 
-    if (num_sections == 0 || num_sections > 2)
-        return std::unexpected(error::corrupt_file);
+    if (num_sections == 0 || num_sections > 2) return std::unexpected(error::corrupt_file);
 
-    if (28 + num_sections * 20 > data.size())
-        return std::unexpected(error::corrupt_file);
+    if (28 + num_sections * 20 > data.size()) return std::unexpected(error::corrupt_file);
 
     for (uint32_t i = 0; i < num_sections; ++i) {
         guid fmtid = guid_read_le(data.data() + 28 + i * 20);
@@ -341,7 +349,7 @@ auto parse_property_set(std::span<const uint8_t> data)
 
 // ── Serialize a typed value ────────────────────────────────────────────
 
-static auto serialize_typed_value(const property& prop, std::vector<uint8_t>& out) {
+static auto serialize_typed_value(const property &prop, std::vector<uint8_t> &out) {
     auto start = out.size();
     // Write type (4 bytes: 2 type + 2 padding)
     out.resize(out.size() + 4);
@@ -470,8 +478,7 @@ static auto serialize_typed_value(const property& prop, std::vector<uint8_t>& ou
 
 // ── serialize_property_set ─────────────────────────────────────────────
 
-auto serialize_property_set(const property_set& ps)
-    -> std::expected<std::vector<uint8_t>, error> {
+auto serialize_property_set(const property_set &ps) -> std::expected<std::vector<uint8_t>, error> {
     std::vector<uint8_t> out;
 
     uint32_t num_sections = static_cast<uint32_t>(ps.sections.size());
@@ -489,7 +496,7 @@ auto serialize_property_set(const property_set& ps)
 
     // Serialize each section
     for (uint32_t si = 0; si < num_sections; ++si) {
-        auto& sec = ps.sections[si];
+        auto &sec = ps.sections[si];
 
         // Write FMTID + offset in the header's section list
         guid_write_le(out.data() + 28 + si * 20, sec.fmtid);
@@ -505,7 +512,7 @@ auto serialize_property_set(const property_set& ps)
 
         // Serialize each property value and record offsets
         uint32_t prop_idx = 0;
-        for (auto& [pid, prop] : sec.properties) {
+        for (auto &[pid, prop] : sec.properties) {
             uint32_t prop_offset = static_cast<uint32_t>(out.size()) - section_start;
 
             // Write PID + offset in the property ID/offset array

@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class ResizeConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -43,14 +44,12 @@ TEST_F(ResizeConformance, MiniToRegularPreservesData) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TestStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TestStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 5000u);
 
     std::vector<uint8_t> w32_buf(100);
     ULONG actual = 0;
-    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(),
-        static_cast<ULONG>(w32_buf.size()), &actual)));
+    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(), static_cast<ULONG>(w32_buf.size()), &actual)));
     EXPECT_EQ(actual, 100u);
     EXPECT_EQ(w32_buf, data);
 }
@@ -84,14 +83,12 @@ TEST_F(ResizeConformance, RegularToMiniPreservesData) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"BigStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"BigStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
 
     std::vector<uint8_t> w32_buf(200);
     ULONG actual = 0;
-    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(),
-        static_cast<ULONG>(w32_buf.size()), &actual)));
+    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(), static_cast<ULONG>(w32_buf.size()), &actual)));
     std::vector<uint8_t> expected(data.begin(), data.begin() + 200);
     EXPECT_EQ(w32_buf, expected);
 }
@@ -123,14 +120,13 @@ TEST_F(ResizeConformance, MiniToRegularAtExactCutoff) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"BoundaryStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStream(L"BoundaryStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 4096u);
 
     std::vector<uint8_t> w32_buf(4000);
     ULONG actual = 0;
-    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(),
-        static_cast<ULONG>(w32_buf.size()), &actual)));
+    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(), static_cast<ULONG>(w32_buf.size()), &actual)));
     EXPECT_EQ(w32_buf, data);
 }
 
@@ -147,10 +143,9 @@ TEST_F(ResizeConformance, Win32CreateLarge_StoutResizeToMini) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"LargeStream",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
-        ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(),
-            static_cast<ULONG>(data.size()))));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"LargeStream", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), static_cast<ULONG>(data.size()))));
     }
 
     // Stout resizes to mini
@@ -176,14 +171,14 @@ TEST_F(ResizeConformance, Win32CreateLarge_StoutResizeToMini) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"LargeStream", nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(
+            SUCCEEDED(stg->OpenStream(L"LargeStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         EXPECT_EQ(win32_stream_size(strm.get()), 500u);
 
         std::vector<uint8_t> w32_buf(500);
         ULONG actual = 0;
-        ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(),
-            static_cast<ULONG>(w32_buf.size()), &actual)));
+        ASSERT_TRUE(
+            SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(), static_cast<ULONG>(w32_buf.size()), &actual)));
         std::vector<uint8_t> expected(data.begin(), data.begin() + 500);
         EXPECT_EQ(w32_buf, expected);
     }
@@ -216,15 +211,13 @@ TEST_F(ResizeConformance, StoutMiniResizeToRegular_Win32Reads) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"GrowStream", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"GrowStream", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 10000u);
 
     // First 64 bytes should be the original mini data
     std::vector<uint8_t> w32_buf(64);
     ULONG actual = 0;
-    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(),
-        static_cast<ULONG>(w32_buf.size()), &actual)));
+    ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), w32_buf.data(), static_cast<ULONG>(w32_buf.size()), &actual)));
     EXPECT_EQ(w32_buf, mini_data);
 }
 

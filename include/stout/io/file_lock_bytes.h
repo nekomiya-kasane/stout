@@ -1,8 +1,9 @@
 #pragma once
 
 #include "stout/exports.h"
-#include "stout/types.h"
 #include "stout/io/lock_bytes.h"
+#include "stout/types.h"
+
 #include <cstdint>
 #include <cstdio>
 #include <expected>
@@ -15,16 +16,15 @@
 namespace stout::io {
 
 class STOUT_API file_lock_bytes {
-public:
+  public:
     ~file_lock_bytes();
-    file_lock_bytes(file_lock_bytes&& other) noexcept;
-    file_lock_bytes& operator=(file_lock_bytes&& other) noexcept;
+    file_lock_bytes(file_lock_bytes &&other) noexcept;
+    file_lock_bytes &operator=(file_lock_bytes &&other) noexcept;
 
-    file_lock_bytes(const file_lock_bytes&) = delete;
-    file_lock_bytes& operator=(const file_lock_bytes&) = delete;
+    file_lock_bytes(const file_lock_bytes &) = delete;
+    file_lock_bytes &operator=(const file_lock_bytes &) = delete;
 
-    static auto open(const std::filesystem::path& path, open_mode mode)
-        -> std::expected<file_lock_bytes, error>;
+    static auto open(const std::filesystem::path &path, open_mode mode) -> std::expected<file_lock_bytes, error>;
 
     auto read_at(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size_t, error>;
     auto write_at(uint64_t offset, std::span<const uint8_t> buf) -> std::expected<size_t, error>;
@@ -33,7 +33,7 @@ public:
     [[nodiscard]] auto size() const -> std::expected<uint64_t, error>;
 
     struct impl {
-        std::FILE* file = nullptr;
+        std::FILE *file = nullptr;
         open_mode mode = open_mode::read;
 
         // Write-back page cache (4 KB pages)
@@ -48,15 +48,15 @@ public:
 
         // Fast path: last accessed page avoids hash lookup
         uint64_t last_page_id = UINT64_MAX;
-        page* last_page_ptr = nullptr;
+        page *last_page_ptr = nullptr;
 
         auto flush_dirty() -> std::expected<void, error>;
-        auto ensure_page(uint64_t page_id) -> std::expected<page*, error>;
+        auto ensure_page(uint64_t page_id) -> std::expected<page *, error>;
 
         ~impl();
     };
 
-private:
+  private:
     file_lock_bytes() = default;
     std::unique_ptr<impl> impl_;
 };

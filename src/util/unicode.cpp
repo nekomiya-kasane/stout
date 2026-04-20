@@ -1,4 +1,5 @@
 #include "stout/util/unicode.h"
+
 #include <algorithm>
 #include <cstring>
 #include <optional>
@@ -91,7 +92,7 @@ auto utf16le_to_utf8(std::u16string_view utf16) -> std::string {
     return result;
 }
 
-auto dir_name_to_utf8(const uint8_t* name_bytes, uint16_t byte_count) -> std::string {
+auto dir_name_to_utf8(const uint8_t *name_bytes, uint16_t byte_count) -> std::string {
     if (byte_count < 2) return {};
 
     // byte_count includes the null terminator (2 bytes for UTF-16)
@@ -116,11 +117,11 @@ auto utf8_to_dir_name(std::string_view name) -> std::optional<dir_name_result> {
 
     dir_name_result result;
     for (size_t i = 0; i < u16.size(); ++i) {
-        result.bytes[i * 2]     = static_cast<uint8_t>(u16[i] & 0xFF);
+        result.bytes[i * 2] = static_cast<uint8_t>(u16[i] & 0xFF);
         result.bytes[i * 2 + 1] = static_cast<uint8_t>(u16[i] >> 8);
     }
     // Null terminator
-    result.bytes[u16.size() * 2]     = 0;
+    result.bytes[u16.size() * 2] = 0;
     result.bytes[u16.size() * 2 + 1] = 0;
     result.byte_count = static_cast<uint16_t>((u16.size() + 1) * 2);
 

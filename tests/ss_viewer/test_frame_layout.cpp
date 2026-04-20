@@ -3,29 +3,26 @@
  * @brief TUI integration tests: frame layout, tree rendering, tab switching,
  *        search overlay, help popup.
  */
-#include <gtest/gtest.h>
-
-#include <filesystem>
-
-#include "stout/compound_file.h"
-#include "tapiru/testing/test_harness.h"
-
 #include "ss_viewer/model/entry_info.h"
 #include "ss_viewer/model/stout_backend.h"
 #include "ss_viewer/model/viewer_state.h"
 #include "ss_viewer/ui/frame_builder.h"
+#include "stout/compound_file.h"
+#include "tapiru/testing/test_harness.h"
+
+#include <filesystem>
+#include <gtest/gtest.h>
 
 using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p))
-        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
     return p;
 }
 
 class FrameLayoutTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path));
@@ -60,8 +57,7 @@ TEST_F(FrameLayoutTest, FrameContainsStatusBar) {
     auto frame = build_frame(st, 20, theme);
     vs.render(frame);
     // Status bar should show file info or navigation hints
-    EXPECT_TRUE(vs.contains("stout_demo.cfb") || vs.contains("Root Entry") ||
-                vs.row_count() > 5);
+    EXPECT_TRUE(vs.contains("stout_demo.cfb") || vs.contains("Root Entry") || vs.row_count() > 5);
 }
 
 TEST_F(FrameLayoutTest, FrameContainsTreeView) {
@@ -124,7 +120,7 @@ TEST_F(FrameLayoutTest, ExpandedTreeShowsChildren) {
     // At least one child should appear in the rendered output
     bool found_child = false;
     for (size_t i = 1; i < st.flat_paths.size(); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && vs.contains(e->name)) {
             found_child = true;
             break;
@@ -148,8 +144,7 @@ TEST_F(FrameLayoutTest, HelpPopupShowsShortcuts) {
     st.show_help = true;
     auto frame = build_frame(st, 20, theme);
     vs.render(frame);
-    EXPECT_TRUE(vs.contains("Keyboard") || vs.contains("Shortcuts") ||
-                vs.contains("Up/Down") || vs.contains("Ctrl+C"));
+    EXPECT_TRUE(vs.contains("Keyboard") || vs.contains("Shortcuts") || vs.contains("Up/Down") || vs.contains("Ctrl+C"));
 }
 
 TEST_F(FrameLayoutTest, NoHelpPopupByDefault) {
@@ -196,7 +191,7 @@ TEST_F(FrameLayoutTest, HexTabShowsDataForStream) {
     expand_all(st.root_entry, st.expanded);
     st.rebuild_flat_paths();
     for (int i = 0; i < static_cast<int>(st.flat_paths.size()); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && e->type == stout::entry_type::stream && e->size > 0) {
             st.tree_cursor = i;
             st.select_current();

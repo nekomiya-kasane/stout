@@ -1,11 +1,12 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <stout/cfb/constants.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cstring>
+#include <gtest/gtest.h>
+#include <stout/cfb/constants.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -20,7 +21,7 @@ struct VersionParam {
 };
 
 class StressCreateConformance : public ::testing::TestWithParam<VersionParam> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -31,14 +32,17 @@ static const VersionParam versions[] = {
 };
 
 INSTANTIATE_TEST_SUITE_P(V, StressCreateConformance, ::testing::ValuesIn(versions),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Basic create + Win32 open ───────────────────────────────────────────
 
 TEST_P(StressCreateConformance, EmptyFile_StoutCreateWin32Open) {
     auto path = temp_file("sc_empty");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
 }
@@ -46,11 +50,12 @@ TEST_P(StressCreateConformance, EmptyFile_StoutCreateWin32Open) {
 TEST_P(StressCreateConformance, EmptyFile_Win32CreateStoutOpen) {
     auto path = temp_file("sc_w32empty");
     guard_.add(path);
-    { storage_ptr stg;
-      if (GetParam().ver == cfb_version::v4)
-          ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-      else
-          ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+    {
+        storage_ptr stg;
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
     }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
@@ -76,19 +81,29 @@ TEST_P(StressCreateConformance, CreateFlushReopenStout) {
 TEST_P(StressCreateConformance, HeaderSignatureBytes) {
     auto path = temp_file("sc_sig");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     ASSERT_GE(bytes.size(), 512u);
-    EXPECT_EQ(bytes[0], 0xD0); EXPECT_EQ(bytes[1], 0xCF);
-    EXPECT_EQ(bytes[2], 0x11); EXPECT_EQ(bytes[3], 0xE0);
-    EXPECT_EQ(bytes[4], 0xA1); EXPECT_EQ(bytes[5], 0xB1);
-    EXPECT_EQ(bytes[6], 0x1A); EXPECT_EQ(bytes[7], 0xE1);
+    EXPECT_EQ(bytes[0], 0xD0);
+    EXPECT_EQ(bytes[1], 0xCF);
+    EXPECT_EQ(bytes[2], 0x11);
+    EXPECT_EQ(bytes[3], 0xE0);
+    EXPECT_EQ(bytes[4], 0xA1);
+    EXPECT_EQ(bytes[5], 0xB1);
+    EXPECT_EQ(bytes[6], 0x1A);
+    EXPECT_EQ(bytes[7], 0xE1);
 }
 
 TEST_P(StressCreateConformance, HeaderMajorVersion) {
     auto path = temp_file("sc_major");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     uint16_t major = bytes[0x1A] | (bytes[0x1B] << 8);
     EXPECT_EQ(major, GetParam().major);
@@ -97,7 +112,10 @@ TEST_P(StressCreateConformance, HeaderMajorVersion) {
 TEST_P(StressCreateConformance, HeaderMinorVersion) {
     auto path = temp_file("sc_minor");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     uint16_t minor = bytes[0x18] | (bytes[0x19] << 8);
     EXPECT_EQ(minor, 0x003Eu);
@@ -106,7 +124,10 @@ TEST_P(StressCreateConformance, HeaderMinorVersion) {
 TEST_P(StressCreateConformance, HeaderByteOrder) {
     auto path = temp_file("sc_bom");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     uint16_t bom = bytes[0x1C] | (bytes[0x1D] << 8);
     EXPECT_EQ(bom, 0xFFFEu);
@@ -115,7 +136,10 @@ TEST_P(StressCreateConformance, HeaderByteOrder) {
 TEST_P(StressCreateConformance, HeaderSectorShift) {
     auto path = temp_file("sc_shift");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     uint16_t shift = bytes[0x1E] | (bytes[0x1F] << 8);
     EXPECT_EQ(shift, GetParam().sector_shift);
@@ -124,7 +148,10 @@ TEST_P(StressCreateConformance, HeaderSectorShift) {
 TEST_P(StressCreateConformance, HeaderMiniSectorShift) {
     auto path = temp_file("sc_minishift");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     uint16_t shift = bytes[0x20] | (bytes[0x21] << 8);
     EXPECT_EQ(shift, 6u);
@@ -133,29 +160,41 @@ TEST_P(StressCreateConformance, HeaderMiniSectorShift) {
 TEST_P(StressCreateConformance, HeaderReservedZeros) {
     auto path = temp_file("sc_reserved");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto bytes = read_file_bytes(path);
     // Reserved bytes at offset 0x22 (6 bytes) should be zero
-    for (int i = 0x22; i < 0x28; ++i)
-        EXPECT_EQ(bytes[i], 0u) << "Non-zero at offset 0x" << std::hex << i;
+    for (int i = 0x22; i < 0x28; ++i) EXPECT_EQ(bytes[i], 0u) << "Non-zero at offset 0x" << std::hex << i;
 }
 
 TEST_P(StressCreateConformance, HeaderMatchesWin32) {
     auto [stout_path, win32_path] = temp_file_pair("sc_hdrmatch");
-    guard_.add(stout_path); guard_.add(win32_path);
-    { auto cf = compound_file::create(stout_path, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
-    { storage_ptr stg;
-      if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(win32_path.wstring(), stg.put())));
-      else ASSERT_TRUE(SUCCEEDED(win32_create_v3(win32_path.wstring(), stg.put())));
+    guard_.add(stout_path);
+    guard_.add(win32_path);
+    {
+        auto cf = compound_file::create(stout_path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
+    {
+        storage_ptr stg;
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(win32_path.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(win32_path.wstring(), stg.put())));
     }
     auto sb = read_file_bytes(stout_path);
     auto wb = read_file_bytes(win32_path);
     // Signature must match
     EXPECT_TRUE(std::equal(sb.begin(), sb.begin() + 8, wb.begin()));
     // Major version must match
-    EXPECT_EQ(sb[0x1A], wb[0x1A]); EXPECT_EQ(sb[0x1B], wb[0x1B]);
+    EXPECT_EQ(sb[0x1A], wb[0x1A]);
+    EXPECT_EQ(sb[0x1B], wb[0x1B]);
     // Sector shift must match
-    EXPECT_EQ(sb[0x1E], wb[0x1E]); EXPECT_EQ(sb[0x1F], wb[0x1F]);
+    EXPECT_EQ(sb[0x1E], wb[0x1E]);
+    EXPECT_EQ(sb[0x1F], wb[0x1F]);
 }
 
 // ── File size checks ────────────────────────────────────────────────────
@@ -163,7 +202,11 @@ TEST_P(StressCreateConformance, HeaderMatchesWin32) {
 TEST_P(StressCreateConformance, FileSizeAligned) {
     auto path = temp_file("sc_align");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     auto sz = std::filesystem::file_size(path);
     EXPECT_GE(sz, static_cast<uintmax_t>(GetParam().sector_size));
     EXPECT_EQ(sz % GetParam().sector_size, 0u);
@@ -172,7 +215,10 @@ TEST_P(StressCreateConformance, FileSizeAligned) {
 TEST_P(StressCreateConformance, FileSizeMinimum) {
     auto path = temp_file("sc_minsz");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto sz = std::filesystem::file_size(path);
     // At minimum: header + FAT sector + directory sector
     EXPECT_GE(sz, static_cast<uintmax_t>(GetParam().sector_size * 2));
@@ -183,17 +229,24 @@ TEST_P(StressCreateConformance, FileSizeMinimum) {
 TEST_P(StressCreateConformance, RootClsidNull) {
     auto path = temp_file("sc_rclsid");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
-    STATSTG st{}; ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
+    STATSTG st{};
+    ASSERT_TRUE(SUCCEEDED(stg->Stat(&st, STATFLAG_NONAME)));
     EXPECT_EQ(st.clsid, CLSID_NULL);
 }
 
 TEST_P(StressCreateConformance, RootStateBitsZero) {
     auto path = temp_file("sc_rbits");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_EQ(cf->root_storage().state_bits(), 0u);
@@ -202,7 +255,10 @@ TEST_P(StressCreateConformance, RootStateBitsZero) {
 TEST_P(StressCreateConformance, RootChildrenEmpty) {
     auto path = temp_file("sc_rchildren");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_EQ(cf->root_storage().children().size(), 0u);
@@ -211,7 +267,10 @@ TEST_P(StressCreateConformance, RootChildrenEmpty) {
 TEST_P(StressCreateConformance, RootNameIsRootEntry) {
     auto path = temp_file("sc_rname");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_EQ(cf->root_storage().name(), "Root Entry");
@@ -266,7 +325,7 @@ TEST_P(StressCreateConformance, InMemoryDataNotNull) {
     auto cf = compound_file::create_in_memory(GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     cf->flush();
-    auto* d = cf->data();
+    auto *d = cf->data();
     ASSERT_NE(d, nullptr);
     EXPECT_GE(d->size(), static_cast<size_t>(GetParam().sector_size));
 }
@@ -279,7 +338,7 @@ TEST_P(StressCreateConformance, InMemorySerializeWin32Opens) {
     auto data = make_test_data(200);
     ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
     ASSERT_TRUE(cf->flush().has_value());
-    auto* raw = cf->data();
+    auto *raw = cf->data();
     ASSERT_NE(raw, nullptr);
 
     // Write to temp file and open with Win32
@@ -287,13 +346,12 @@ TEST_P(StressCreateConformance, InMemorySerializeWin32Opens) {
     guard_.add(path);
     {
         std::ofstream ofs(path, std::ios::binary);
-        ofs.write(reinterpret_cast<const char*>(raw->data()), raw->size());
+        ofs.write(reinterpret_cast<const char *>(raw->data()), raw->size());
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Test", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Test", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
 }
 
@@ -306,7 +364,7 @@ TEST_P(StressCreateConformance, OpenFromMemoryRoundtrip) {
     auto data = make_test_data(150, 0xAB);
     ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
     ASSERT_TRUE(cf1->flush().has_value());
-    auto* raw = cf1->data();
+    auto *raw = cf1->data();
     ASSERT_NE(raw, nullptr);
 
     auto cf2 = compound_file::open_from_memory(*raw);
@@ -324,7 +382,10 @@ TEST_P(StressCreateConformance, OpenFromMemoryRoundtrip) {
 TEST_P(StressCreateConformance, CreateNoExplicitFlush) {
     auto path = temp_file("sc_noflush");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     // File should still be valid
     auto sz = std::filesystem::file_size(path);
     EXPECT_GT(sz, 0u);
@@ -341,7 +402,10 @@ TEST_P(StressCreateConformance, VersionQueryAfterCreate) {
 TEST_P(StressCreateConformance, VersionQueryAfterOpen) {
     auto path = temp_file("sc_veropen");
     guard_.add(path);
-    { auto cf = compound_file::create(path, GetParam().ver); ASSERT_TRUE(cf.has_value()); }
+    {
+        auto cf = compound_file::create(path, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+    }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     EXPECT_EQ(cf->version(), GetParam().ver);
@@ -364,8 +428,7 @@ TEST_P(StressCreateConformance, CreateWithStreamWin32Reads) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 300u);
     std::vector<uint8_t> buf(300);
     ULONG rc = 0;
@@ -385,8 +448,7 @@ TEST_P(StressCreateConformance, CreateWithStorageWin32Opens) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Sub", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
 }
 
 // ── Win32 creates with content, Stout reads ─────────────────────────────
@@ -397,11 +459,13 @@ TEST_P(StressCreateConformance, Win32CreateWithStreamStoutReads) {
     auto data = make_test_data(400, 0x77);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"W32Data",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"W32Data", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 400)));
     }
     auto cf = compound_file::open(path, open_mode::read);
@@ -419,11 +483,13 @@ TEST_P(StressCreateConformance, Win32CreateWithStorageStoutOpens) {
     guard_.add(path);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStorage(L"W32Sub",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStorage(L"W32Sub", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
     }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
@@ -461,7 +527,9 @@ TEST_P(StressCreateConformance, FlushAfterWritePreservesData) {
     ASSERT_TRUE(s2->write(0, std::span<const uint8_t>(data2)).has_value());
     ASSERT_TRUE(cf->flush().has_value());
     // Verify both exist — close cf first
-    { auto tmp = std::move(cf); }
+    {
+        auto tmp = std::move(cf);
+    }
     auto cf2 = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf2.has_value());
     EXPECT_EQ(cf2->root_storage().children().size(), 2u);

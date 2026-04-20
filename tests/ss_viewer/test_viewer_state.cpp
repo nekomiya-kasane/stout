@@ -3,27 +3,24 @@
  * @brief Unit tests for viewer_state: select_current, rebuild_flat_paths,
  *        expand/collapse, load_hex_data.
  */
-#include <gtest/gtest.h>
-
-#include <filesystem>
-
-#include "stout/compound_file.h"
-
 #include "ss_viewer/model/entry_info.h"
 #include "ss_viewer/model/stout_backend.h"
 #include "ss_viewer/model/viewer_state.h"
+#include "stout/compound_file.h"
+
+#include <filesystem>
+#include <gtest/gtest.h>
 
 using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p))
-        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
     return p;
 }
 
 class ViewerStateTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         auto path = test_cfb_path();
         ASSERT_TRUE(std::filesystem::exists(path)) << "Test file not found: " << path;
@@ -69,7 +66,7 @@ TEST_F(ViewerStateTest, SelectCurrentUpdatesSelected) {
 TEST_F(ViewerStateTest, SelectCurrentSetsStream) {
     // Find a stream in flat_paths
     for (int i = 0; i < static_cast<int>(st.flat_paths.size()); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && e->type == stout::entry_type::stream) {
             st.tree_cursor = i;
             st.select_current();
@@ -85,7 +82,7 @@ TEST_F(ViewerStateTest, SelectCurrentSetsStream) {
 
 TEST_F(ViewerStateTest, LoadHexDataForStream) {
     for (int i = 0; i < static_cast<int>(st.flat_paths.size()); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && e->type == stout::entry_type::stream && e->size > 0) {
             st.tree_cursor = i;
             st.select_current();
@@ -101,7 +98,7 @@ TEST_F(ViewerStateTest, LoadHexDataForStream) {
 TEST_F(ViewerStateTest, LoadHexDataClearsForStorage) {
     // First select a stream to populate hex data
     for (int i = 0; i < static_cast<int>(st.flat_paths.size()); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && e->type == stout::entry_type::stream && e->size > 0) {
             st.tree_cursor = i;
             st.select_current();
@@ -117,7 +114,7 @@ TEST_F(ViewerStateTest, LoadHexDataClearsForStorage) {
 
 TEST_F(ViewerStateTest, HexCacheAvoidsDuplicateLoad) {
     for (int i = 0; i < static_cast<int>(st.flat_paths.size()); ++i) {
-        auto* e = find_entry(st.root_entry, st.flat_paths[i]);
+        auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && e->type == stout::entry_type::stream && e->size > 0) {
             st.tree_cursor = i;
             st.select_current();
@@ -155,5 +152,5 @@ TEST_F(ViewerStateTest, CollapseReducesFlatPaths) {
     st.expanded.clear();
     st.rebuild_flat_paths();
     EXPECT_LT(st.flat_paths.size(), expanded_size);
-    EXPECT_EQ(st.flat_paths.size(), 1u);  // only root
+    EXPECT_EQ(st.flat_paths.size(), 1u); // only root
 }

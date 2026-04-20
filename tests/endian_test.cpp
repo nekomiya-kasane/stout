@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/util/endian.h"
+
 #include <array>
+#include <gtest/gtest.h>
 
 using namespace stout::util;
 

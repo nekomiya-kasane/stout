@@ -11,7 +11,7 @@
 namespace ssv {
 
 /// Helper: navigate to a Win32 IStorage by full_path. Caller must Release() the result.
-static IStorage* navigate_to_win32_storage(IStorage* root_stg, const std::string& full_path) {
+static IStorage *navigate_to_win32_storage(IStorage *root_stg, const std::string &full_path) {
     std::vector<std::string> parts;
     {
         std::string s = full_path;
@@ -22,15 +22,14 @@ static IStorage* navigate_to_win32_storage(IStorage* root_stg, const std::string
         }
         parts.push_back(s);
     }
-    IStorage* cur = root_stg;
+    IStorage *cur = root_stg;
     cur->AddRef();
     for (size_t i = 1; i < parts.size(); ++i) {
         int needed = MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, nullptr, 0);
         std::wstring wname(needed - 1, L'\0');
         MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, wname.data(), needed);
-        IStorage* next = nullptr;
-        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
+        IStorage *next = nullptr;
+        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
             cur->Release();
             return nullptr;
         }
@@ -41,15 +40,14 @@ static IStorage* navigate_to_win32_storage(IStorage* root_stg, const std::string
 }
 
 /// Helper: convert wide string to UTF-8.
-static std::string wide_to_utf8(const std::wstring& wstr) {
+static std::string wide_to_utf8(const std::wstring &wstr) {
     int needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
     std::string u8(needed - 1, '\0');
     WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, u8.data(), needed, nullptr, nullptr);
     return u8;
 }
 
-entry_info build_win32_tree(IStorage* stg, const std::string& parent_path,
-                             const std::string& name) {
+entry_info build_win32_tree(IStorage *stg, const std::string &parent_path, const std::string &name) {
     entry_info info;
     info.name = name;
     info.type = stout::entry_type::storage;
@@ -71,22 +69,20 @@ entry_info build_win32_tree(IStorage* stg, const std::string& parent_path,
         if (ct.QuadPart != 0) {
             auto ft_ns = ct.QuadPart * 100;
             auto epoch_diff = std::chrono::seconds(11644473600LL);
-            info.creation_time = stout::file_time(
-                std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                    std::chrono::nanoseconds(ft_ns) - epoch_diff));
+            info.creation_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
         if (mt.QuadPart != 0) {
             auto ft_ns = mt.QuadPart * 100;
             auto epoch_diff = std::chrono::seconds(11644473600LL);
-            info.modified_time = stout::file_time(
-                std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                    std::chrono::nanoseconds(ft_ns) - epoch_diff));
+            info.modified_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
         if (parent_path.empty()) info.type = stout::entry_type::root;
     }
 
     info.children_loaded = true;
-    IEnumSTATSTG* pEnum = nullptr;
+    IEnumSTATSTG *pEnum = nullptr;
     if (SUCCEEDED(stg->EnumElements(0, nullptr, 0, &pEnum)) && pEnum) {
         STATSTG child_stat;
         while (pEnum->Next(1, &child_stat, nullptr) == S_OK) {
@@ -95,9 +91,9 @@ entry_info build_win32_tree(IStorage* stg, const std::string& parent_path,
             auto u8name = wide_to_utf8(wname);
 
             if (child_stat.type == STGTY_STORAGE) {
-                IStorage* child_stg = nullptr;
-                if (SUCCEEDED(stg->OpenStorage(wname.c_str(), nullptr,
-                    STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &child_stg))) {
+                IStorage *child_stg = nullptr;
+                if (SUCCEEDED(stg->OpenStorage(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0,
+                                               &child_stg))) {
                     info.children.push_back(build_win32_tree(child_stg, info.full_path, u8name));
                     child_stg->Release();
                 }
@@ -117,13 +113,12 @@ entry_info build_win32_tree(IStorage* stg, const std::string& parent_path,
     return info;
 }
 
-entry_info build_win32_tree_shallow(IStorage* stg, const std::string& parent_path,
-                                     const std::string& name) {
+entry_info build_win32_tree_shallow(IStorage *stg, const std::string &parent_path, const std::string &name) {
     entry_info info;
     info.name = name;
     info.type = stout::entry_type::storage;
     info.full_path = parent_path.empty() ? name : parent_path + "/" + name;
-    info.children_loaded = true;  // first level loaded
+    info.children_loaded = true; // first level loaded
 
     STATSTG stat_stg;
     if (SUCCEEDED(stg->Stat(&stat_stg, STATFLAG_DEFAULT))) {
@@ -138,21 +133,19 @@ entry_info build_win32_tree_shallow(IStorage* stg, const std::string& parent_pat
         if (ct.QuadPart != 0) {
             auto ft_ns = ct.QuadPart * 100;
             auto epoch_diff = std::chrono::seconds(11644473600LL);
-            info.creation_time = stout::file_time(
-                std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                    std::chrono::nanoseconds(ft_ns) - epoch_diff));
+            info.creation_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
         if (mt.QuadPart != 0) {
             auto ft_ns = mt.QuadPart * 100;
             auto epoch_diff = std::chrono::seconds(11644473600LL);
-            info.modified_time = stout::file_time(
-                std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                    std::chrono::nanoseconds(ft_ns) - epoch_diff));
+            info.modified_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
         if (parent_path.empty()) info.type = stout::entry_type::root;
     }
 
-    IEnumSTATSTG* pEnum = nullptr;
+    IEnumSTATSTG *pEnum = nullptr;
     if (SUCCEEDED(stg->EnumElements(0, nullptr, 0, &pEnum)) && pEnum) {
         STATSTG child_stat;
         while (pEnum->Next(1, &child_stat, nullptr) == S_OK) {
@@ -180,21 +173,21 @@ entry_info build_win32_tree_shallow(IStorage* stg, const std::string& parent_pat
     return info;
 }
 
-void load_win32_children(IStorage* root_stg, entry_info& ei) {
+void load_win32_children(IStorage *root_stg, entry_info &ei) {
     if (ei.children_loaded) return;
     if (ei.type != stout::entry_type::storage && ei.type != stout::entry_type::root) {
         ei.children_loaded = true;
         return;
     }
 
-    IStorage* stg = navigate_to_win32_storage(root_stg, ei.full_path);
+    IStorage *stg = navigate_to_win32_storage(root_stg, ei.full_path);
     if (!stg) {
         ei.children_loaded = true;
         return;
     }
 
     ei.children.clear();
-    IEnumSTATSTG* pEnum = nullptr;
+    IEnumSTATSTG *pEnum = nullptr;
     if (SUCCEEDED(stg->EnumElements(0, nullptr, 0, &pEnum)) && pEnum) {
         STATSTG child_stat;
         while (pEnum->Next(1, &child_stat, nullptr) == S_OK) {
@@ -222,9 +215,7 @@ void load_win32_children(IStorage* root_stg, entry_info& ei) {
     ei.children_loaded = true;
 }
 
-std::vector<uint8_t> read_win32_stream(IStorage* root_stg,
-                                        const entry_info& ei,
-                                        uint64_t max_bytes) {
+std::vector<uint8_t> read_win32_stream(IStorage *root_stg, const entry_info &ei, uint64_t max_bytes) {
     // Navigate to the stream by path
     std::vector<std::string> parts;
     {
@@ -238,15 +229,14 @@ std::vector<uint8_t> read_win32_stream(IStorage* root_stg,
     }
 
     // Navigate storages (skip root name)
-    IStorage* cur = root_stg;
+    IStorage *cur = root_stg;
     cur->AddRef();
     for (size_t i = 1; i + 1 < parts.size(); ++i) {
         int needed = MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, nullptr, 0);
         std::wstring wname(needed - 1, L'\0');
         MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, wname.data(), needed);
-        IStorage* next = nullptr;
-        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
+        IStorage *next = nullptr;
+        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
             cur->Release();
             return {};
         }
@@ -258,9 +248,8 @@ std::vector<uint8_t> read_win32_stream(IStorage* root_stg,
     int needed = MultiByteToWideChar(CP_UTF8, 0, parts.back().c_str(), -1, nullptr, 0);
     std::wstring wname(needed - 1, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, parts.back().c_str(), -1, wname.data(), needed);
-    IStream* pStrm = nullptr;
-    if (FAILED(cur->OpenStream(wname.c_str(), nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStrm))) {
+    IStream *pStrm = nullptr;
+    if (FAILED(cur->OpenStream(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStrm))) {
         cur->Release();
         return {};
     }
@@ -279,10 +268,12 @@ std::vector<uint8_t> read_win32_stream(IStorage* root_stg,
 
 /// @brief RAII wrapper for IStream shared_ptr custom deleter.
 struct istream_deleter {
-    void operator()(IStream* p) const { if (p) p->Release(); }
+    void operator()(IStream *p) const {
+        if (p) p->Release();
+    }
 };
 
-paged_reader open_win32_reader(IStorage* root_stg, const entry_info& ei) {
+paged_reader open_win32_reader(IStorage *root_stg, const entry_info &ei) {
     if (ei.type != stout::entry_type::stream) return {};
 
     // Navigate to the stream by path
@@ -298,15 +289,14 @@ paged_reader open_win32_reader(IStorage* root_stg, const entry_info& ei) {
     }
 
     // Navigate storages (skip root name)
-    IStorage* cur = root_stg;
+    IStorage *cur = root_stg;
     cur->AddRef();
     for (size_t i = 1; i + 1 < parts.size(); ++i) {
         int needed = MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, nullptr, 0);
         std::wstring wname(needed - 1, L'\0');
         MultiByteToWideChar(CP_UTF8, 0, parts[i].c_str(), -1, wname.data(), needed);
-        IStorage* next = nullptr;
-        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
+        IStorage *next = nullptr;
+        if (FAILED(cur->OpenStorage(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, &next))) {
             cur->Release();
             return {};
         }
@@ -318,9 +308,8 @@ paged_reader open_win32_reader(IStorage* root_stg, const entry_info& ei) {
     int needed = MultiByteToWideChar(CP_UTF8, 0, parts.back().c_str(), -1, nullptr, 0);
     std::wstring wname(needed - 1, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, parts.back().c_str(), -1, wname.data(), needed);
-    IStream* pStrm = nullptr;
-    if (FAILED(cur->OpenStream(wname.c_str(), nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStrm))) {
+    IStream *pStrm = nullptr;
+    if (FAILED(cur->OpenStream(wname.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &pStrm))) {
         cur->Release();
         return {};
     }

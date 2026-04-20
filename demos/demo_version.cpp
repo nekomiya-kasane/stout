@@ -1,4 +1,5 @@
 #include "stout/stout.h"
+
 #include <print>
 
 int main() {
@@ -21,11 +22,9 @@ int main() {
     std::println("  UTF-8 -> UTF-16 -> UTF-8: \"{}\"", back);
 
     // CFB constants
-    std::println("  CFB signature: {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}",
-        stout::cfb::signature[0], stout::cfb::signature[1],
-        stout::cfb::signature[2], stout::cfb::signature[3],
-        stout::cfb::signature[4], stout::cfb::signature[5],
-        stout::cfb::signature[6], stout::cfb::signature[7]);
+    std::println("  CFB signature: {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}", stout::cfb::signature[0],
+                 stout::cfb::signature[1], stout::cfb::signature[2], stout::cfb::signature[3], stout::cfb::signature[4],
+                 stout::cfb::signature[5], stout::cfb::signature[6], stout::cfb::signature[7]);
     std::println("  V3 sector size: {} bytes", stout::cfb::sector_size_v3);
     std::println("  V4 sector size: {} bytes", stout::cfb::sector_size_v4);
 

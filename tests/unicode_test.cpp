@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/util/unicode.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout::util;
 

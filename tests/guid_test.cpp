@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
 #include "stout/util/guid.h"
+
 #include <format>
+#include <gtest/gtest.h>
 
 using namespace stout;
 
@@ -80,8 +81,8 @@ TEST(GuidTest, RoundtripParseFormat) {
 TEST(GuidTest, GenerateIsV4) {
     auto g = guid_generate();
     EXPECT_FALSE(g.is_null());
-    EXPECT_EQ((g.data3 >> 12) & 0xF, 4);       // version 4
-    EXPECT_EQ((g.data4[0] >> 6) & 0x3, 2);      // variant 1
+    EXPECT_EQ((g.data3 >> 12) & 0xF, 4);   // version 4
+    EXPECT_EQ((g.data4[0] >> 6) & 0x3, 2); // variant 1
 }
 
 TEST(GuidTest, GenerateUnique) {

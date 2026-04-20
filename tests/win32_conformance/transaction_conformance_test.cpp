@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class TransactionConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -32,8 +33,7 @@ TEST_F(TransactionConformance, CommitDirect) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
     std::vector<uint8_t> buf(200);
     ULONG rc = 0;
@@ -62,8 +62,7 @@ TEST_F(TransactionConformance, TransactedCommit) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TxnData", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"TxnData", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 300u);
     std::vector<uint8_t> buf(300);
     ULONG rc = 0;
@@ -99,7 +98,7 @@ TEST_F(TransactionConformance, TransactedRevert) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── TransactedMultipleWrites: multiple writes, single commit ────────────
@@ -127,7 +126,7 @@ TEST_F(TransactionConformance, TransactedMultipleWrites) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 5u);
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── TransactedPartialRevert: commit A, write B, revert → A persists ────
@@ -166,8 +165,7 @@ TEST_F(TransactionConformance, TransactedPartialRevert) {
     EXPECT_EQ(entries.size(), 1u);
 
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"StreamA", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"StreamA", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 150u);
     std::vector<uint8_t> buf(150);
     ULONG rc = 0;
@@ -176,11 +174,10 @@ TEST_F(TransactionConformance, TransactedPartialRevert) {
 
     // StreamB should not exist
     stream_ptr strm_b;
-    HRESULT hr = stg->OpenStream(L"StreamB", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm_b.put());
+    HRESULT hr = stg->OpenStream(L"StreamB", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm_b.put());
     EXPECT_TRUE(FAILED(hr));
 
-    for (auto& e : entries) free_statstg_name(e);
+    for (auto &e : entries) free_statstg_name(e);
 }
 
 // ── TransactedNewStream: create stream in transacted, revert → gone ─────
@@ -242,8 +239,7 @@ TEST_F(TransactionConformance, TransactedDestroyRevert) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Keeper", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Keeper", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 200u);
     std::vector<uint8_t> buf(200);
     ULONG rc = 0;
@@ -264,13 +260,11 @@ TEST_F(TransactionConformance, Win32TransactedStoutRead) {
         opts.usVersion = 1;
         opts.ulSectorSize = 4096;
         ASSERT_TRUE(SUCCEEDED(StgCreateStorageEx(
-            path.wstring().c_str(),
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_TRANSACTED,
-            STGFMT_DOCFILE, 0, &opts, nullptr,
-            IID_IStorage, reinterpret_cast<void**>(stg.put()))));
+            path.wstring().c_str(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_TRANSACTED,
+            STGFMT_DOCFILE, 0, &opts, nullptr, IID_IStorage, reinterpret_cast<void **>(stg.put()))));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"TxnStream",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"TxnStream", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 250)));
         strm.reset();
         ASSERT_TRUE(SUCCEEDED(stg->Commit(STGC_DEFAULT)));

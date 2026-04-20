@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class MiniStreamConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -31,8 +32,7 @@ TEST_F(MiniStreamConformance, SmallStreamInMini) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Small", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 100u);
     std::vector<uint8_t> buf(100);
     ULONG rc = 0;
@@ -59,8 +59,7 @@ TEST_F(MiniStreamConformance, BelowCutoff) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Below", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Below", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 4095u);
     std::vector<uint8_t> buf(4095);
     ULONG rc = 0;
@@ -87,8 +86,7 @@ TEST_F(MiniStreamConformance, ExactCutoff) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Exact", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Exact", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 4096u);
     std::vector<uint8_t> buf(4096);
     ULONG rc = 0;
@@ -120,8 +118,7 @@ TEST_F(MiniStreamConformance, MultipleMiniStreams) {
     for (int i = 0; i < 10; ++i) {
         auto name = L"Mini" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         EXPECT_EQ(win32_stream_size(strm.get()), 200u);
         std::vector<uint8_t> buf(200);
         ULONG rc = 0;
@@ -162,16 +159,16 @@ TEST_F(MiniStreamConformance, MiniAndRegularMixed) {
         {
             auto name = L"Small" + std::to_wstring(i);
             stream_ptr strm;
-            ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-                STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+            ASSERT_TRUE(
+                SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
             EXPECT_EQ(win32_stream_size(strm.get()), 100u);
         }
         // Check large
         {
             auto name = L"Large" + std::to_wstring(i);
             stream_ptr strm;
-            ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-                STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+            ASSERT_TRUE(
+                SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
             EXPECT_EQ(win32_stream_size(strm.get()), 5000u);
             std::vector<uint8_t> buf(5000);
             ULONG rc = 0;
@@ -192,8 +189,8 @@ TEST_F(MiniStreamConformance, Win32MiniStoutRead) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"MiniData",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStream(L"MiniData", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), 500)));
     }
 

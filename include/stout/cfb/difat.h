@@ -1,12 +1,13 @@
 #pragma once
 
-#include "stout/exports.h"
-#include "stout/types.h"
 #include "stout/cfb/constants.h"
 #include "stout/cfb/header.h"
 #include "stout/cfb/sector_io.h"
+#include "stout/exports.h"
 #include "stout/io/lock_bytes.h"
+#include "stout/types.h"
 #include "stout/util/endian.h"
+
 #include <cstdint>
 #include <expected>
 #include <vector>
@@ -17,13 +18,11 @@ namespace stout::cfb {
 // The first 109 entries are stored in the header; additional entries
 // are stored in dedicated DIFAT sectors linked via their last 4 bytes.
 class STOUT_API difat_table {
-public:
+  public:
     difat_table() = default;
 
     // Load the full DIFAT from a parsed header + any DIFAT sector chain
-    template<io::lock_bytes LB>
-    auto load(const cfb_header& hdr, sector_io<LB>& sio)
-        -> std::expected<void, error> {
+    template <io::lock_bytes LB> auto load(const cfb_header &hdr, sector_io<LB> &sio) -> std::expected<void, error> {
 
         entries_.clear();
         auto ss = sio.sector_size();
@@ -61,9 +60,7 @@ public:
     }
 
     // Write the DIFAT back to the header and any DIFAT sectors
-    template<io::lock_bytes LB>
-    auto flush(cfb_header& hdr, sector_io<LB>& sio)
-        -> std::expected<void, error> {
+    template <io::lock_bytes LB> auto flush(cfb_header &hdr, sector_io<LB> &sio) -> std::expected<void, error> {
 
         auto ss = sio.sector_size();
         auto entries_per = difat_entries_per_sector(ss);
@@ -109,7 +106,9 @@ public:
                     util::write_u32_le(buf.data() + j * 4, entries_[idx]);
                 }
                 // Fill remaining with FREESECT
-                for (uint32_t j = static_cast<uint32_t>(std::min(entries_.size() - (idx - entries_per), static_cast<size_t>(entries_per))); j < entries_per; ++j) {
+                for (uint32_t j = static_cast<uint32_t>(
+                         std::min(entries_.size() - (idx - entries_per), static_cast<size_t>(entries_per)));
+                     j < entries_per; ++j) {
                     // Already zeroed, write FREESECT
                     util::write_u32_le(buf.data() + j * 4, freesect);
                 }
@@ -128,21 +127,15 @@ public:
         return {};
     }
 
-    [[nodiscard]] auto fat_sector_ids() const noexcept -> const std::vector<uint32_t>& {
-        return entries_;
-    }
+    [[nodiscard]] auto fat_sector_ids() const noexcept -> const std::vector<uint32_t> & { return entries_; }
 
-    [[nodiscard]] auto fat_sector_ids() noexcept -> std::vector<uint32_t>& {
-        return entries_;
-    }
+    [[nodiscard]] auto fat_sector_ids() noexcept -> std::vector<uint32_t> & { return entries_; }
 
-    void add_fat_sector(uint32_t sector_id) {
-        entries_.push_back(sector_id);
-    }
+    void add_fat_sector(uint32_t sector_id) { entries_.push_back(sector_id); }
 
     [[nodiscard]] auto count() const noexcept -> size_t { return entries_.size(); }
 
-private:
+  private:
     std::vector<uint32_t> entries_;
 };
 

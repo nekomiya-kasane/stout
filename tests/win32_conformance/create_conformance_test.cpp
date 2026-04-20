@@ -1,18 +1,19 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
-#include <stout/cfb/header.h>
-#include <stout/cfb/constants.h>
-#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cstring>
+#include <gtest/gtest.h>
+#include <stout/cfb/constants.h>
+#include <stout/cfb/header.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class CreateConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -32,8 +33,7 @@ TEST_F(CreateConformance, EmptyFileV4_StoutCreateWin32Open) {
     // Win32 opens
     storage_ptr stg;
     HRESULT hr = win32_open_read(path.wstring(), stg.put());
-    ASSERT_TRUE(SUCCEEDED(hr)) << "Win32 failed to open Stout v4 file, hr=0x"
-        << std::hex << hr;
+    ASSERT_TRUE(SUCCEEDED(hr)) << "Win32 failed to open Stout v4 file, hr=0x" << std::hex << hr;
 
     // Verify root entry name
     STATSTG st{};
@@ -56,8 +56,7 @@ TEST_F(CreateConformance, EmptyFileV3_StoutCreateWin32Open) {
 
     storage_ptr stg;
     HRESULT hr = win32_open_read(path.wstring(), stg.put());
-    ASSERT_TRUE(SUCCEEDED(hr)) << "Win32 failed to open Stout v3 file, hr=0x"
-        << std::hex << hr;
+    ASSERT_TRUE(SUCCEEDED(hr)) << "Win32 failed to open Stout v3 file, hr=0x" << std::hex << hr;
 
     STATSTG st{};
     hr = stg->Stat(&st, STATFLAG_DEFAULT);
@@ -122,8 +121,7 @@ TEST_F(CreateConformance, HeaderFieldsV4) {
     ASSERT_GE(win32_bytes.size(), 512u);
 
     // Magic signature must match (first 8 bytes)
-    EXPECT_TRUE(std::equal(stout_bytes.begin(), stout_bytes.begin() + 8,
-                           win32_bytes.begin()));
+    EXPECT_TRUE(std::equal(stout_bytes.begin(), stout_bytes.begin() + 8, win32_bytes.begin()));
 
     // Minor version at offset 0x18 (2 bytes) — may differ
     // Major version at offset 0x1A (2 bytes) — must be 4

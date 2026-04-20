@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPData {
 };
 
 class StressDataPatternsConformance : public ::testing::TestWithParam<VPData> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,12 +22,13 @@ protected:
 static const VPData vp_data[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressDataPatternsConformance, ::testing::ValuesIn(vp_data),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── All zeros ───────────────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, AllZeros100) {
-    auto p = temp_file("dp_z100"); guard_.add(p);
+    auto p = temp_file("dp_z100");
+    guard_.add(p);
     std::vector<uint8_t> d(100, 0x00);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -47,7 +49,8 @@ TEST_P(StressDataPatternsConformance, AllZeros100) {
 }
 
 TEST_P(StressDataPatternsConformance, AllZeros1000) {
-    auto p = temp_file("dp_z1k"); guard_.add(p);
+    auto p = temp_file("dp_z1k");
+    guard_.add(p);
     std::vector<uint8_t> d(1000, 0x00);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -70,7 +73,8 @@ TEST_P(StressDataPatternsConformance, AllZeros1000) {
 // ── All 0xFF ────────────────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, AllFF100) {
-    auto p = temp_file("dp_ff100"); guard_.add(p);
+    auto p = temp_file("dp_ff100");
+    guard_.add(p);
     std::vector<uint8_t> d(100, 0xFF);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -91,7 +95,8 @@ TEST_P(StressDataPatternsConformance, AllFF100) {
 }
 
 TEST_P(StressDataPatternsConformance, AllFF2000) {
-    auto p = temp_file("dp_ff2k"); guard_.add(p);
+    auto p = temp_file("dp_ff2k");
+    guard_.add(p);
     std::vector<uint8_t> d(2000, 0xFF);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -114,7 +119,8 @@ TEST_P(StressDataPatternsConformance, AllFF2000) {
 // ── Ascending pattern ───────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, AscendingPattern256) {
-    auto p = temp_file("dp_asc256"); guard_.add(p);
+    auto p = temp_file("dp_asc256");
+    guard_.add(p);
     std::vector<uint8_t> d(256);
     for (int i = 0; i < 256; ++i) d[i] = static_cast<uint8_t>(i);
     {
@@ -136,7 +142,8 @@ TEST_P(StressDataPatternsConformance, AscendingPattern256) {
 }
 
 TEST_P(StressDataPatternsConformance, AscendingPattern512) {
-    auto p = temp_file("dp_asc512"); guard_.add(p);
+    auto p = temp_file("dp_asc512");
+    guard_.add(p);
     std::vector<uint8_t> d(512);
     for (int i = 0; i < 512; ++i) d[i] = static_cast<uint8_t>(i & 0xFF);
     {
@@ -160,7 +167,8 @@ TEST_P(StressDataPatternsConformance, AscendingPattern512) {
 // ── Alternating pattern ─────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, AlternatingAA55) {
-    auto p = temp_file("dp_alt"); guard_.add(p);
+    auto p = temp_file("dp_alt");
+    guard_.add(p);
     std::vector<uint8_t> d(500);
     for (size_t i = 0; i < 500; ++i) d[i] = (i % 2 == 0) ? 0xAA : 0x55;
     {
@@ -184,7 +192,8 @@ TEST_P(StressDataPatternsConformance, AlternatingAA55) {
 // ── Partial read at offset ──────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, PartialReadAtOffset) {
-    auto p = temp_file("dp_partial"); guard_.add(p);
+    auto p = temp_file("dp_partial");
+    guard_.add(p);
     auto d = make_test_data(1000, 0x42);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -207,7 +216,8 @@ TEST_P(StressDataPatternsConformance, PartialReadAtOffset) {
 // ── Write at offset ─────────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, WriteAtOffset) {
-    auto p = temp_file("dp_wroff"); guard_.add(p);
+    auto p = temp_file("dp_wroff");
+    guard_.add(p);
     auto d = make_test_data(500, 0x11);
     auto patch = make_test_data(100, 0xFF);
     {
@@ -236,7 +246,8 @@ TEST_P(StressDataPatternsConformance, WriteAtOffset) {
 // ── Multiple patterns in same file ──────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, MultiplePatternsInFile) {
-    auto p = temp_file("dp_multi"); guard_.add(p);
+    auto p = temp_file("dp_multi");
+    guard_.add(p);
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -253,8 +264,7 @@ TEST_P(StressDataPatternsConformance, MultiplePatternsInFile) {
     for (int i = 0; i < 8; ++i) {
         auto name = L"P" + std::to_wstring(i);
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr,
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+        ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
         std::vector<uint8_t> buf(200);
         ULONG rc = 0;
         ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data(), 200, &rc)));
@@ -265,7 +275,8 @@ TEST_P(StressDataPatternsConformance, MultiplePatternsInFile) {
 // ── Single byte values ──────────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, SingleByte0x00) {
-    auto p = temp_file("dp_sb00"); guard_.add(p);
+    auto p = temp_file("dp_sb00");
+    guard_.add(p);
     std::vector<uint8_t> d = {0x00};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -285,7 +296,8 @@ TEST_P(StressDataPatternsConformance, SingleByte0x00) {
 }
 
 TEST_P(StressDataPatternsConformance, SingleByte0xFF) {
-    auto p = temp_file("dp_sbFF"); guard_.add(p);
+    auto p = temp_file("dp_sbFF");
+    guard_.add(p);
     std::vector<uint8_t> d = {0xFF};
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -307,10 +319,14 @@ TEST_P(StressDataPatternsConformance, SingleByte0xFF) {
 // ── Repeating 4-byte pattern ────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, Repeating4BytePattern) {
-    auto p = temp_file("dp_rep4"); guard_.add(p);
+    auto p = temp_file("dp_rep4");
+    guard_.add(p);
     std::vector<uint8_t> d(400);
     for (size_t i = 0; i < 400; i += 4) {
-        d[i] = 0xDE; d[i+1] = 0xAD; d[i+2] = 0xBE; d[i+3] = 0xEF;
+        d[i] = 0xDE;
+        d[i + 1] = 0xAD;
+        d[i + 2] = 0xBE;
+        d[i + 3] = 0xEF;
     }
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -333,7 +349,8 @@ TEST_P(StressDataPatternsConformance, Repeating4BytePattern) {
 // ── Large ascending pattern ─────────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, LargeAscending4096) {
-    auto p = temp_file("dp_asc4k"); guard_.add(p);
+    auto p = temp_file("dp_asc4k");
+    guard_.add(p);
     std::vector<uint8_t> d(4096);
     for (size_t i = 0; i < 4096; ++i) d[i] = static_cast<uint8_t>(i & 0xFF);
     {
@@ -357,16 +374,19 @@ TEST_P(StressDataPatternsConformance, LargeAscending4096) {
 // ── Win32 writes pattern, Stout reads ───────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, Win32PatternStoutReads) {
-    auto p = temp_file("dp_w32pat"); guard_.add(p);
+    auto p = temp_file("dp_w32pat");
+    guard_.add(p);
     std::vector<uint8_t> d(300);
     for (size_t i = 0; i < 300; ++i) d[i] = static_cast<uint8_t>((i * 7) & 0xFF);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4) ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        if (GetParam().ver == cfb_version::v4)
+            ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
+        else
+            ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
         stream_ptr strm;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStream(L"S",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
+        ASSERT_TRUE(
+            SUCCEEDED(stg->CreateStream(L"S", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
         ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), d.data(), 300)));
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -381,7 +401,8 @@ TEST_P(StressDataPatternsConformance, Win32PatternStoutReads) {
 // ── Stout writes, Win32 reads various sizes ─────────────────────────────
 
 TEST_P(StressDataPatternsConformance, StoutWin32Size10) {
-    auto p = temp_file("dp_sw10"); guard_.add(p);
+    auto p = temp_file("dp_sw10");
+    guard_.add(p);
     auto d = make_test_data(10, 0xAB);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -402,7 +423,8 @@ TEST_P(StressDataPatternsConformance, StoutWin32Size10) {
 }
 
 TEST_P(StressDataPatternsConformance, StoutWin32Size63) {
-    auto p = temp_file("dp_sw63"); guard_.add(p);
+    auto p = temp_file("dp_sw63");
+    guard_.add(p);
     auto d = make_test_data(63, 0xCD);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -423,7 +445,8 @@ TEST_P(StressDataPatternsConformance, StoutWin32Size63) {
 }
 
 TEST_P(StressDataPatternsConformance, StoutWin32Size128) {
-    auto p = temp_file("dp_sw128"); guard_.add(p);
+    auto p = temp_file("dp_sw128");
+    guard_.add(p);
     auto d = make_test_data(128, 0xEF);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -444,7 +467,8 @@ TEST_P(StressDataPatternsConformance, StoutWin32Size128) {
 }
 
 TEST_P(StressDataPatternsConformance, StoutWin32Size2048) {
-    auto p = temp_file("dp_sw2k"); guard_.add(p);
+    auto p = temp_file("dp_sw2k");
+    guard_.add(p);
     auto d = make_test_data(2048, 0x77);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -465,7 +489,8 @@ TEST_P(StressDataPatternsConformance, StoutWin32Size2048) {
 }
 
 TEST_P(StressDataPatternsConformance, StoutWin32Size3000) {
-    auto p = temp_file("dp_sw3k"); guard_.add(p);
+    auto p = temp_file("dp_sw3k");
+    guard_.add(p);
     auto d = make_test_data(3000, 0x88);
     {
         auto cf = compound_file::create(p, GetParam().ver);
@@ -488,7 +513,8 @@ TEST_P(StressDataPatternsConformance, StoutWin32Size3000) {
 // ── Stout read-back integrity ───────────────────────────────────────────
 
 TEST_P(StressDataPatternsConformance, StoutReadbackIntegrity) {
-    auto p = temp_file("dp_readback"); guard_.add(p);
+    auto p = temp_file("dp_readback");
+    guard_.add(p);
     auto d = make_test_data(750, 0x99);
     {
         auto cf = compound_file::create(p, GetParam().ver);

@@ -2,24 +2,21 @@
  * @file test_hex.cpp
  * @brief Unit tests for hex_line formatter: empty, partial, full 16-byte lines.
  */
-#include <gtest/gtest.h>
+#include "ss_viewer/util/hex.h"
 
 #include <cstdint>
+#include <gtest/gtest.h>
 #include <span>
 #include <string>
 #include <vector>
-
-#include "ss_viewer/util/hex.h"
 
 using namespace ssv;
 
 // ── hex_line ────────────────────────────────────────────────────────────
 
 TEST(HexLine, FullLine) {
-    std::vector<uint8_t> data = {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
-    };
+    std::vector<uint8_t> data = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                                 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     auto line = hex_line(data, 0);
     // Offset
     EXPECT_TRUE(line.starts_with("00000000"));
@@ -31,7 +28,7 @@ TEST(HexLine, FullLine) {
 }
 
 TEST(HexLine, PartialLine) {
-    std::vector<uint8_t> data = {0x41, 0x42, 0x43};  // "ABC"
+    std::vector<uint8_t> data = {0x41, 0x42, 0x43}; // "ABC"
     auto line = hex_line(data, 0);
     EXPECT_TRUE(line.starts_with("00000000"));
     EXPECT_NE(line.find("41 42 43"), std::string::npos);
@@ -45,7 +42,7 @@ TEST(HexLine, EmptyData) {
     auto line = hex_line(data, 0);
     EXPECT_TRUE(line.starts_with("00000000"));
     // No hex bytes, just padding
-    EXPECT_NE(line.find("||"), std::string::npos);  // empty ASCII section
+    EXPECT_NE(line.find("||"), std::string::npos); // empty ASCII section
 }
 
 TEST(HexLine, OffsetNonZero) {
@@ -56,10 +53,8 @@ TEST(HexLine, OffsetNonZero) {
 }
 
 TEST(HexLine, PrintableVsNonPrintable) {
-    std::vector<uint8_t> data = {
-        0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x00, 0x01, 0x7F,
-        0x80, 0xFF, 0x20, 0x7E, 0x1F, 0x41, 0x42, 0x43
-    };
+    std::vector<uint8_t> data = {0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x00, 0x01, 0x7F,
+                                 0x80, 0xFF, 0x20, 0x7E, 0x1F, 0x41, 0x42, 0x43};
     auto line = hex_line(data, 0);
     // "Hello" should appear, non-printable as '.'
     EXPECT_NE(line.find("Hello"), std::string::npos);

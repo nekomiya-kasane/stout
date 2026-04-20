@@ -1,8 +1,9 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
@@ -13,7 +14,7 @@ struct VPErr {
 };
 
 class StressErrorHandlingConformance : public ::testing::TestWithParam<VPErr> {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -21,7 +22,7 @@ protected:
 static const VPErr vp_err[] = {{cfb_version::v3, 3}, {cfb_version::v4, 4}};
 
 INSTANTIATE_TEST_SUITE_P(V, StressErrorHandlingConformance, ::testing::ValuesIn(vp_err),
-    [](const auto& info) { return info.param.major == 3 ? "V3" : "V4"; });
+                         [](const auto &info) { return info.param.major == 3 ? "V3" : "V4"; });
 
 // ── Open non-existent file ──────────────────────────────────────────────
 
@@ -33,8 +34,13 @@ TEST_P(StressErrorHandlingConformance, OpenNonExistentFile) {
 // ── Open stream that doesn't exist ──────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, OpenNonExistentStream) {
-    auto p = temp_file("se_nostrm"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("se_nostrm");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().open_stream("Ghost");
@@ -44,8 +50,13 @@ TEST_P(StressErrorHandlingConformance, OpenNonExistentStream) {
 // ── Open storage that doesn't exist ─────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, OpenNonExistentStorage) {
-    auto p = temp_file("se_nostg"); guard_.add(p);
-    { auto cf = compound_file::create(p, GetParam().ver); ASSERT_TRUE(cf.has_value()); ASSERT_TRUE(cf->flush().has_value()); }
+    auto p = temp_file("se_nostg");
+    guard_.add(p);
+    {
+        auto cf = compound_file::create(p, GetParam().ver);
+        ASSERT_TRUE(cf.has_value());
+        ASSERT_TRUE(cf->flush().has_value());
+    }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().open_storage("Ghost");
@@ -55,7 +66,8 @@ TEST_P(StressErrorHandlingConformance, OpenNonExistentStorage) {
 // ── Remove non-existent entry ───────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, RemoveNonExistent) {
-    auto p = temp_file("se_remnone"); guard_.add(p);
+    auto p = temp_file("se_remnone");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().remove("Ghost");
@@ -65,7 +77,8 @@ TEST_P(StressErrorHandlingConformance, RemoveNonExistent) {
 // ── Create duplicate stream ─────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, CreateDuplicateStream) {
-    auto p = temp_file("se_dupstrm"); guard_.add(p);
+    auto p = temp_file("se_dupstrm");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("X").has_value());
@@ -77,7 +90,8 @@ TEST_P(StressErrorHandlingConformance, CreateDuplicateStream) {
 // ── Create duplicate storage ────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, CreateDuplicateStorage) {
-    auto p = temp_file("se_dupstg"); guard_.add(p);
+    auto p = temp_file("se_dupstg");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_storage("X").has_value());
@@ -89,7 +103,8 @@ TEST_P(StressErrorHandlingConformance, CreateDuplicateStorage) {
 // ── Create stream with empty name ───────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, CreateStreamEmptyName) {
-    auto p = temp_file("se_emptyname"); guard_.add(p);
+    auto p = temp_file("se_emptyname");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().create_stream("");
@@ -100,7 +115,8 @@ TEST_P(StressErrorHandlingConformance, CreateStreamEmptyName) {
 // ── Create storage with empty name ──────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, CreateStorageEmptyName) {
-    auto p = temp_file("se_emptystg"); guard_.add(p);
+    auto p = temp_file("se_emptystg");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().create_storage("");
@@ -111,7 +127,8 @@ TEST_P(StressErrorHandlingConformance, CreateStorageEmptyName) {
 // ── Create with too-long name ───────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, CreateStreamTooLongName) {
-    auto p = temp_file("se_longname"); guard_.add(p);
+    auto p = temp_file("se_longname");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().create_stream(std::string(32, 'A'));
@@ -120,7 +137,8 @@ TEST_P(StressErrorHandlingConformance, CreateStreamTooLongName) {
 }
 
 TEST_P(StressErrorHandlingConformance, CreateStorageTooLongName) {
-    auto p = temp_file("se_longstg"); guard_.add(p);
+    auto p = temp_file("se_longstg");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto r = cf->root_storage().create_storage(std::string(32, 'A'));
@@ -131,7 +149,8 @@ TEST_P(StressErrorHandlingConformance, CreateStorageTooLongName) {
 // ── Rename with empty name ──────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, RenameStorageEmptyName) {
-    auto p = temp_file("se_renempty"); guard_.add(p);
+    auto p = temp_file("se_renempty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto sub = cf->root_storage().create_storage("X");
@@ -140,7 +159,8 @@ TEST_P(StressErrorHandlingConformance, RenameStorageEmptyName) {
 }
 
 TEST_P(StressErrorHandlingConformance, RenameStreamEmptyName) {
-    auto p = temp_file("se_rensempty"); guard_.add(p);
+    auto p = temp_file("se_rensempty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("X");
@@ -151,7 +171,8 @@ TEST_P(StressErrorHandlingConformance, RenameStreamEmptyName) {
 // ── Rename with too-long name ───────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, RenameStorageTooLong) {
-    auto p = temp_file("se_renlong"); guard_.add(p);
+    auto p = temp_file("se_renlong");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto sub = cf->root_storage().create_storage("X");
@@ -160,7 +181,8 @@ TEST_P(StressErrorHandlingConformance, RenameStorageTooLong) {
 }
 
 TEST_P(StressErrorHandlingConformance, RenameStreamTooLong) {
-    auto p = temp_file("se_renslong"); guard_.add(p);
+    auto p = temp_file("se_renslong");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("X");
@@ -171,7 +193,8 @@ TEST_P(StressErrorHandlingConformance, RenameStreamTooLong) {
 // ── Read from empty stream ──────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, ReadFromEmptyStream) {
-    auto p = temp_file("se_rdempty"); guard_.add(p);
+    auto p = temp_file("se_rdempty");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("E");
@@ -185,7 +208,8 @@ TEST_P(StressErrorHandlingConformance, ReadFromEmptyStream) {
 // ── Read beyond stream end ──────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, ReadBeyondEnd) {
-    auto p = temp_file("se_rdbeyond"); guard_.add(p);
+    auto p = temp_file("se_rdbeyond");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto s = cf->root_storage().create_stream("D");
@@ -201,7 +225,8 @@ TEST_P(StressErrorHandlingConformance, ReadBeyondEnd) {
 // ── Transaction errors ──────────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, DoubleBeginTransaction) {
-    auto p = temp_file("se_dbltxn"); guard_.add(p);
+    auto p = temp_file("se_dbltxn");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->begin_transaction().has_value());
@@ -209,14 +234,16 @@ TEST_P(StressErrorHandlingConformance, DoubleBeginTransaction) {
 }
 
 TEST_P(StressErrorHandlingConformance, CommitWithoutTransaction) {
-    auto p = temp_file("se_notxncom"); guard_.add(p);
+    auto p = temp_file("se_notxncom");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->commit().has_value());
 }
 
 TEST_P(StressErrorHandlingConformance, RevertWithoutTransaction) {
-    auto p = temp_file("se_notxnrev"); guard_.add(p);
+    auto p = temp_file("se_notxnrev");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->revert().has_value());
@@ -225,7 +252,8 @@ TEST_P(StressErrorHandlingConformance, RevertWithoutTransaction) {
 // ── set_element_times on non-existent child ─────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, SetElementTimesNotFound) {
-    auto p = temp_file("se_eltnf"); guard_.add(p);
+    auto p = temp_file("se_eltnf");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     auto tp = std::chrono::system_clock::now();
@@ -236,14 +264,16 @@ TEST_P(StressErrorHandlingConformance, SetElementTimesNotFound) {
 // ── Exists check ────────────────────────────────────────────────────────
 
 TEST_P(StressErrorHandlingConformance, ExistsReturnsFalseForMissing) {
-    auto p = temp_file("se_exists"); guard_.add(p);
+    auto p = temp_file("se_exists");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     EXPECT_FALSE(cf->root_storage().exists("Nothing"));
 }
 
 TEST_P(StressErrorHandlingConformance, ExistsReturnsTrueForPresent) {
-    auto p = temp_file("se_existsok"); guard_.add(p);
+    auto p = temp_file("se_existsok");
+    guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
     ASSERT_TRUE(cf->root_storage().create_stream("Here").has_value());

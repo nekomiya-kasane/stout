@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/util/filetime.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::util;

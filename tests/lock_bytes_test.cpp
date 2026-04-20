@@ -1,8 +1,9 @@
-#include <gtest/gtest.h>
-#include "stout/io/memory_lock_bytes.h"
 #include "stout/io/file_lock_bytes.h"
-#include <filesystem>
+#include "stout/io/memory_lock_bytes.h"
+
 #include <array>
+#include <filesystem>
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::io;
@@ -100,7 +101,7 @@ TEST(MemoryLockBytesTest, ConstructFromVector) {
 // ── file_lock_bytes tests ──────────────────────────────────────────────
 
 class FileLockBytesTest : public ::testing::Test {
-protected:
+  protected:
     std::filesystem::path temp_path;
 
     void SetUp() override {
@@ -108,9 +109,7 @@ protected:
         std::filesystem::remove(temp_path);
     }
 
-    void TearDown() override {
-        std::filesystem::remove(temp_path);
-    }
+    void TearDown() override { std::filesystem::remove(temp_path); }
 };
 
 TEST_F(FileLockBytesTest, CreateAndWrite) {

@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/ole/property_set.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 using namespace stout::ole;
@@ -54,10 +55,10 @@ TEST(PropertySectionTest, SetBool) {
 
 TEST(PropertySetTest, AddSection) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_string(pid::title, "Hello");
 
-    auto* found = ps.section(fmtid_summary_information());
+    auto *found = ps.section(fmtid_summary_information());
     ASSERT_NE(found, nullptr);
     EXPECT_EQ(found->get_string(pid::title), "Hello");
 }
@@ -69,9 +70,9 @@ TEST(PropertySetTest, SectionNotFound) {
 
 TEST(PropertySetTest, AddSectionIdempotent) {
     property_set ps;
-    auto& s1 = ps.add_section(fmtid_summary_information());
+    auto &s1 = ps.add_section(fmtid_summary_information());
     s1.set_string(pid::title, "First");
-    auto& s2 = ps.add_section(fmtid_summary_information());
+    auto &s2 = ps.add_section(fmtid_summary_information());
     EXPECT_EQ(s2.get_string(pid::title), "First");
     EXPECT_EQ(ps.sections.size(), 1u);
 }
@@ -94,7 +95,7 @@ TEST(PropertySetRoundtrip, EmptySection) {
 
 TEST(PropertySetRoundtrip, StringProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_string(pid::title, "Test Title");
     sec.set_string(pid::author, "John Doe");
 
@@ -110,7 +111,7 @@ TEST(PropertySetRoundtrip, StringProperty) {
 
 TEST(PropertySetRoundtrip, IntegerProperties) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_i4(pid::page_count, 100);
     sec.set_u4(pid::security, 0xDEADBEEF);
 
@@ -126,7 +127,7 @@ TEST(PropertySetRoundtrip, IntegerProperties) {
 
 TEST(PropertySetRoundtrip, FiletimeProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_filetime(pid::create_dtm, 0x0102030405060708ULL);
 
     auto data = serialize_property_set(ps);
@@ -139,7 +140,7 @@ TEST(PropertySetRoundtrip, FiletimeProperty) {
 
 TEST(PropertySetRoundtrip, BoolProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_bool(0x100, true);
 
     auto data = serialize_property_set(ps);
@@ -152,7 +153,7 @@ TEST(PropertySetRoundtrip, BoolProperty) {
 
 TEST(PropertySetRoundtrip, FloatProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set(0x200, vt::r4, 3.14f);
 
     auto data = serialize_property_set(ps);
@@ -160,16 +161,16 @@ TEST(PropertySetRoundtrip, FloatProperty) {
 
     auto ps2 = parse_property_set(*data);
     ASSERT_TRUE(ps2.has_value());
-    auto* p = ps2->sections[0].get(0x200);
+    auto *p = ps2->sections[0].get(0x200);
     ASSERT_NE(p, nullptr);
-    auto* f = std::get_if<float>(&p->value);
+    auto *f = std::get_if<float>(&p->value);
     ASSERT_NE(f, nullptr);
     EXPECT_NEAR(*f, 3.14f, 0.001f);
 }
 
 TEST(PropertySetRoundtrip, DoubleProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set(0x201, vt::r8, 2.71828);
 
     auto data = serialize_property_set(ps);
@@ -177,16 +178,16 @@ TEST(PropertySetRoundtrip, DoubleProperty) {
 
     auto ps2 = parse_property_set(*data);
     ASSERT_TRUE(ps2.has_value());
-    auto* p = ps2->sections[0].get(0x201);
+    auto *p = ps2->sections[0].get(0x201);
     ASSERT_NE(p, nullptr);
-    auto* d = std::get_if<double>(&p->value);
+    auto *d = std::get_if<double>(&p->value);
     ASSERT_NE(d, nullptr);
     EXPECT_NEAR(*d, 2.71828, 0.00001);
 }
 
 TEST(PropertySetRoundtrip, BlobProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     std::vector<uint8_t> blob = {0x01, 0x02, 0x03, 0x04, 0x05};
     sec.set(0x300, vt::blob, blob);
 
@@ -195,16 +196,16 @@ TEST(PropertySetRoundtrip, BlobProperty) {
 
     auto ps2 = parse_property_set(*data);
     ASSERT_TRUE(ps2.has_value());
-    auto* p = ps2->sections[0].get(0x300);
+    auto *p = ps2->sections[0].get(0x300);
     ASSERT_NE(p, nullptr);
-    auto* b = std::get_if<std::vector<uint8_t>>(&p->value);
+    auto *b = std::get_if<std::vector<uint8_t>>(&p->value);
     ASSERT_NE(b, nullptr);
     EXPECT_EQ(*b, blob);
 }
 
 TEST(PropertySetRoundtrip, GuidProperty) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     guid g = {0x12345678, 0xABCD, 0xEF01, {0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01}};
     sec.set(0x400, vt::clsid, g);
 
@@ -213,19 +214,19 @@ TEST(PropertySetRoundtrip, GuidProperty) {
 
     auto ps2 = parse_property_set(*data);
     ASSERT_TRUE(ps2.has_value());
-    auto* p = ps2->sections[0].get(0x400);
+    auto *p = ps2->sections[0].get(0x400);
     ASSERT_NE(p, nullptr);
-    auto* gp = std::get_if<guid>(&p->value);
+    auto *gp = std::get_if<guid>(&p->value);
     ASSERT_NE(gp, nullptr);
     EXPECT_EQ(*gp, g);
 }
 
 TEST(PropertySetRoundtrip, TwoSections) {
     property_set ps;
-    auto& s1 = ps.add_section(fmtid_summary_information());
+    auto &s1 = ps.add_section(fmtid_summary_information());
     s1.set_string(pid::title, "Title");
 
-    auto& s2 = ps.add_section(fmtid_doc_summary_information());
+    auto &s2 = ps.add_section(fmtid_doc_summary_information());
     s2.set_i4(0x02, 99);
 
     auto data = serialize_property_set(ps);
@@ -235,18 +236,18 @@ TEST(PropertySetRoundtrip, TwoSections) {
     ASSERT_TRUE(ps2.has_value());
     ASSERT_EQ(ps2->sections.size(), 2u);
 
-    auto* sec1 = ps2->section(fmtid_summary_information());
+    auto *sec1 = ps2->section(fmtid_summary_information());
     ASSERT_NE(sec1, nullptr);
     EXPECT_EQ(sec1->get_string(pid::title), "Title");
 
-    auto* sec2 = ps2->section(fmtid_doc_summary_information());
+    auto *sec2 = ps2->section(fmtid_doc_summary_information());
     ASSERT_NE(sec2, nullptr);
     EXPECT_EQ(sec2->get_i4(0x02), 99);
 }
 
 TEST(PropertySetRoundtrip, MixedTypes) {
     property_set ps;
-    auto& sec = ps.add_section(fmtid_summary_information());
+    auto &sec = ps.add_section(fmtid_summary_information());
     sec.set_string(pid::title, "Mixed");
     sec.set_i4(pid::page_count, 7);
     sec.set_filetime(pid::create_dtm, 132000000000000000ULL);
@@ -258,7 +259,7 @@ TEST(PropertySetRoundtrip, MixedTypes) {
 
     auto ps2 = parse_property_set(*data);
     ASSERT_TRUE(ps2.has_value());
-    auto& s = ps2->sections[0];
+    auto &s = ps2->sections[0];
     EXPECT_EQ(s.get_string(pid::title), "Mixed");
     EXPECT_EQ(s.get_i4(pid::page_count), 7);
     EXPECT_EQ(s.get_filetime(pid::create_dtm), 132000000000000000ULL);

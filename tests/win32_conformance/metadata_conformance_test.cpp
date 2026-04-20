@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
 #include "conformance_utils.h"
-#include <stout/compound_file.h>
+
 #include <gtest/gtest.h>
+#include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;
 
 class MetadataConformance : public ::testing::Test {
-protected:
+  protected:
     com_init com_;
     temp_file_guard guard_;
 };
@@ -32,8 +33,7 @@ TEST_F(MetadataConformance, StatStreamSize) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Data", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 1234u);
 }
 
@@ -201,8 +201,8 @@ TEST_F(MetadataConformance, Win32SubStorageClsid) {
         storage_ptr stg;
         ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
         storage_ptr sub;
-        ASSERT_TRUE(SUCCEEDED(stg->CreateStorage(L"Child",
-            STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
+        ASSERT_TRUE(SUCCEEDED(
+            stg->CreateStorage(L"Child", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
         ASSERT_TRUE(SUCCEEDED(sub->SetClass(sub_clsid)));
     }
 
@@ -234,8 +234,7 @@ TEST_F(MetadataConformance, EmptyStreamSizeZero) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     stream_ptr strm;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Empty", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
+    ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Empty", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 0u);
 
     // Stout
@@ -320,7 +319,7 @@ TEST_F(MetadataConformance, StoutTimestampsWin32Read) {
     guard_.add(path);
 
     // Use a known time point: 2020-01-01 00:00:00 UTC
-    auto tp = std::chrono::sys_days{std::chrono::year{2020}/std::chrono::January/1};
+    auto tp = std::chrono::sys_days{std::chrono::year{2020} / std::chrono::January / 1};
     auto ft = stout::file_time{tp};
 
     {
@@ -337,8 +336,8 @@ TEST_F(MetadataConformance, StoutTimestampsWin32Read) {
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     storage_ptr sub;
-    ASSERT_TRUE(SUCCEEDED(stg->OpenStorage(L"Timed", nullptr,
-        STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
+    ASSERT_TRUE(
+        SUCCEEDED(stg->OpenStorage(L"Timed", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
     STATSTG stat{};
     ASSERT_TRUE(SUCCEEDED(sub->Stat(&stat, STATFLAG_NONAME)));
 

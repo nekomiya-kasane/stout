@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "stout/compound_file.h"
+
+#include <gtest/gtest.h>
 
 using namespace stout;
 
@@ -293,7 +294,7 @@ TEST(CompoundFileTest, OpenFromMemoryRoundtrip) {
     cf1->flush();
 
     // Get the raw bytes
-    auto* raw = cf1->data();
+    auto *raw = cf1->data();
     ASSERT_NE(raw, nullptr);
     ASSERT_GT(raw->size(), 0u);
 
