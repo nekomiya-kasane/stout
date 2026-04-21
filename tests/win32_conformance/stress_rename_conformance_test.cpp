@@ -1,10 +1,10 @@
 #ifdef _WIN32
 
-#include "conformance_utils.h"
+#    include "conformance_utils.h"
 
-#include <gtest/gtest.h>
-#include <set>
-#include <stout/compound_file.h>
+#    include <gtest/gtest.h>
+#    include <set>
+#    include <stout/compound_file.h>
 
 using namespace conformance;
 using namespace stout;

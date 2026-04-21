@@ -2,15 +2,15 @@
 
 #ifdef _WIN32
 
-#include "win32_helpers.h"
+#    include "win32_helpers.h"
 
-#include <cstdint>
-#include <filesystem>
-#include <fstream>
-#include <optional>
-#include <random>
-#include <string>
-#include <vector>
+#    include <cstdint>
+#    include <filesystem>
+#    include <fstream>
+#    include <optional>
+#    include <random>
+#    include <string>
+#    include <vector>
 
 namespace conformance {
 

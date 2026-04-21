@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #if defined(_MSC_VER)
-#include <io.h>
+#    include <io.h>
 #endif
 
 namespace stout::io {
