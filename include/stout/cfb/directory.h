@@ -87,7 +87,9 @@ class STOUT_API directory {
 
         for (auto sec_id : iterate_chain(fat, first_dir_sector)) {
             auto r = sio.read_sector(sec_id, buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
             for (uint32_t j = 0; j < entries_per; ++j) {
                 auto span = std::span<const uint8_t, dir_entry_size>(buf.data() + j * dir_entry_size, dir_entry_size);
                 entries_.push_back(parse_dir_entry(span, is_v3));
@@ -111,7 +113,9 @@ class STOUT_API directory {
                 serialize_dir_entry(entries_[idx], span, is_v3_);
             }
             auto r = sio.write_sector(sec_id, buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
         }
         return {};
     }

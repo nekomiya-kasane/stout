@@ -122,7 +122,9 @@ TEST_P(StressDataPatternsConformance, AscendingPattern256) {
     auto p = temp_file("dp_asc256");
     guard_.add(p);
     std::vector<uint8_t> d(256);
-    for (int i = 0; i < 256; ++i) d[i] = static_cast<uint8_t>(i);
+    for (int i = 0; i < 256; ++i) {
+        d[i] = static_cast<uint8_t>(i);
+    }
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -145,7 +147,9 @@ TEST_P(StressDataPatternsConformance, AscendingPattern512) {
     auto p = temp_file("dp_asc512");
     guard_.add(p);
     std::vector<uint8_t> d(512);
-    for (int i = 0; i < 512; ++i) d[i] = static_cast<uint8_t>(i & 0xFF);
+    for (int i = 0; i < 512; ++i) {
+        d[i] = static_cast<uint8_t>(i & 0xFF);
+    }
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -170,7 +174,9 @@ TEST_P(StressDataPatternsConformance, AlternatingAA55) {
     auto p = temp_file("dp_alt");
     guard_.add(p);
     std::vector<uint8_t> d(500);
-    for (size_t i = 0; i < 500; ++i) d[i] = (i % 2 == 0) ? 0xAA : 0x55;
+    for (size_t i = 0; i < 500; ++i) {
+        d[i] = (i % 2 == 0) ? 0xAA : 0x55;
+    }
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -352,7 +358,9 @@ TEST_P(StressDataPatternsConformance, LargeAscending4096) {
     auto p = temp_file("dp_asc4k");
     guard_.add(p);
     std::vector<uint8_t> d(4096);
-    for (size_t i = 0; i < 4096; ++i) d[i] = static_cast<uint8_t>(i & 0xFF);
+    for (size_t i = 0; i < 4096; ++i) {
+        d[i] = static_cast<uint8_t>(i & 0xFF);
+    }
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
@@ -377,13 +385,16 @@ TEST_P(StressDataPatternsConformance, Win32PatternStoutReads) {
     auto p = temp_file("dp_w32pat");
     guard_.add(p);
     std::vector<uint8_t> d(300);
-    for (size_t i = 0; i < 300; ++i) d[i] = static_cast<uint8_t>((i * 7) & 0xFF);
+    for (size_t i = 0; i < 300; ++i) {
+        d[i] = static_cast<uint8_t>((i * 7) & 0xFF);
+    }
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(
             SUCCEEDED(stg->CreateStream(L"S", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));

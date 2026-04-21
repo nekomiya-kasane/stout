@@ -36,7 +36,9 @@ static void resize_and_verify(const std::filesystem::path &path, cfb_version ver
         ASSERT_TRUE(cf.has_value());
         auto s = cf->root_storage().create_stream("R");
         ASSERT_TRUE(s.has_value());
-        if (initial_sz > 0) ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
+        if (initial_sz > 0) {
+            ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
+        }
         ASSERT_TRUE(s->resize(new_sz).has_value());
         EXPECT_EQ(s->size(), new_sz);
         // Verify preserved data
@@ -313,10 +315,11 @@ TEST_P(StressResizeConformance, Win32CreateStoutResizeWin32Verify) {
     auto data = make_test_data(6000, 0x55);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(
             SUCCEEDED(stg->CreateStream(L"R", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));

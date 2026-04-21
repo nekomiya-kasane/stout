@@ -107,7 +107,9 @@ TEST(ConformanceTest, ManyStreams) {
         EXPECT_EQ(s->size(), static_cast<uint64_t>((i + 1) * 10));
         std::vector<uint8_t> buf(s->size(), 0);
         s->read(0, buf);
-        for (auto b : buf) EXPECT_EQ(b, static_cast<uint8_t>(i));
+        for (auto b : buf) {
+            EXPECT_EQ(b, static_cast<uint8_t>(i));
+        }
     }
 }
 

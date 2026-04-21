@@ -189,10 +189,11 @@ TEST_P(StressRenameConformance, Win32RenameStoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStream(L"Original", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));

@@ -69,7 +69,9 @@ TEST_P(StressHierarchyConformance, TwoLevels5x4) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto root_entries = win32_enumerate(stg.get());
     EXPECT_EQ(root_entries.size(), 5u);
-    for (auto &e : root_entries) free_statstg_name(e);
+    for (auto &e : root_entries) {
+        free_statstg_name(e);
+    }
     for (int i = 0; i < 5; ++i) {
         auto name = L"D" + std::to_wstring(i);
         storage_ptr sub;
@@ -77,7 +79,9 @@ TEST_P(StressHierarchyConformance, TwoLevels5x4) {
             stg->OpenStorage(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, nullptr, 0, sub.put())));
         auto sub_entries = win32_enumerate(sub.get());
         EXPECT_EQ(sub_entries.size(), 4u);
-        for (auto &e : sub_entries) free_statstg_name(e);
+        for (auto &e : sub_entries) {
+            free_statstg_name(e);
+        }
     }
 }
 
@@ -212,10 +216,11 @@ TEST_P(StressHierarchyConformance, Win32HierarchyStoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         storage_ptr sub;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStorage(L"Sub", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
@@ -254,7 +259,9 @@ TEST_P(StressHierarchyConformance, SameNamePrefixDifferentTypes) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 3u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── Delete sub-storage, verify parent ───────────────────────────────────

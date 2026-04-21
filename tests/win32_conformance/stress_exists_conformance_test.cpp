@@ -82,8 +82,12 @@ TEST_P(StressExistsConformance, ExistsMultipleEntries) {
     guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 10; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
-    for (int i = 0; i < 10; ++i) EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
+    for (int i = 0; i < 10; ++i) {
+        ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+    }
+    for (int i = 0; i < 10; ++i) {
+        EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
+    }
     EXPECT_FALSE(cf->root_storage().exists("S10"));
 }
 
@@ -185,9 +189,15 @@ TEST_P(StressExistsConformance, Exists20Entries) {
     guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 20; ++i) ASSERT_TRUE(cf->root_storage().create_stream("E" + std::to_string(i)).has_value());
-    for (int i = 0; i < 20; ++i) EXPECT_TRUE(cf->root_storage().exists("E" + std::to_string(i)));
-    for (int i = 20; i < 25; ++i) EXPECT_FALSE(cf->root_storage().exists("E" + std::to_string(i)));
+    for (int i = 0; i < 20; ++i) {
+        ASSERT_TRUE(cf->root_storage().create_stream("E" + std::to_string(i)).has_value());
+    }
+    for (int i = 0; i < 20; ++i) {
+        EXPECT_TRUE(cf->root_storage().exists("E" + std::to_string(i)));
+    }
+    for (int i = 20; i < 25; ++i) {
+        EXPECT_FALSE(cf->root_storage().exists("E" + std::to_string(i)));
+    }
 }
 
 // ── exists after partial delete ─────────────────────────────────────────
@@ -197,13 +207,18 @@ TEST_P(StressExistsConformance, ExistsAfterPartialDelete) {
     guard_.add(p);
     auto cf = compound_file::create(p, GetParam().ver);
     ASSERT_TRUE(cf.has_value());
-    for (int i = 0; i < 10; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
-    for (int i = 0; i < 10; i += 2) ASSERT_TRUE(cf->root_storage().remove("S" + std::to_string(i)).has_value());
     for (int i = 0; i < 10; ++i) {
-        if (i % 2 == 0)
+        ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+    }
+    for (int i = 0; i < 10; i += 2) {
+        ASSERT_TRUE(cf->root_storage().remove("S" + std::to_string(i)).has_value());
+    }
+    for (int i = 0; i < 10; ++i) {
+        if (i % 2 == 0) {
             EXPECT_FALSE(cf->root_storage().exists("S" + std::to_string(i)));
-        else
+        } else {
             EXPECT_TRUE(cf->root_storage().exists("S" + std::to_string(i)));
+        }
     }
 }
 

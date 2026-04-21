@@ -93,7 +93,9 @@ TEST(SectorIOTest, ReadAtPartial) {
     sector_io sio(mlb, 512);
 
     std::array<uint8_t, 512> data;
-    for (uint32_t i = 0; i < 512; ++i) data[i] = static_cast<uint8_t>(i & 0xFF);
+    for (uint32_t i = 0; i < 512; ++i) {
+        data[i] = static_cast<uint8_t>(i & 0xFF);
+    }
     sio.write_sector(0, data);
 
     std::array<uint8_t, 4> partial = {};

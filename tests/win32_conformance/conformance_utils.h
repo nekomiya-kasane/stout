@@ -47,7 +47,9 @@ struct temp_file_guard {
     std::vector<fs::path> paths;
     ~temp_file_guard() {
         std::error_code ec;
-        for (auto &p : paths) fs::remove(p, ec);
+        for (auto &p : paths) {
+            fs::remove(p, ec);
+        }
     }
     void add(const fs::path &p) { paths.push_back(p); }
 };
@@ -55,7 +57,9 @@ struct temp_file_guard {
 // Read entire file into a byte vector
 inline auto read_file_bytes(const fs::path &path) -> std::vector<uint8_t> {
     std::ifstream f(path, std::ios::binary | std::ios::ate);
-    if (!f) return {};
+    if (!f) {
+        return {};
+    }
     auto sz = f.tellg();
     f.seekg(0);
     std::vector<uint8_t> buf(static_cast<size_t>(sz));
@@ -69,9 +73,13 @@ inline auto compare_files(const fs::path &a, const fs::path &b) -> std::optional
     auto db = read_file_bytes(b);
     auto min_sz = std::min(da.size(), db.size());
     for (size_t i = 0; i < min_sz; ++i) {
-        if (da[i] != db[i]) return static_cast<uint64_t>(i);
+        if (da[i] != db[i]) {
+            return static_cast<uint64_t>(i);
+        }
     }
-    if (da.size() != db.size()) return static_cast<uint64_t>(min_sz);
+    if (da.size() != db.size()) {
+        return static_cast<uint64_t>(min_sz);
+    }
     return std::nullopt;
 }
 
@@ -88,7 +96,9 @@ inline auto make_test_data(size_t size, uint8_t seed = 0) -> std::vector<uint8_t
 inline HRESULT win32_stream_write(IStream *strm, const void *data, ULONG size) {
     ULONG written = 0;
     HRESULT hr = strm->Write(data, size, &written);
-    if (SUCCEEDED(hr) && written != size) return E_FAIL;
+    if (SUCCEEDED(hr) && written != size) {
+        return E_FAIL;
+    }
     return hr;
 }
 
@@ -96,7 +106,9 @@ inline HRESULT win32_stream_write(IStream *strm, const void *data, ULONG size) {
 inline HRESULT win32_stream_read(IStream *strm, void *buf, ULONG size, ULONG *actual = nullptr) {
     ULONG read_count = 0;
     HRESULT hr = strm->Read(buf, size, &read_count);
-    if (actual) *actual = read_count;
+    if (actual) {
+        *actual = read_count;
+    }
     return hr;
 }
 
@@ -111,7 +123,9 @@ inline auto win32_stream_size(IStream *strm) -> uint64_t {
 inline auto win32_enumerate(IStorage *stg) -> std::vector<STATSTG> {
     std::vector<STATSTG> result;
     enum_stat_ptr enumerator;
-    if (FAILED(stg->EnumElements(0, nullptr, 0, enumerator.put()))) return result;
+    if (FAILED(stg->EnumElements(0, nullptr, 0, enumerator.put()))) {
+        return result;
+    }
     STATSTG st{};
     while (enumerator->Next(1, &st, nullptr) == S_OK) {
         result.push_back(st);

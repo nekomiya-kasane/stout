@@ -74,7 +74,9 @@ TEST_P(StressEnumerationConformance, FiveChildren) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 5; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) {
+            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     {
@@ -93,7 +95,9 @@ TEST_P(StressEnumerationConformance, TwentyChildren) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 20; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 20; ++i) {
+            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     {
@@ -112,7 +116,9 @@ TEST_P(StressEnumerationConformance, FiftyChildren) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 50; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 50; ++i) {
+            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -140,7 +146,9 @@ TEST_P(StressEnumerationConformance, NamesMatchBetweenAPIs) {
         ASSERT_TRUE(cf.has_value());
         auto stout_kids = cf->root_storage().children();
         std::set<std::string> stout_names;
-        for (auto &c : stout_kids) stout_names.insert(c.name);
+        for (auto &c : stout_kids) {
+            stout_names.insert(c.name);
+        }
         EXPECT_TRUE(stout_names.count("Alpha"));
         EXPECT_TRUE(stout_names.count("Beta"));
         EXPECT_TRUE(stout_names.count("Gamma"));
@@ -177,16 +185,24 @@ TEST_P(StressEnumerationConformance, TypesMatchBetweenAPIs) {
         ASSERT_TRUE(cf.has_value());
         auto kids = cf->root_storage().children();
         for (auto &c : kids) {
-            if (c.name == "File") EXPECT_EQ(c.type, entry_type::stream);
-            if (c.name == "Dir") EXPECT_EQ(c.type, entry_type::storage);
+            if (c.name == "File") {
+                EXPECT_EQ(c.type, entry_type::stream);
+            }
+            if (c.name == "Dir") {
+                EXPECT_EQ(c.type, entry_type::storage);
+            }
         }
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto w32 = win32_enumerate(stg.get());
     for (auto &e : w32) {
-        if (std::wstring(e.pwcsName) == L"File") EXPECT_EQ(e.type, STGTY_STREAM);
-        if (std::wstring(e.pwcsName) == L"Dir") EXPECT_EQ(e.type, STGTY_STORAGE);
+        if (std::wstring(e.pwcsName) == L"File") {
+            EXPECT_EQ(e.type, STGTY_STREAM);
+        }
+        if (std::wstring(e.pwcsName) == L"Dir") {
+            EXPECT_EQ(e.type, STGTY_STORAGE);
+        }
         free_statstg_name(e);
     }
 }
@@ -215,16 +231,24 @@ TEST_P(StressEnumerationConformance, SizesMatchBetweenAPIs) {
         ASSERT_TRUE(cf.has_value());
         auto kids = cf->root_storage().children();
         for (auto &c : kids) {
-            if (c.name == "Small") EXPECT_EQ(c.size, 100u);
-            if (c.name == "Big") EXPECT_EQ(c.size, 5000u);
+            if (c.name == "Small") {
+                EXPECT_EQ(c.size, 100u);
+            }
+            if (c.name == "Big") {
+                EXPECT_EQ(c.size, 5000u);
+            }
         }
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto w32 = win32_enumerate(stg.get());
     for (auto &e : w32) {
-        if (std::wstring(e.pwcsName) == L"Small") EXPECT_EQ(e.cbSize.QuadPart, 100u);
-        if (std::wstring(e.pwcsName) == L"Big") EXPECT_EQ(e.cbSize.QuadPart, 5000u);
+        if (std::wstring(e.pwcsName) == L"Small") {
+            EXPECT_EQ(e.cbSize.QuadPart, 100u);
+        }
+        if (std::wstring(e.pwcsName) == L"Big") {
+            EXPECT_EQ(e.cbSize.QuadPart, 5000u);
+        }
         free_statstg_name(e);
     }
 }
@@ -249,7 +273,9 @@ TEST_P(StressEnumerationConformance, EnumerateAfterDelete) {
     auto kids = cf->root_storage().children();
     EXPECT_EQ(kids.size(), 2u);
     std::set<std::string> names;
-    for (auto &c : kids) names.insert(c.name);
+    for (auto &c : kids) {
+        names.insert(c.name);
+    }
     EXPECT_TRUE(names.count("A"));
     EXPECT_TRUE(names.count("C"));
     EXPECT_FALSE(names.count("B"));
@@ -262,7 +288,9 @@ TEST_P(StressEnumerationConformance, EnumerateAfterAddAndDelete) {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 10; ++i) ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 10; ++i) {
+            ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(root.remove("S3").has_value());
         ASSERT_TRUE(root.remove("S7").has_value());
         ASSERT_TRUE(root.create_stream("New").has_value());

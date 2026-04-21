@@ -233,7 +233,9 @@ static double bench_stout_write_1k(const fs::path &path, int iters) {
     auto strm = root.create_stream("data");
     std::vector<uint8_t> buf(1024, 0xAB);
     // Warmup
-    for (int i = 0; i < 10; ++i) strm->write(0, std::span<const uint8_t>(buf));
+    for (int i = 0; i < 10; ++i) {
+        strm->write(0, std::span<const uint8_t>(buf));
+    }
     auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < iters; ++i) {
         strm->write(0, std::span<const uint8_t>(buf));
@@ -248,7 +250,9 @@ static double bench_stout_write_8k(const fs::path &path, int iters) {
     auto strm = root.create_stream("data");
     std::vector<uint8_t> buf(8192, 0xCD);
     // Warmup
-    for (int i = 0; i < 10; ++i) strm->write(0, std::span<const uint8_t>(buf));
+    for (int i = 0; i < 10; ++i) {
+        strm->write(0, std::span<const uint8_t>(buf));
+    }
     auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < iters; ++i) {
         strm->write(0, std::span<const uint8_t>(buf));
@@ -265,7 +269,9 @@ static double bench_stout_read_1k(const fs::path &path, int iters) {
     strm->write(0, std::span<const uint8_t>(wbuf));
     std::vector<uint8_t> rbuf(1024);
     // Warmup
-    for (int i = 0; i < 10; ++i) strm->read(0, std::span<uint8_t>(rbuf));
+    for (int i = 0; i < 10; ++i) {
+        strm->read(0, std::span<uint8_t>(rbuf));
+    }
     auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < iters; ++i) {
         strm->read(0, std::span<uint8_t>(rbuf));
@@ -282,7 +288,9 @@ static double bench_stout_read_8k(const fs::path &path, int iters) {
     strm->write(0, std::span<const uint8_t>(wbuf));
     std::vector<uint8_t> rbuf(8192);
     // Warmup
-    for (int i = 0; i < 10; ++i) strm->read(0, std::span<uint8_t>(rbuf));
+    for (int i = 0; i < 10; ++i) {
+        strm->read(0, std::span<uint8_t>(rbuf));
+    }
     auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < iters; ++i) {
         strm->read(0, std::span<uint8_t>(rbuf));
@@ -361,7 +369,9 @@ static double bench_win32_create_stream(const fs::path &path, int iters) {
         swprintf_s(name, L"warmup_%d", i);
         IStream *pStrm = nullptr;
         pStg->CreateStream(name, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &pStrm);
-        if (pStrm) pStrm->Release();
+        if (pStrm) {
+            pStrm->Release();
+        }
     }
     auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < iters; ++i) {
@@ -369,10 +379,14 @@ static double bench_win32_create_stream(const fs::path &path, int iters) {
         swprintf_s(name, L"s%d", i);
         IStream *pStrm = nullptr;
         pStg->CreateStream(name, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &pStrm);
-        if (pStrm) pStrm->Release();
+        if (pStrm) {
+            pStrm->Release();
+        }
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStg) pStg->Release();
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -398,8 +412,12 @@ static double bench_win32_write_1k(const fs::path &path, int iters) {
         pStrm->Write(buf.data(), static_cast<ULONG>(buf.size()), &written);
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStrm) pStrm->Release();
-    if (pStg) pStg->Release();
+    if (pStrm) {
+        pStrm->Release();
+    }
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -425,8 +443,12 @@ static double bench_win32_write_8k(const fs::path &path, int iters) {
         pStrm->Write(buf.data(), static_cast<ULONG>(buf.size()), &written);
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStrm) pStrm->Release();
-    if (pStg) pStg->Release();
+    if (pStrm) {
+        pStrm->Release();
+    }
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -455,8 +477,12 @@ static double bench_win32_read_1k(const fs::path &path, int iters) {
         pStrm->Read(rbuf.data(), static_cast<ULONG>(rbuf.size()), &read_bytes);
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStrm) pStrm->Release();
-    if (pStg) pStg->Release();
+    if (pStrm) {
+        pStrm->Release();
+    }
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -485,8 +511,12 @@ static double bench_win32_read_8k(const fs::path &path, int iters) {
         pStrm->Read(rbuf.data(), static_cast<ULONG>(rbuf.size()), &read_bytes);
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStrm) pStrm->Release();
-    if (pStg) pStg->Release();
+    if (pStrm) {
+        pStrm->Release();
+    }
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -499,7 +529,9 @@ static double bench_win32_enumerate(const fs::path &path, int iters) {
         swprintf_s(name, L"child_%d", i);
         IStream *pStrm = nullptr;
         pStg->CreateStream(name, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &pStrm);
-        if (pStrm) pStrm->Release();
+        if (pStrm) {
+            pStrm->Release();
+        }
     }
     // Warmup
     for (int i = 0; i < 5; ++i) {
@@ -507,7 +539,9 @@ static double bench_win32_enumerate(const fs::path &path, int iters) {
         pStg->EnumElements(0, nullptr, 0, &pEnum);
         if (pEnum) {
             STATSTG stat;
-            while (pEnum->Next(1, &stat, nullptr) == S_OK) CoTaskMemFree(stat.pwcsName);
+            while (pEnum->Next(1, &stat, nullptr) == S_OK) {
+                CoTaskMemFree(stat.pwcsName);
+            }
             pEnum->Release();
         }
     }
@@ -524,7 +558,9 @@ static double bench_win32_enumerate(const fs::path &path, int iters) {
         }
     }
     auto t1 = std::chrono::high_resolution_clock::now();
-    if (pStg) pStg->Release();
+    if (pStg) {
+        pStg->Release();
+    }
     return std::chrono::duration<double, std::micro>(t1 - t0).count() / iters;
 }
 
@@ -592,12 +628,13 @@ static void show_performance(console &con) {
         if (r.win32_us > 0.0) {
             std::snprintf(w_buf, sizeof(w_buf), "%.1f", r.win32_us);
             double ratio = r.stout_us / r.win32_us;
-            if (ratio <= 1.0)
+            if (ratio <= 1.0) {
                 std::snprintf(ratio_buf, sizeof(ratio_buf), "[green]%.2fx faster[/]", 1.0 / ratio);
-            else if (ratio <= 1.5)
+            } else if (ratio <= 1.5) {
                 std::snprintf(ratio_buf, sizeof(ratio_buf), "[yellow]%.2fx slower[/]", ratio);
-            else
+            } else {
                 std::snprintf(ratio_buf, sizeof(ratio_buf), "[red]%.2fx slower[/]", ratio);
+            }
         } else {
             std::snprintf(w_buf, sizeof(w_buf), "N/A");
             std::snprintf(ratio_buf, sizeof(ratio_buf), "[dim]—[/]");
@@ -617,14 +654,20 @@ static void show_performance(console &con) {
     std::vector<float> bar_data;
     std::vector<std::string> bar_labels;
     for (auto &r : results) {
-        if (r.win32_us <= 0.0) continue;
+        if (r.win32_us <= 0.0) {
+            continue;
+        }
         bar_data.push_back(static_cast<float>(r.stout_us));
         bar_data.push_back(static_cast<float>(r.win32_us));
         // Short label
         std::string label(r.name);
         auto sp = label.find(' ');
-        if (sp != std::string::npos) label = label.substr(0, sp);
-        if (label.size() > 5) label = label.substr(0, 5);
+        if (sp != std::string::npos) {
+            label = label.substr(0, sp);
+        }
+        if (label.size() > 5) {
+            label = label.substr(0, 5);
+        }
         bar_labels.push_back(label + "S");
         bar_labels.push_back(label + "W");
     }

@@ -15,7 +15,9 @@ using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) {
+        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    }
     return p;
 }
 

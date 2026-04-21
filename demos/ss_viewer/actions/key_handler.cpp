@@ -23,7 +23,9 @@ using namespace tapiru;
 
 /// @brief Copy text to Win32 clipboard.
 static void copy_to_clipboard(const std::string &text) {
-    if (!OpenClipboard(nullptr)) return;
+    if (!OpenClipboard(nullptr)) {
+        return;
+    }
     EmptyClipboard();
     HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
     if (hg) {
@@ -39,7 +41,9 @@ static void copy_to_clipboard(const std::string &text) {
 
 /// @brief Build a copyable string for the current selection context.
 static std::string build_copy_text(const viewer_state &st) {
-    if (!st.selected) return {};
+    if (!st.selected) {
+        return {};
+    }
 
     // On Hex tab, copy the hex view of current page
     if (st.active_tab == 1 && st.selected->type == stout::entry_type::stream) {
@@ -62,7 +66,9 @@ static std::string build_copy_text(const viewer_state &st) {
 
 /// @brief Case-insensitive substring search.
 static bool icontains(const std::string &haystack, const std::string &needle) {
-    if (needle.empty()) return false;
+    if (needle.empty()) {
+        return false;
+    }
     auto it = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), [](char a, char b) {
         return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
     });
@@ -84,8 +90,12 @@ static void search_jump_next(viewer_state &st) {
         auto *e = find_entry(st.root_entry, st.flat_paths[i]);
         if (e && icontains(e->name, st.search_query)) {
             ++count;
-            if (first_overall < 0) first_overall = i;
-            if (first_after < 0 && i > st.tree_cursor) first_after = i;
+            if (first_overall < 0) {
+                first_overall = i;
+            }
+            if (first_after < 0 && i > st.tree_cursor) {
+                first_after = i;
+            }
         }
     }
     st.search_match_count = count;
@@ -101,7 +111,9 @@ static void search_jump_next(viewer_state &st) {
     int idx = 0;
     for (int i = 0; i <= target; ++i) {
         auto *e = find_entry(st.root_entry, st.flat_paths[i]);
-        if (e && icontains(e->name, st.search_query)) ++idx;
+        if (e && icontains(e->name, st.search_query)) {
+            ++idx;
+        }
     }
     st.search_current_match = idx;
 }
@@ -118,7 +130,9 @@ static void export_entry_json(const entry_info &ei, std::string &out, int indent
         out += ",\n" + pad + "  \"children\": [\n";
         for (size_t i = 0; i < ei.children.size(); ++i) {
             export_entry_json(ei.children[i], out, indent + 2);
-            if (i + 1 < ei.children.size()) out += ",";
+            if (i + 1 < ei.children.size()) {
+                out += ",";
+            }
             out += "\n";
         }
         out += pad + "  ]\n";
@@ -149,16 +163,19 @@ static void export_tree_json(viewer_state &st) {
 
 /// @brief Handle goto overlay input: navigate to entry path or hex offset.
 static void goto_execute(viewer_state &st) {
-    if (st.goto_query.empty()) return;
+    if (st.goto_query.empty()) {
+        return;
+    }
 
     if (st.goto_is_hex_offset) {
         // Parse hex offset
         uint64_t offset = 0;
         try {
-            if (st.goto_query.starts_with("0x") || st.goto_query.starts_with("0X"))
+            if (st.goto_query.starts_with("0x") || st.goto_query.starts_with("0X")) {
                 offset = std::stoull(st.goto_query, nullptr, 16);
-            else
+            } else {
                 offset = std::stoull(st.goto_query, nullptr, 0);
+            }
         } catch (...) {
             st.toast_msg = "Invalid offset";
             st.toast_until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
@@ -197,7 +214,9 @@ bool handle_key(const key_event &ke, viewer_state &st, classic_app &app) {
             return true;
         }
         if (ke.key == special_key::backspace) {
-            if (!st.goto_query.empty()) st.goto_query.pop_back();
+            if (!st.goto_query.empty()) {
+                st.goto_query.pop_back();
+            }
             st.dirty = true;
             return true;
         }
@@ -349,10 +368,11 @@ bool handle_key(const key_event &ke, viewer_state &st, classic_app &app) {
 
     // Tab switching (4 tabs: Info, Hex, Properties, Stats)
     if (ke.key == special_key::tab) {
-        if (ke.mods == key_mod::shift)
+        if (ke.mods == key_mod::shift) {
             st.active_tab = (st.active_tab + 3) % 4;
-        else
+        } else {
             st.active_tab = (st.active_tab + 1) % 4;
+        }
         st.dirty = true;
         return true;
     }
@@ -438,8 +458,9 @@ bool handle_key(const key_event &ke, viewer_state &st, classic_app &app) {
                 st.expanded.erase(tree_label(*st.selected));
                 st.rebuild_flat_paths();
                 // Clamp cursor
-                if (st.tree_cursor >= static_cast<int>(st.flat_paths.size()))
+                if (st.tree_cursor >= static_cast<int>(st.flat_paths.size())) {
                     st.tree_cursor = static_cast<int>(st.flat_paths.size()) - 1;
+                }
                 st.select_current();
             } else {
                 // Go to parent
@@ -463,19 +484,21 @@ bool handle_key(const key_event &ke, viewer_state &st, classic_app &app) {
     if (ke.key == special_key::page_down && st.active_tab == 1) {
         uint32_t total_lines = st.hex_reader.total_lines();
         uint32_t page = 20;
-        if (st.hex_scroll + page < total_lines)
+        if (st.hex_scroll + page < total_lines) {
             st.hex_scroll += page;
-        else if (total_lines > 0)
+        } else if (total_lines > 0) {
             st.hex_scroll = total_lines - 1;
+        }
         st.dirty = true;
         return true;
     }
     if (ke.key == special_key::page_up && st.active_tab == 1) {
         uint32_t page = 20;
-        if (st.hex_scroll >= page)
+        if (st.hex_scroll >= page) {
             st.hex_scroll -= page;
-        else
+        } else {
             st.hex_scroll = 0;
+        }
         st.dirty = true;
         return true;
     }

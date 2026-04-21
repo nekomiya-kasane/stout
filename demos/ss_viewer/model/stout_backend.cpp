@@ -27,7 +27,9 @@ static std::optional<stout::storage> navigate_to_storage(stout::compound_file &c
     stout::storage stg = root;
     for (size_t i = 1; i < parts.size(); ++i) {
         auto sub = stg.open_storage(parts[i]);
-        if (!sub) return std::nullopt;
+        if (!sub) {
+            return std::nullopt;
+        }
         stg = std::move(*sub);
     }
     return stg;
@@ -54,7 +56,9 @@ entry_info build_stout_tree(stout::storage &stg, const std::string &parent_path)
     for (auto &child : stg.children()) {
         if (child.type == stout::entry_type::storage) {
             auto sub = stg.open_storage(child.name);
-            if (sub) info.children.push_back(build_stout_tree(*sub, info.full_path));
+            if (sub) {
+                info.children.push_back(build_stout_tree(*sub, info.full_path));
+            }
         } else {
             auto ci = stat_to_entry(child, info.full_path);
             ci.children_loaded = true; // streams have no children
@@ -70,7 +74,9 @@ entry_info build_stout_tree_shallow(stout::storage &stg, const std::string &pare
 
     for (auto &child : stg.children()) {
         auto ci = stat_to_entry(child, info.full_path);
-        if (child.type == stout::entry_type::stream) ci.children_loaded = true; // streams have no children
+        if (child.type == stout::entry_type::stream) {
+            ci.children_loaded = true; // streams have no children
+        }
         // storages left with children_loaded = false (lazy)
         info.children.push_back(std::move(ci));
     }
@@ -78,7 +84,9 @@ entry_info build_stout_tree_shallow(stout::storage &stg, const std::string &pare
 }
 
 void load_stout_children(stout::compound_file &cf, entry_info &ei) {
-    if (ei.children_loaded) return;
+    if (ei.children_loaded) {
+        return;
+    }
     if (ei.type != stout::entry_type::storage && ei.type != stout::entry_type::root) {
         ei.children_loaded = true;
         return;
@@ -93,7 +101,9 @@ void load_stout_children(stout::compound_file &cf, entry_info &ei) {
     ei.children.clear();
     for (auto &child : stg_opt->children()) {
         auto ci = stat_to_entry(child, ei.full_path);
-        if (child.type == stout::entry_type::stream) ci.children_loaded = true;
+        if (child.type == stout::entry_type::stream) {
+            ci.children_loaded = true;
+        }
         ei.children.push_back(std::move(ci));
     }
     ei.children_loaded = true;
@@ -116,21 +126,31 @@ std::vector<uint8_t> read_stout_stream(stout::compound_file &cf, const entry_inf
     stout::storage stg = root;
     for (size_t i = 1; i + 1 < parts.size(); ++i) {
         auto sub = stg.open_storage(parts[i]);
-        if (!sub) return {};
+        if (!sub) {
+            return {};
+        }
         stg = std::move(*sub);
     }
-    if (parts.size() < 2) return {};
+    if (parts.size() < 2) {
+        return {};
+    }
     auto strm = stg.open_stream(parts.back());
-    if (!strm) return {};
+    if (!strm) {
+        return {};
+    }
 
     uint64_t sz = std::min(strm->size(), max_bytes);
     std::vector<uint8_t> buf(static_cast<size_t>(sz));
-    if (sz > 0) strm->read(0, std::span<uint8_t>(buf));
+    if (sz > 0) {
+        strm->read(0, std::span<uint8_t>(buf));
+    }
     return buf;
 }
 
 paged_reader open_stout_reader(stout::compound_file &cf, const entry_info &ei) {
-    if (ei.type != stout::entry_type::stream) return {};
+    if (ei.type != stout::entry_type::stream) {
+        return {};
+    }
 
     // Navigate to the stream
     auto root = cf.root_storage();
@@ -148,12 +168,18 @@ paged_reader open_stout_reader(stout::compound_file &cf, const entry_info &ei) {
     stout::storage stg = root;
     for (size_t i = 1; i + 1 < parts.size(); ++i) {
         auto sub = stg.open_storage(parts[i]);
-        if (!sub) return {};
+        if (!sub) {
+            return {};
+        }
         stg = std::move(*sub);
     }
-    if (parts.size() < 2) return {};
+    if (parts.size() < 2) {
+        return {};
+    }
     auto strm_result = stg.open_stream(parts.back());
-    if (!strm_result) return {};
+    if (!strm_result) {
+        return {};
+    }
 
     // Capture the stream by shared_ptr so the lambda outlives this scope
     auto strm = std::make_shared<stout::stream>(std::move(*strm_result));

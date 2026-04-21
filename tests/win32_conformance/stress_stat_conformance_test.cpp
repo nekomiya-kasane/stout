@@ -40,7 +40,9 @@ TEST_P(StressStatConformance, RootStorageStat) {
     STATSTG stat{};
     ASSERT_TRUE(SUCCEEDED(stg->Stat(&stat, STATFLAG_DEFAULT)));
     EXPECT_EQ(stat.type, static_cast<DWORD>(STGTY_STORAGE));
-    if (stat.pwcsName) CoTaskMemFree(stat.pwcsName);
+    if (stat.pwcsName) {
+        CoTaskMemFree(stat.pwcsName);
+    }
 }
 
 // ── Stream stat size matches ────────────────────────────────────────────
@@ -132,7 +134,9 @@ TEST_P(StressStatConformance, EnumerateNamesMatch) {
     ASSERT_EQ(entries.size(), 5u);
     std::set<std::wstring> win32_names;
     for (auto &e : entries) {
-        if (e.pwcsName) win32_names.insert(e.pwcsName);
+        if (e.pwcsName) {
+            win32_names.insert(e.pwcsName);
+        }
         free_statstg_name(e);
     }
     for (auto &n : names) {
@@ -160,10 +164,11 @@ TEST_P(StressStatConformance, EnumerateTypesMatch) {
     ASSERT_EQ(entries.size(), 3u);
     int streams = 0, storages = 0;
     for (auto &e : entries) {
-        if (e.type == STGTY_STREAM)
+        if (e.type == STGTY_STREAM) {
             ++streams;
-        else if (e.type == STGTY_STORAGE)
+        } else if (e.type == STGTY_STORAGE) {
             ++storages;
+        }
         free_statstg_name(e);
     }
     EXPECT_EQ(streams, 2);
@@ -206,7 +211,9 @@ TEST_P(StressStatConformance, ChildrenCountMatch) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 8; ++i) ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 8; ++i) {
+            ASSERT_TRUE(cf->root_storage().create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     // Stout count
@@ -221,7 +228,9 @@ TEST_P(StressStatConformance, ChildrenCountMatch) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), stout_count);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── Stout stream size matches Win32 stat ────────────────────────────────

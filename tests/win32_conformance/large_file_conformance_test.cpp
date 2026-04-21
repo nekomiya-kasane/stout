@@ -52,7 +52,9 @@ TEST_F(LargeFileConformance, ManyStreams100) {
         EXPECT_EQ(buf, expected) << "Mismatch at stream S" << i;
     }
 
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── LargeStream1MB: single 1 MB stream ─────────────────────────────────
@@ -83,7 +85,9 @@ TEST_F(LargeFileConformance, LargeStream1MB) {
     while (total_read < 1024 * 1024) {
         ULONG to_read = std::min(ULONG(65536), ULONG(1024 * 1024 - total_read));
         ASSERT_TRUE(SUCCEEDED(win32_stream_read(strm.get(), buf.data() + total_read, to_read, &chunk_read)));
-        if (chunk_read == 0) break;
+        if (chunk_read == 0) {
+            break;
+        }
         total_read += chunk_read;
     }
     EXPECT_EQ(total_read, 1024u * 1024u);
@@ -127,7 +131,9 @@ TEST_F(LargeFileConformance, ManyStorages50) {
         EXPECT_EQ(win32_stream_size(strm.get()), 50u);
     }
 
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── DirectorySectorGrowth: enough entries to span multiple dir sectors ──
@@ -154,7 +160,9 @@ TEST_F(LargeFileConformance, DirectorySectorGrowth) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), static_cast<size_t>(count));
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 
     // Stout also enumerates all
     auto cf = compound_file::open(path, open_mode::read);

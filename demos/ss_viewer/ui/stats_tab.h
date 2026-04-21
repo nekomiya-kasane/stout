@@ -41,7 +41,9 @@ inline void collect_stats(const entry_info &ei, cfb_stats &s, uint32_t depth = 0
             s.largest_stream_name = ei.name;
         }
     }
-    for (auto &c : ei.children) collect_stats(c, s, depth + 1);
+    for (auto &c : ei.children) {
+        collect_stats(c, s, depth + 1);
+    }
 }
 
 /// @brief Build the Stats tab content.

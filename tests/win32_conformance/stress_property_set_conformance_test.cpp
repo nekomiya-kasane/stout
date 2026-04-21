@@ -22,29 +22,41 @@ class StressPropertySetConformance : public ::testing::TestWithParam<VPProp> {
 
     static bool write_summary(compound_file &cf, const property_set &pset) {
         auto data = serialize_property_set(pset);
-        if (!data) return false;
+        if (!data) {
+            return false;
+        }
         auto root = cf.root_storage();
         auto s = root.create_stream("\005SummaryInformation");
-        if (!s) return false;
+        if (!s) {
+            return false;
+        }
         return s->write(0, std::span<const uint8_t>(*data)).has_value();
     }
 
     static std::expected<property_set, error> read_summary(compound_file &cf) {
         auto root = cf.root_storage();
         auto s = root.open_stream("\005SummaryInformation");
-        if (!s) return std::unexpected(s.error());
+        if (!s) {
+            return std::unexpected(s.error());
+        }
         std::vector<uint8_t> buf(s->size());
         auto rd = s->read(0, std::span<uint8_t>(buf));
-        if (!rd) return std::unexpected(rd.error());
+        if (!rd) {
+            return std::unexpected(rd.error());
+        }
         return parse_property_set(buf);
     }
 
     static HRESULT open_summary_read(const std::wstring &path, propset_storage_ptr &pss, propset_ptr &ps) {
         storage_ptr stg;
         HRESULT hr = win32_open_read(path, stg.put());
-        if (FAILED(hr)) return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
         hr = stg->QueryInterface(IID_IPropertySetStorage, reinterpret_cast<void **>(pss.put()));
-        if (FAILED(hr)) return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
         hr = pss->Open(FMTID_SummaryInformation, STGM_READ | STGM_SHARE_EXCLUSIVE, ps.put());
         return hr;
     }
@@ -79,7 +91,9 @@ TEST_P(StressPropertySetConformance, TitleStringStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "Test Title");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "Test Title");
+    }
     PropVariantClear(&var);
 }
 
@@ -105,7 +119,9 @@ TEST_P(StressPropertySetConformance, AuthorStringStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "John Doe");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "John Doe");
+    }
     PropVariantClear(&var);
 }
 
@@ -131,7 +147,9 @@ TEST_P(StressPropertySetConformance, SubjectStringStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "Test Subject");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "Test Subject");
+    }
     PropVariantClear(&var);
 }
 
@@ -162,12 +180,16 @@ TEST_P(StressPropertySetConformance, MultiplePropertiesStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "My Title");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "My Title");
+    }
     PropVariantClear(&var);
     spec.propid = PIDSI_KEYWORDS;
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "key1, key2");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "key1, key2");
+    }
     PropVariantClear(&var);
 }
 
@@ -195,7 +217,9 @@ TEST_P(StressPropertySetConformance, PageCountIntStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_I4);
-    if (var.vt == VT_I4) EXPECT_EQ(var.lVal, 42);
+    if (var.vt == VT_I4) {
+        EXPECT_EQ(var.lVal, 42);
+    }
     PropVariantClear(&var);
 }
 
@@ -206,10 +230,11 @@ TEST_P(StressPropertySetConformance, TitleWin32ToStout) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         propset_storage_ptr pss;
         ASSERT_TRUE(SUCCEEDED(stg->QueryInterface(IID_IPropertySetStorage, reinterpret_cast<void **>(pss.put()))));
         propset_ptr ps;
@@ -237,10 +262,11 @@ TEST_P(StressPropertySetConformance, IntWin32ToStout) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         propset_storage_ptr pss;
         ASSERT_TRUE(SUCCEEDED(stg->QueryInterface(IID_IPropertySetStorage, reinterpret_cast<void **>(pss.put()))));
         propset_ptr ps;
@@ -344,7 +370,9 @@ TEST_P(StressPropertySetConformance, LongStringProperty) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_EQ(std::string(var.pszVal), long_str);
+    if (var.vt == VT_LPSTR) {
+        EXPECT_EQ(std::string(var.pszVal), long_str);
+    }
     PropVariantClear(&var);
 }
 
@@ -416,7 +444,9 @@ TEST_P(StressPropertySetConformance, KeywordsStoutToWin32) {
     PropVariantInit(&var);
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
     EXPECT_EQ(var.vt, VT_LPSTR);
-    if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "alpha, beta, gamma");
+    if (var.vt == VT_LPSTR) {
+        EXPECT_STREQ(var.pszVal, "alpha, beta, gamma");
+    }
     PropVariantClear(&var);
 }
 

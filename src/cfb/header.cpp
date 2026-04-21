@@ -36,7 +36,9 @@ auto parse_header(std::span<const uint8_t, header_size> d) noexcept -> std::expe
 
     // Signature (offset 0, 8 bytes)
     std::copy_n(d.data(), 8, hdr.signature.begin());
-    if (hdr.signature != cfb::signature) return std::unexpected(error::invalid_signature);
+    if (hdr.signature != cfb::signature) {
+        return std::unexpected(error::invalid_signature);
+    }
 
     // CLSID (offset 8, 16 bytes)
     hdr.clsid = guid_read_le(d.data() + 8);
@@ -49,7 +51,9 @@ auto parse_header(std::span<const uint8_t, header_size> d) noexcept -> std::expe
 
     // Byte order (offset 28, 2 bytes)
     hdr.byte_order = read_u16_le(d.data() + 28);
-    if (hdr.byte_order != byte_order_le) return std::unexpected(error::invalid_header);
+    if (hdr.byte_order != byte_order_le) {
+        return std::unexpected(error::invalid_header);
+    }
 
     // Sector shift (offset 30, 2 bytes)
     hdr.sector_shift = read_u16_le(d.data() + 30);
@@ -154,24 +158,37 @@ void serialize_header(const cfb_header &hdr, std::span<uint8_t, header_size> out
 }
 
 auto validate_header(const cfb_header &hdr) noexcept -> std::expected<void, error> {
-    if (hdr.signature != cfb::signature) return std::unexpected(error::invalid_signature);
+    if (hdr.signature != cfb::signature) {
+        return std::unexpected(error::invalid_signature);
+    }
 
-    if (hdr.major_ver != major_version_3 && hdr.major_ver != major_version_4)
+    if (hdr.major_ver != major_version_3 && hdr.major_ver != major_version_4) {
         return std::unexpected(error::invalid_version);
+    }
 
-    if (hdr.byte_order != byte_order_le) return std::unexpected(error::invalid_header);
+    if (hdr.byte_order != byte_order_le) {
+        return std::unexpected(error::invalid_header);
+    }
 
-    if (hdr.major_ver == major_version_3 && hdr.sector_shift != sector_shift_v3)
+    if (hdr.major_ver == major_version_3 && hdr.sector_shift != sector_shift_v3) {
         return std::unexpected(error::invalid_sector_size);
+    }
 
-    if (hdr.major_ver == major_version_4 && hdr.sector_shift != sector_shift_v4)
+    if (hdr.major_ver == major_version_4 && hdr.sector_shift != sector_shift_v4) {
         return std::unexpected(error::invalid_sector_size);
+    }
 
-    if (hdr.mini_sec_shift != mini_sector_shift) return std::unexpected(error::invalid_header);
+    if (hdr.mini_sec_shift != mini_sector_shift) {
+        return std::unexpected(error::invalid_header);
+    }
 
-    if (hdr.major_ver == major_version_3 && hdr.total_dir_sectors != 0) return std::unexpected(error::invalid_header);
+    if (hdr.major_ver == major_version_3 && hdr.total_dir_sectors != 0) {
+        return std::unexpected(error::invalid_header);
+    }
 
-    if (hdr.mini_stream_cutoff_size != mini_stream_cutoff) return std::unexpected(error::invalid_header);
+    if (hdr.mini_stream_cutoff_size != mini_stream_cutoff) {
+        return std::unexpected(error::invalid_header);
+    }
 
     return {};
 }

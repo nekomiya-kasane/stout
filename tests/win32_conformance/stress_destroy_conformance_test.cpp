@@ -157,8 +157,12 @@ TEST_P(StressDestroyConformance, DestroyAllOneByOne) {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 5; ++i) ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
-        for (int i = 0; i < 5; ++i) ASSERT_TRUE(root.remove("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) {
+            ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        }
+        for (int i = 0; i < 5; ++i) {
+            ASSERT_TRUE(root.remove("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -203,10 +207,11 @@ TEST_P(StressDestroyConformance, Win32DestroyStoutVerifies) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStream(L"Victim", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));

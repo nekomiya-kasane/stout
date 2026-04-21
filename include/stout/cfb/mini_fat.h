@@ -26,7 +26,9 @@ class STOUT_API mini_fat_table {
     template <io::lock_bytes LB>
     auto load(sector_io<LB> &sio, const fat_table &fat, uint32_t first_mini_fat_sector) -> std::expected<void, error> {
         entries_.clear();
-        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) return {};
+        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) {
+            return {};
+        }
 
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss); // same layout as FAT
@@ -34,7 +36,9 @@ class STOUT_API mini_fat_table {
 
         for (auto sec_id : iterate_chain(fat, first_mini_fat_sector)) {
             auto r = sio.read_sector(sec_id, buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
             for (uint32_t j = 0; j < entries_per; ++j) {
                 entries_.push_back(util::read_u32_le(buf.data() + j * 4));
             }
@@ -45,7 +49,9 @@ class STOUT_API mini_fat_table {
     // Flush the mini FAT back to disk
     template <io::lock_bytes LB>
     auto flush(sector_io<LB> &sio, const fat_table &fat, uint32_t first_mini_fat_sector) -> std::expected<void, error> {
-        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) return {};
+        if (first_mini_fat_sector == endofchain || first_mini_fat_sector == freesect) {
+            return {};
+        }
 
         auto ss = sio.sector_size();
         auto entries_per = fat_entries_per_sector(ss);
@@ -60,13 +66,17 @@ class STOUT_API mini_fat_table {
                 ++idx;
             }
             auto r = sio.write_sector(sec_id, buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
         }
         return {};
     }
 
     [[nodiscard]] auto next(uint32_t mini_sector_id) const noexcept -> uint32_t {
-        if (mini_sector_id >= entries_.size()) return freesect;
+        if (mini_sector_id >= entries_.size()) {
+            return freesect;
+        }
         return entries_[mini_sector_id];
     }
 
@@ -110,7 +120,9 @@ class STOUT_API mini_fat_table {
         while (cur != endofchain && cur != freesect && cur < entries_.size()) {
             result.push_back(cur);
             cur = entries_[cur];
-            if (result.size() > entries_.size()) break;
+            if (result.size() > entries_.size()) {
+                break;
+            }
         }
         return result;
     }
@@ -143,11 +155,17 @@ class STOUT_API mini_stream_io {
     template <io::lock_bytes LB>
     auto read_mini_sector(sector_io<LB> &sio, uint32_t mini_sector_id, std::span<uint8_t> buf)
         -> std::expected<void, error> {
-        if (buf.size() < mini_sector_size_) return std::unexpected(error::invalid_argument);
+        if (buf.size() < mini_sector_size_) {
+            return std::unexpected(error::invalid_argument);
+        }
         auto [reg_sector, offset] = locate(mini_sector_id);
-        if (reg_sector >= root_chain_.size()) return std::unexpected(error::io_error);
+        if (reg_sector >= root_chain_.size()) {
+            return std::unexpected(error::io_error);
+        }
         auto result = sio.read_at(root_chain_[reg_sector], offset, buf.subspan(0, mini_sector_size_));
-        if (!result) return std::unexpected(result.error());
+        if (!result) {
+            return std::unexpected(result.error());
+        }
         return {};
     }
 
@@ -155,11 +173,17 @@ class STOUT_API mini_stream_io {
     template <io::lock_bytes LB>
     auto write_mini_sector(sector_io<LB> &sio, uint32_t mini_sector_id, std::span<const uint8_t> buf)
         -> std::expected<void, error> {
-        if (buf.size() < mini_sector_size_) return std::unexpected(error::invalid_argument);
+        if (buf.size() < mini_sector_size_) {
+            return std::unexpected(error::invalid_argument);
+        }
         auto [reg_sector, offset] = locate(mini_sector_id);
-        if (reg_sector >= root_chain_.size()) return std::unexpected(error::io_error);
+        if (reg_sector >= root_chain_.size()) {
+            return std::unexpected(error::io_error);
+        }
         auto result = sio.write_at(root_chain_[reg_sector], offset, buf.subspan(0, mini_sector_size_));
-        if (!result) return std::unexpected(result.error());
+        if (!result) {
+            return std::unexpected(result.error());
+        }
         return {};
     }
 
@@ -168,7 +192,9 @@ class STOUT_API mini_stream_io {
     auto read_mini_stream(sector_io<LB> &sio, const mini_fat_table &mfat, uint32_t start_mini_sector, uint64_t offset,
                           std::span<uint8_t> buf) -> std::expected<size_t, error> {
         auto chain = mfat.chain(start_mini_sector);
-        if (chain.empty()) return size_t{0};
+        if (chain.empty()) {
+            return size_t{0};
+        }
 
         size_t bytes_read = 0;
         uint32_t skip_sectors = static_cast<uint32_t>(offset / mini_sector_size_);
@@ -177,7 +203,9 @@ class STOUT_API mini_stream_io {
         std::vector<uint8_t> sec_buf(mini_sector_size_);
         for (size_t i = skip_sectors; i < chain.size() && bytes_read < buf.size(); ++i) {
             auto r = read_mini_sector(sio, chain[i], sec_buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
 
             uint32_t start = (i == skip_sectors) ? offset_in_sector : 0;
             uint32_t avail = mini_sector_size_ - start;
@@ -193,7 +221,9 @@ class STOUT_API mini_stream_io {
     auto write_mini_stream(sector_io<LB> &sio, const mini_fat_table &mfat, uint32_t start_mini_sector, uint64_t offset,
                            std::span<const uint8_t> buf) -> std::expected<size_t, error> {
         auto chain = mfat.chain(start_mini_sector);
-        if (chain.empty()) return size_t{0};
+        if (chain.empty()) {
+            return size_t{0};
+        }
 
         size_t bytes_written = 0;
         uint32_t skip_sectors = static_cast<uint32_t>(offset / mini_sector_size_);
@@ -208,12 +238,16 @@ class STOUT_API mini_stream_io {
             // If partial write, read first
             if (start != 0 || to_copy != mini_sector_size_) {
                 auto r = read_mini_sector(sio, chain[i], sec_buf);
-                if (!r) return std::unexpected(r.error());
+                if (!r) {
+                    return std::unexpected(r.error());
+                }
             }
 
             std::copy_n(buf.data() + bytes_written, to_copy, sec_buf.data() + start);
             auto w = write_mini_sector(sio, chain[i], sec_buf);
-            if (!w) return std::unexpected(w.error());
+            if (!w) {
+                return std::unexpected(w.error());
+            }
             bytes_written += to_copy;
         }
         return bytes_written;

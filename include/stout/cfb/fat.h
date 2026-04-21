@@ -29,7 +29,9 @@ class STOUT_API fat_table {
         std::vector<uint8_t> buf(ss);
         for (size_t i = 0; i < fat_sector_ids.size(); ++i) {
             auto r = sio.read_sector(fat_sector_ids[i], buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
             for (uint32_t j = 0; j < entries_per; ++j) {
                 entries_[i * entries_per + j] = util::read_u32_le(buf.data() + j * 4);
             }
@@ -51,14 +53,18 @@ class STOUT_API fat_table {
                 util::write_u32_le(buf.data() + j * 4, val);
             }
             auto r = sio.write_sector(fat_sector_ids[i], buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
         }
         return {};
     }
 
     // Get the next sector in a chain
     [[nodiscard]] auto next(uint32_t sector_id) const noexcept -> uint32_t {
-        if (sector_id >= entries_.size()) return freesect;
+        if (sector_id >= entries_.size()) {
+            return freesect;
+        }
         return entries_[sector_id];
     }
 
@@ -107,7 +113,9 @@ class STOUT_API fat_table {
         while (cur != endofchain && cur != freesect && cur < entries_.size()) {
             result.push_back(cur);
             cur = entries_[cur];
-            if (result.size() > entries_.size()) break; // cycle guard
+            if (result.size() > entries_.size()) {
+                break; // cycle guard
+            }
         }
         return result;
     }
@@ -122,7 +130,9 @@ class STOUT_API fat_table {
         uint32_t cur = start_sector;
         while (entries_[cur] != endofchain && entries_[cur] != freesect) {
             cur = entries_[cur];
-            if (cur >= entries_.size()) break;
+            if (cur >= entries_.size()) {
+                break;
+            }
         }
         entries_[cur] = new_id;
         return new_id;

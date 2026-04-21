@@ -43,7 +43,9 @@ TEST_P(StressStorageHierarchyConformance, OneSubStorage) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 1u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 TEST_P(StressStorageHierarchyConformance, FiveSubStorages) {
@@ -52,7 +54,9 @@ TEST_P(StressStorageHierarchyConformance, FiveSubStorages) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 5; ++i) ASSERT_TRUE(cf->root_storage().create_storage("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 5; ++i) {
+            ASSERT_TRUE(cf->root_storage().create_storage("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
@@ -66,15 +70,18 @@ TEST_P(StressStorageHierarchyConformance, TwentySubStorages) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 20; ++i)
+        for (int i = 0; i < 20; ++i) {
             ASSERT_TRUE(cf->root_storage().create_storage("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 20u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 TEST_P(StressStorageHierarchyConformance, FiftySubStorages) {
@@ -83,8 +90,9 @@ TEST_P(StressStorageHierarchyConformance, FiftySubStorages) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 50; ++i)
+        for (int i = 0; i < 50; ++i) {
             ASSERT_TRUE(cf->root_storage().create_storage("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
@@ -241,7 +249,9 @@ TEST_P(StressStorageHierarchyConformance, HundredSiblings) {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 100; ++i) ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        for (int i = 0; i < 100; ++i) {
+            ASSERT_TRUE(root.create_stream("S" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
@@ -256,10 +266,11 @@ TEST_P(StressStorageHierarchyConformance, Win32DeepStoutTraverses) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         IStorage *cur = stg.get();
         std::vector<storage_ptr> holders;
         for (int i = 0; i < 5; ++i) {
@@ -359,7 +370,9 @@ TEST_P(StressStorageHierarchyConformance, StoragesOnly) {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
         auto root = cf->root_storage();
-        for (int i = 0; i < 10; ++i) ASSERT_TRUE(root.create_storage("D" + std::to_string(i)).has_value());
+        for (int i = 0; i < 10; ++i) {
+            ASSERT_TRUE(root.create_storage("D" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
@@ -417,10 +430,11 @@ TEST_P(StressStorageHierarchyConformance, MixedStoragesAndStreams) {
     EXPECT_EQ(entries.size(), 10u);
     int stg_count = 0, strm_count = 0;
     for (auto &e : entries) {
-        if (e.type == STGTY_STORAGE)
+        if (e.type == STGTY_STORAGE) {
             ++stg_count;
-        else if (e.type == STGTY_STREAM)
+        } else if (e.type == STGTY_STREAM) {
             ++strm_count;
+        }
         free_statstg_name(e);
     }
     EXPECT_EQ(stg_count, 5);

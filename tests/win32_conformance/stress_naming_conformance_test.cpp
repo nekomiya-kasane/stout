@@ -262,10 +262,11 @@ TEST_P(StressNamingConformance, Win32SpecialNameStoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(stg->CreateStream(
             L"My File (v2).dat", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
@@ -285,15 +286,18 @@ TEST_P(StressNamingConformance, ThirtyUniqueNames) {
     {
         auto cf = compound_file::create(p, GetParam().ver);
         ASSERT_TRUE(cf.has_value());
-        for (int i = 0; i < 30; ++i)
+        for (int i = 0; i < 30; ++i) {
             ASSERT_TRUE(cf->root_storage().create_stream("Entry_" + std::to_string(i)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 30u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 #endif // _WIN32

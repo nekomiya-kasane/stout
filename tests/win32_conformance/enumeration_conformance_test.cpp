@@ -65,7 +65,9 @@ TEST_F(EnumerationConformance, EnumStreamsOnly) {
     std::set<std::wstring> names;
     for (auto &e : entries) {
         EXPECT_EQ(e.type, STGTY_STREAM);
-        if (e.pwcsName) names.insert(e.pwcsName);
+        if (e.pwcsName) {
+            names.insert(e.pwcsName);
+        }
         free_statstg_name(e);
     }
     for (int i = 0; i < 5; ++i) {
@@ -122,10 +124,11 @@ TEST_F(EnumerationConformance, EnumMixed) {
 
     int stg_count = 0, strm_count = 0;
     for (auto &e : entries) {
-        if (e.type == STGTY_STORAGE)
+        if (e.type == STGTY_STORAGE) {
             ++stg_count;
-        else if (e.type == STGTY_STREAM)
+        } else if (e.type == STGTY_STREAM) {
             ++strm_count;
+        }
         free_statstg_name(e);
     }
     EXPECT_EQ(stg_count, 3);
@@ -159,7 +162,9 @@ TEST_F(EnumerationConformance, EnumAfterDelete) {
 
     std::set<std::wstring> names;
     for (auto &e : entries) {
-        if (e.pwcsName) names.insert(e.pwcsName);
+        if (e.pwcsName) {
+            names.insert(e.pwcsName);
+        }
         free_statstg_name(e);
     }
     EXPECT_TRUE(names.count(L"Item0"));

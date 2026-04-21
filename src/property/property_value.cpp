@@ -57,7 +57,9 @@ auto property_value_to_string(const property &prop) -> std::string {
             if constexpr (std::is_same_v<T, std::monostate>) {
                 return "(empty)";
             } else if constexpr (std::is_same_v<T, int16_t>) {
-                if (prop.type == vt::bool_) return val != 0 ? "true" : "false";
+                if (prop.type == vt::bool_) {
+                    return val != 0 ? "true" : "false";
+                }
                 return std::to_string(val);
             } else if constexpr (std::is_same_v<T, int32_t>) {
                 return std::to_string(val);
@@ -68,7 +70,9 @@ auto property_value_to_string(const property &prop) -> std::string {
             } else if constexpr (std::is_same_v<T, int64_t>) {
                 return std::to_string(val);
             } else if constexpr (std::is_same_v<T, uint64_t>) {
-                if (prop.type == vt::filetime) return std::format("0x{:016X}", val);
+                if (prop.type == vt::filetime) {
+                    return std::format("0x{:016X}", val);
+                }
                 return std::to_string(val);
             } else if constexpr (std::is_same_v<T, float>) {
                 return std::to_string(val);
@@ -80,10 +84,11 @@ auto property_value_to_string(const property &prop) -> std::string {
                 // Simple ASCII approximation for debug
                 std::string result = "u\"";
                 for (auto ch : val) {
-                    if (ch < 128)
+                    if (ch < 128) {
                         result += static_cast<char>(ch);
-                    else
+                    } else {
                         result += '?';
+                    }
                 }
                 result += "\"";
                 return result;

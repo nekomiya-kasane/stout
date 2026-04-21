@@ -11,36 +11,52 @@ namespace stout {
 namespace {
 
 auto hex_nibble(char ch) noexcept -> int {
-    if (ch >= '0' && ch <= '9') return ch - '0';
-    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
-    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    if (ch >= '0' && ch <= '9') {
+        return ch - '0';
+    }
+    if (ch >= 'a' && ch <= 'f') {
+        return ch - 'a' + 10;
+    }
+    if (ch >= 'A' && ch <= 'F') {
+        return ch - 'A' + 10;
+    }
     return -1;
 }
 
 auto hex_byte(char hi, char lo) noexcept -> int {
     int h = hex_nibble(hi);
     int l = hex_nibble(lo);
-    if (h < 0 || l < 0) return -1;
+    if (h < 0 || l < 0) {
+        return -1;
+    }
     return (h << 4) | l;
 }
 
 auto parse_hex_u32(std::string_view s) noexcept -> std::optional<uint32_t> {
-    if (s.size() != 8) return std::nullopt;
+    if (s.size() != 8) {
+        return std::nullopt;
+    }
     uint32_t val = 0;
     for (char ch : s) {
         int n = hex_nibble(ch);
-        if (n < 0) return std::nullopt;
+        if (n < 0) {
+            return std::nullopt;
+        }
         val = (val << 4) | static_cast<uint32_t>(n);
     }
     return val;
 }
 
 auto parse_hex_u16(std::string_view s) noexcept -> std::optional<uint16_t> {
-    if (s.size() != 4) return std::nullopt;
+    if (s.size() != 4) {
+        return std::nullopt;
+    }
     uint16_t val = 0;
     for (char ch : s) {
         int n = hex_nibble(ch);
-        if (n < 0) return std::nullopt;
+        if (n < 0) {
+            return std::nullopt;
+        }
         val = static_cast<uint16_t>((val << 4) | static_cast<uint16_t>(n));
     }
     return val;
@@ -55,13 +71,19 @@ auto guid_parse(std::string_view str) noexcept -> std::optional<guid> {
     }
 
     // Expected: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX (36 chars)
-    if (str.size() != 36) return std::nullopt;
-    if (str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-') return std::nullopt;
+    if (str.size() != 36) {
+        return std::nullopt;
+    }
+    if (str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-') {
+        return std::nullopt;
+    }
 
     auto d1 = parse_hex_u32(str.substr(0, 8));
     auto d2 = parse_hex_u16(str.substr(9, 4));
     auto d3 = parse_hex_u16(str.substr(14, 4));
-    if (!d1 || !d2 || !d3) return std::nullopt;
+    if (!d1 || !d2 || !d3) {
+        return std::nullopt;
+    }
 
     guid g;
     g.data1 = *d1;
@@ -72,7 +94,9 @@ auto guid_parse(std::string_view str) noexcept -> std::optional<guid> {
     auto sv = str.substr(19, 4);
     for (int i = 0; i < 2; ++i) {
         int b = hex_byte(sv[i * 2], sv[i * 2 + 1]);
-        if (b < 0) return std::nullopt;
+        if (b < 0) {
+            return std::nullopt;
+        }
         g.data4[i] = static_cast<uint8_t>(b);
     }
 
@@ -80,7 +104,9 @@ auto guid_parse(std::string_view str) noexcept -> std::optional<guid> {
     sv = str.substr(24, 12);
     for (int i = 0; i < 6; ++i) {
         int b = hex_byte(sv[i * 2], sv[i * 2 + 1]);
-        if (b < 0) return std::nullopt;
+        if (b < 0) {
+            return std::nullopt;
+        }
         g.data4[2 + i] = static_cast<uint8_t>(b);
     }
 

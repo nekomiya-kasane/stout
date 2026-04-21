@@ -27,7 +27,9 @@ namespace ssv {
 
     for (auto &section : ps.sections) {
         for (auto &[pid, prop] : section.properties) {
-            if (pid == 0 || pid == 1) continue; // skip dictionary and codepage
+            if (pid == 0 || pid == 1) {
+                continue; // skip dictionary and codepage
+            }
             std::string value = stout::ole::property_value_to_string(prop);
             std::string type_name = stout::ole::vt_type_name(prop.type);
             tb.add_row({std::to_string(pid), type_name, value});

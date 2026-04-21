@@ -19,18 +19,24 @@ auto utf8_to_utf16le(std::string_view utf8) -> std::u16string {
             cp = ch;
             i += 1;
         } else if ((ch & 0xE0) == 0xC0) {
-            if (i + 1 >= utf8.size()) break;
+            if (i + 1 >= utf8.size()) {
+                break;
+            }
             cp = (ch & 0x1F) << 6;
             cp |= (static_cast<uint8_t>(utf8[i + 1]) & 0x3F);
             i += 2;
         } else if ((ch & 0xF0) == 0xE0) {
-            if (i + 2 >= utf8.size()) break;
+            if (i + 2 >= utf8.size()) {
+                break;
+            }
             cp = (ch & 0x0F) << 12;
             cp |= (static_cast<uint8_t>(utf8[i + 1]) & 0x3F) << 6;
             cp |= (static_cast<uint8_t>(utf8[i + 2]) & 0x3F);
             i += 3;
         } else if ((ch & 0xF8) == 0xF0) {
-            if (i + 3 >= utf8.size()) break;
+            if (i + 3 >= utf8.size()) {
+                break;
+            }
             cp = (ch & 0x07) << 18;
             cp |= (static_cast<uint8_t>(utf8[i + 1]) & 0x3F) << 12;
             cp |= (static_cast<uint8_t>(utf8[i + 2]) & 0x3F) << 6;
@@ -93,7 +99,9 @@ auto utf16le_to_utf8(std::u16string_view utf16) -> std::string {
 }
 
 auto dir_name_to_utf8(const uint8_t *name_bytes, uint16_t byte_count) -> std::string {
-    if (byte_count < 2) return {};
+    if (byte_count < 2) {
+        return {};
+    }
 
     // byte_count includes the null terminator (2 bytes for UTF-16)
     uint16_t char_count = (byte_count / 2) - 1;
@@ -110,10 +118,14 @@ auto dir_name_to_utf8(const uint8_t *name_bytes, uint16_t byte_count) -> std::st
 }
 
 auto utf8_to_dir_name(std::string_view name) -> std::optional<dir_name_result> {
-    if (!cfb_name_is_valid(name)) return std::nullopt;
+    if (!cfb_name_is_valid(name)) {
+        return std::nullopt;
+    }
 
     auto u16 = utf8_to_utf16le(name);
-    if (u16.size() >= 32) return std::nullopt; // max 31 chars + null
+    if (u16.size() >= 32) {
+        return std::nullopt; // max 31 chars + null
+    }
 
     dir_name_result result;
     for (size_t i = 0; i < u16.size(); ++i) {
@@ -130,11 +142,17 @@ auto utf8_to_dir_name(std::string_view name) -> std::optional<dir_name_result> {
 
 auto cfb_toupper(char16_t ch) noexcept -> char16_t {
     // Simple ASCII uppercase + basic Latin supplement
-    if (ch >= u'a' && ch <= u'z') return static_cast<char16_t>(ch - u'a' + u'A');
+    if (ch >= u'a' && ch <= u'z') {
+        return static_cast<char16_t>(ch - u'a' + u'A');
+    }
     // Latin-1 supplement: à-ö (0xE0-0xF6) -> À-Ö (0xC0-0xD6)
-    if (ch >= 0x00E0 && ch <= 0x00F6) return static_cast<char16_t>(ch - 0x20);
+    if (ch >= 0x00E0 && ch <= 0x00F6) {
+        return static_cast<char16_t>(ch - 0x20);
+    }
     // Latin-1 supplement: ø-þ (0xF8-0xFE) -> Ø-Þ (0xD8-0xDE)
-    if (ch >= 0x00F8 && ch <= 0x00FE) return static_cast<char16_t>(ch - 0x20);
+    if (ch >= 0x00F8 && ch <= 0x00FE) {
+        return static_cast<char16_t>(ch - 0x20);
+    }
     return ch;
 }
 
@@ -148,17 +166,23 @@ auto cfb_name_compare(std::u16string_view a, std::u16string_view b) noexcept -> 
     for (size_t i = 0; i < a.size(); ++i) {
         auto ua = cfb_toupper(a[i]);
         auto ub = cfb_toupper(b[i]);
-        if (ua != ub) return (ua < ub) ? -1 : 1;
+        if (ua != ub) {
+            return (ua < ub) ? -1 : 1;
+        }
     }
 
     return 0;
 }
 
 auto cfb_name_is_valid(std::string_view name) noexcept -> bool {
-    if (name.empty()) return false;
+    if (name.empty()) {
+        return false;
+    }
 
     for (char ch : name) {
-        if (ch == '/' || ch == '\\' || ch == ':' || ch == '!') return false;
+        if (ch == '/' || ch == '\\' || ch == ':' || ch == '!') {
+            return false;
+        }
     }
 
     // Check length after conversion

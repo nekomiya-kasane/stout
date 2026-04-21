@@ -213,7 +213,9 @@ TEST_P(StressMiniStreamConformance, MiniAfterDelete) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 2u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
     // Verify B data
     stream_ptr strm;
     ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"B", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
@@ -267,10 +269,11 @@ TEST_P(StressMiniStreamConformance, Win32MiniStoutRead100) {
     auto data = make_test_data(100, 0x77);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(
             SUCCEEDED(stg->CreateStream(L"W", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
@@ -292,10 +295,11 @@ TEST_P(StressMiniStreamConformance, Win32MiniStoutRead2000) {
     auto data = make_test_data(2000, 0x88);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(
             SUCCEEDED(stg->CreateStream(L"W", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));

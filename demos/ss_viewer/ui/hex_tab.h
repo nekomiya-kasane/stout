@@ -25,11 +25,14 @@ namespace ssv {
     uint32_t n = reader.read_hex_line(line_idx, buf);
 
     for (uint32_t i = 0; i < 16; ++i) {
-        if (i == 8) out += ' ';
-        if (i < n)
+        if (i == 8) {
+            out += ' ';
+        }
+        if (i < n) {
             out += std::format("{:02X} ", buf[i]);
-        else
+        } else {
             out += "   ";
+        }
     }
     out += " |";
     for (uint32_t i = 0; i < n; ++i) {

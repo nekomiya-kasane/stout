@@ -153,10 +153,11 @@ TEST_F(StorageHierarchyConformance, MixedChildren) {
 
     int storage_count = 0, stream_count = 0;
     for (auto &e : entries) {
-        if (e.type == STGTY_STORAGE)
+        if (e.type == STGTY_STORAGE) {
             ++storage_count;
-        else if (e.type == STGTY_STREAM)
+        } else if (e.type == STGTY_STREAM) {
             ++stream_count;
+        }
         free_statstg_name(e);
     }
     EXPECT_EQ(storage_count, 5);

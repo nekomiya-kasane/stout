@@ -58,18 +58,19 @@ int main(int argc, char *argv[]) {
     uint32_t dump_height = 30;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--win32")
+        if (arg == "--win32") {
             st.use_win32 = true;
-        else if (arg == "--dump")
+        } else if (arg == "--dump") {
             dump_mode = true;
-        else if (arg == "--dump-canvas")
+        } else if (arg == "--dump-canvas") {
             dump_canvas_mode = true;
-        else if (arg == "--width" && i + 1 < argc)
+        } else if (arg == "--width" && i + 1 < argc) {
             dump_width = static_cast<uint32_t>(std::atoi(argv[++i]));
-        else if (arg == "--height" && i + 1 < argc)
+        } else if (arg == "--height" && i + 1 < argc) {
             dump_height = static_cast<uint32_t>(std::atoi(argv[++i]));
-        else
+        } else {
             st.file_path = arg;
+        }
     }
 
     if (st.file_path.empty()) {
@@ -127,17 +128,22 @@ int main(int argc, char *argv[]) {
         console con(ccfg);
         std::fprintf(stderr, "=== DUMP: %ux%u (viewport_h=%d) ===\n", dump_width, dump_height, viewport_h);
         std::fprintf(stderr, "expanded set (%zu entries):\n", st.expanded.size());
-        for (auto &e : st.expanded) std::fprintf(stderr, "  [%s]\n", e.c_str());
+        for (auto &e : st.expanded) {
+            std::fprintf(stderr, "  [%s]\n", e.c_str());
+        }
         std::fprintf(stderr, "flat_paths (%zu entries):\n", st.flat_paths.size());
-        for (size_t i = 0; i < st.flat_paths.size(); ++i)
+        for (size_t i = 0; i < st.flat_paths.size(); ++i) {
             std::fprintf(stderr, "  [%zu] %s%s\n", i, st.flat_paths[i].c_str(),
                          (static_cast<int>(i) == st.tree_cursor) ? " <-- cursor" : "");
+        }
         std::fprintf(stderr, "tree_cursor=%d selected=%s\n", st.tree_cursor,
                      st.selected ? st.selected->full_path.c_str() : "(null)");
         std::fprintf(stderr, "=== RENDERED FRAME ===\n");
         con.print_widget(frame, dump_width);
 
-        if (st.use_win32) CoUninitialize();
+        if (st.use_win32) {
+            CoUninitialize();
+        }
         return 0;
     }
 
@@ -156,11 +162,15 @@ int main(int argc, char *argv[]) {
         // Styled info for key rows
         std::fprintf(stderr, "--- styled info for key rows ---\n");
         auto dump_row_style = [&](uint32_t y) {
-            if (y >= wc.height) return;
+            if (y >= wc.height) {
+                return;
+            }
             std::fprintf(stderr, "row %u: ", y);
             for (uint32_t x = 0; x < std::min(wc.width, 40u); ++x) {
                 auto &c = wc.cell_at(x, y);
-                if (c.width == 0) continue;
+                if (c.width == 0) {
+                    continue;
+                }
                 char32_t cp = c.codepoint;
                 if (cp == 0 || cp == U' ') {
                     std::fprintf(stderr, ".");
@@ -183,9 +193,13 @@ int main(int argc, char *argv[]) {
         dump_row_style(0);
         dump_row_style(1);
         dump_row_style(2);
-        if (wc.height > 0) dump_row_style(wc.height - 1);
+        if (wc.height > 0) {
+            dump_row_style(wc.height - 1);
+        }
 
-        if (st.use_win32) CoUninitialize();
+        if (st.use_win32) {
+            CoUninitialize();
+        }
         return 0;
     }
 
@@ -210,6 +224,8 @@ int main(int argc, char *argv[]) {
 
     app.run();
 
-    if (st.use_win32) CoUninitialize();
+    if (st.use_win32) {
+        CoUninitialize();
+    }
     return 0;
 }

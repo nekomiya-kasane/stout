@@ -21,7 +21,9 @@ using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) {
+        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    }
     return p;
 }
 
@@ -139,7 +141,9 @@ TEST_F(DumpCanvasTest, NoCompletelyBlankRows) {
                 break;
             }
         }
-        if (all_space) ++blank_count;
+        if (all_space) {
+            ++blank_count;
+        }
     }
     // Allow some blank rows (padding) but not all
     EXPECT_LT(blank_count, static_cast<int>(vs.row_count()) / 2);

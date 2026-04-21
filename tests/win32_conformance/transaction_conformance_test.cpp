@@ -98,7 +98,9 @@ TEST_F(TransactionConformance, TransactedRevert) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── TransactedMultipleWrites: multiple writes, single commit ────────────
@@ -126,7 +128,9 @@ TEST_F(TransactionConformance, TransactedMultipleWrites) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 5u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── TransactedPartialRevert: commit A, write B, revert → A persists ────
@@ -177,7 +181,9 @@ TEST_F(TransactionConformance, TransactedPartialRevert) {
     HRESULT hr = stg->OpenStream(L"StreamB", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm_b.put());
     EXPECT_TRUE(FAILED(hr));
 
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── TransactedNewStream: create stream in transacted, revert → gone ─────

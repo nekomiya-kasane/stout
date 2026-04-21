@@ -49,10 +49,14 @@ class paged_reader {
 
     /// @brief Read a single byte at the given offset. Returns 0 if out of range.
     [[nodiscard]] uint8_t byte_at(uint64_t offset) {
-        if (offset >= total_size_) return 0;
+        if (offset >= total_size_) {
+            return 0;
+        }
         auto &page = ensure_page(offset / page_size);
         uint32_t off_in_page = static_cast<uint32_t>(offset % page_size);
-        if (off_in_page >= page.size()) return 0;
+        if (off_in_page >= page.size()) {
+            return 0;
+        }
         return page[off_in_page];
     }
 
@@ -76,7 +80,9 @@ class paged_reader {
     ///        Returns the actual number of bytes available (0–16).
     uint32_t read_hex_line(uint32_t line_idx, uint8_t out[16]) {
         uint64_t offset = static_cast<uint64_t>(line_idx) * 16;
-        if (offset >= total_size_) return 0;
+        if (offset >= total_size_) {
+            return 0;
+        }
         uint32_t avail = static_cast<uint32_t>(std::min<uint64_t>(16, total_size_ - offset));
         std::span<uint8_t> buf(out, avail);
         read_range(offset, buf);
@@ -101,7 +107,9 @@ class paged_reader {
     /// @brief Ensure a page is loaded and return a reference to its data.
     std::vector<uint8_t> &ensure_page(uint64_t page_idx) {
         auto it = pages_.find(page_idx);
-        if (it != pages_.end()) return it->second;
+        if (it != pages_.end()) {
+            return it->second;
+        }
 
         uint64_t offset = page_idx * page_size;
         uint64_t remaining = (offset < total_size_) ? total_size_ - offset : 0;

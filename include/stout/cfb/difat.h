@@ -42,7 +42,9 @@ class STOUT_API difat_table {
         std::vector<uint8_t> buf(ss);
         while (difat_sector != endofchain && difat_sector != freesect && remaining > 0) {
             auto r = sio.read_sector(difat_sector, buf);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
 
             for (uint32_t i = 0; i < entries_per; ++i) {
                 uint32_t val = util::read_u32_le(buf.data() + i * 4);
@@ -82,7 +84,9 @@ class STOUT_API difat_table {
                 // Read to get next link
                 std::vector<uint8_t> buf(ss);
                 auto r = sio.read_sector(ds, buf);
-                if (!r) return std::unexpected(r.error());
+                if (!r) {
+                    return std::unexpected(r.error());
+                }
                 ds = util::read_u32_le(buf.data() + entries_per * 4);
             }
 
@@ -117,7 +121,9 @@ class STOUT_API difat_table {
                 util::write_u32_le(buf.data() + entries_per * 4, next_ds);
 
                 auto r = sio.write_sector(difat_sectors[s], buf);
-                if (!r) return std::unexpected(r.error());
+                if (!r) {
+                    return std::unexpected(r.error());
+                }
             }
         } else {
             hdr.first_difat_sector = endofchain;

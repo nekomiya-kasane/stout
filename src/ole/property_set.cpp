@@ -34,36 +34,56 @@ void property_section::remove(uint32_t id) {
 
 auto property_section::get_string(uint32_t id) const -> std::string {
     auto p = get(id);
-    if (!p) return {};
-    if (auto *s = std::get_if<std::string>(&p->value)) return *s;
+    if (!p) {
+        return {};
+    }
+    if (auto *s = std::get_if<std::string>(&p->value)) {
+        return *s;
+    }
     return {};
 }
 
 auto property_section::get_i4(uint32_t id) const -> int32_t {
     auto p = get(id);
-    if (!p) return 0;
-    if (auto *v = std::get_if<int32_t>(&p->value)) return *v;
+    if (!p) {
+        return 0;
+    }
+    if (auto *v = std::get_if<int32_t>(&p->value)) {
+        return *v;
+    }
     return 0;
 }
 
 auto property_section::get_u4(uint32_t id) const -> uint32_t {
     auto p = get(id);
-    if (!p) return 0;
-    if (auto *v = std::get_if<uint32_t>(&p->value)) return *v;
+    if (!p) {
+        return 0;
+    }
+    if (auto *v = std::get_if<uint32_t>(&p->value)) {
+        return *v;
+    }
     return 0;
 }
 
 auto property_section::get_filetime(uint32_t id) const -> uint64_t {
     auto p = get(id);
-    if (!p) return 0;
-    if (auto *v = std::get_if<uint64_t>(&p->value)) return *v;
+    if (!p) {
+        return 0;
+    }
+    if (auto *v = std::get_if<uint64_t>(&p->value)) {
+        return *v;
+    }
     return 0;
 }
 
 auto property_section::get_bool(uint32_t id) const -> bool {
     auto p = get(id);
-    if (!p) return false;
-    if (auto *v = std::get_if<int16_t>(&p->value)) return *v != 0;
+    if (!p) {
+        return false;
+    }
+    if (auto *v = std::get_if<int16_t>(&p->value)) {
+        return *v != 0;
+    }
     return false;
 }
 
@@ -91,20 +111,26 @@ void property_section::set_bool(uint32_t id, bool val) {
 
 auto property_set::section(const guid &fmtid) -> property_section * {
     for (auto &s : sections) {
-        if (s.fmtid == fmtid) return &s;
+        if (s.fmtid == fmtid) {
+            return &s;
+        }
     }
     return nullptr;
 }
 
 auto property_set::section(const guid &fmtid) const -> const property_section * {
     for (auto &s : sections) {
-        if (s.fmtid == fmtid) return &s;
+        if (s.fmtid == fmtid) {
+            return &s;
+        }
     }
     return nullptr;
 }
 
 auto property_set::add_section(const guid &fmtid) -> property_section & {
-    if (auto *s = section(fmtid)) return *s;
+    if (auto *s = section(fmtid)) {
+        return *s;
+    }
     sections.push_back({});
     sections.back().fmtid = fmtid;
     return sections.back();
@@ -140,7 +166,9 @@ static auto pad4(uint32_t n) -> uint32_t {
 
 static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, uint16_t codepage = 1252)
     -> std::expected<property, error> {
-    if (offset + 4 > data.size()) return std::unexpected(error::corrupt_file);
+    if (offset + 4 > data.size()) {
+        return std::unexpected(error::corrupt_file);
+    }
 
     property prop;
     prop.type = static_cast<vt>(read_u16(data.data() + offset));
@@ -154,39 +182,53 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
         break;
 
     case vt::i2:
-        if (val_off + 2 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 2 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = static_cast<int16_t>(read_u16(data.data() + val_off));
         break;
 
     case vt::i4:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = static_cast<int32_t>(read_u32(data.data() + val_off));
         break;
 
     case vt::ui2:
-        if (val_off + 2 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 2 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = read_u16(data.data() + val_off);
         break;
 
     case vt::ui4:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = read_u32(data.data() + val_off);
         break;
 
     case vt::i8:
     case vt::cy:
-        if (val_off + 8 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 8 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = static_cast<int64_t>(read_u64(data.data() + val_off));
         break;
 
     case vt::ui8:
     case vt::filetime:
-        if (val_off + 8 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 8 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = read_u64(data.data() + val_off);
         break;
 
     case vt::r4:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         {
             float f;
             std::memcpy(&f, data.data() + val_off, 4);
@@ -196,7 +238,9 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
 
     case vt::r8:
     case vt::date:
-        if (val_off + 8 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 8 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         {
             double d;
             std::memcpy(&d, data.data() + val_off, 8);
@@ -205,16 +249,22 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
         break;
 
     case vt::bool_:
-        if (val_off + 2 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 2 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = static_cast<int16_t>(read_u16(data.data() + val_off));
         break;
 
     case vt::lpstr:
     case vt::bstr:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         {
             uint32_t len = read_u32(data.data() + val_off);
-            if (val_off + 4 + len > data.size()) return std::unexpected(error::corrupt_file);
+            if (val_off + 4 + len > data.size()) {
+                return std::unexpected(error::corrupt_file);
+            }
             if (codepage == 1200 && len >= 2) {
                 // Codepage 1200 = UTF-16LE: decode as u16string
                 uint32_t char_count = len / 2;
@@ -222,30 +272,40 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
                 str.reserve(char_count);
                 for (uint32_t i = 0; i < char_count; ++i) {
                     auto ch = read_u16(data.data() + val_off + 4 + i * 2);
-                    if (ch == 0) break;
+                    if (ch == 0) {
+                        break;
+                    }
                     str.push_back(static_cast<char16_t>(ch));
                 }
                 prop.value = std::move(str);
             } else {
                 // Strip trailing null if present
                 auto str_len = len;
-                while (str_len > 0 && data[val_off + 4 + str_len - 1] == 0) --str_len;
+                while (str_len > 0 && data[val_off + 4 + str_len - 1] == 0) {
+                    --str_len;
+                }
                 prop.value = std::string(reinterpret_cast<const char *>(data.data() + val_off + 4), str_len);
             }
         }
         break;
 
     case vt::lpwstr:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         {
             uint32_t char_count = read_u32(data.data() + val_off);
             uint32_t byte_count = char_count * 2;
-            if (val_off + 4 + byte_count > data.size()) return std::unexpected(error::corrupt_file);
+            if (val_off + 4 + byte_count > data.size()) {
+                return std::unexpected(error::corrupt_file);
+            }
             std::u16string str;
             str.reserve(char_count);
             for (uint32_t i = 0; i < char_count; ++i) {
                 auto ch = read_u16(data.data() + val_off + 4 + i * 2);
-                if (ch == 0) break;
+                if (ch == 0) {
+                    break;
+                }
                 str.push_back(static_cast<char16_t>(ch));
             }
             prop.value = std::move(str);
@@ -253,16 +313,22 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
         break;
 
     case vt::blob:
-        if (val_off + 4 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 4 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         {
             uint32_t len = read_u32(data.data() + val_off);
-            if (val_off + 4 + len > data.size()) return std::unexpected(error::corrupt_file);
+            if (val_off + 4 + len > data.size()) {
+                return std::unexpected(error::corrupt_file);
+            }
             prop.value = std::vector<uint8_t>(data.data() + val_off + 4, data.data() + val_off + 4 + len);
         }
         break;
 
     case vt::clsid:
-        if (val_off + 16 > data.size()) return std::unexpected(error::corrupt_file);
+        if (val_off + 16 > data.size()) {
+            return std::unexpected(error::corrupt_file);
+        }
         prop.value = guid_read_le(data.data() + val_off);
         break;
 
@@ -279,7 +345,9 @@ static auto parse_typed_value(std::span<const uint8_t> data, uint32_t offset, ui
 
 static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset, const guid &fmtid)
     -> std::expected<property_section, error> {
-    if (section_offset + 8 > data.size()) return std::unexpected(error::corrupt_file);
+    if (section_offset + 8 > data.size()) {
+        return std::unexpected(error::corrupt_file);
+    }
 
     property_section sec;
     sec.fmtid = fmtid;
@@ -287,7 +355,9 @@ static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset
     uint32_t section_size = read_u32(data.data() + section_offset);
     uint32_t num_props = read_u32(data.data() + section_offset + 4);
 
-    if (section_offset + 8 + num_props * 8 > data.size()) return std::unexpected(error::corrupt_file);
+    if (section_offset + 8 + num_props * 8 > data.size()) {
+        return std::unexpected(error::corrupt_file);
+    }
 
     // First pass: find codepage so string properties are decoded correctly
     for (uint32_t i = 0; i < num_props; ++i) {
@@ -322,7 +392,9 @@ static auto parse_section(std::span<const uint8_t> data, uint32_t section_offset
 
 auto parse_property_set(std::span<const uint8_t> data) -> std::expected<property_set, error> {
     // Minimum: header (28 bytes) + at least 1 section entry (20 bytes)
-    if (data.size() < 28) return std::unexpected(error::corrupt_file);
+    if (data.size() < 28) {
+        return std::unexpected(error::corrupt_file);
+    }
 
     property_set ps;
     ps.byte_order = read_u16(data.data());
@@ -331,16 +403,22 @@ auto parse_property_set(std::span<const uint8_t> data) -> std::expected<property
     ps.clsid = guid_read_le(data.data() + 8);
     uint32_t num_sections = read_u32(data.data() + 24);
 
-    if (num_sections == 0 || num_sections > 2) return std::unexpected(error::corrupt_file);
+    if (num_sections == 0 || num_sections > 2) {
+        return std::unexpected(error::corrupt_file);
+    }
 
-    if (28 + num_sections * 20 > data.size()) return std::unexpected(error::corrupt_file);
+    if (28 + num_sections * 20 > data.size()) {
+        return std::unexpected(error::corrupt_file);
+    }
 
     for (uint32_t i = 0; i < num_sections; ++i) {
         guid fmtid = guid_read_le(data.data() + 28 + i * 20);
         uint32_t offset = read_u32(data.data() + 28 + i * 20 + 16);
 
         auto sec = parse_section(data, offset, fmtid);
-        if (!sec) return std::unexpected(sec.error());
+        if (!sec) {
+            return std::unexpected(sec.error());
+        }
         ps.sections.push_back(std::move(*sec));
     }
 

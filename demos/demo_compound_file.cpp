@@ -70,7 +70,9 @@ int main() {
         return 1;
     }
     std::vector<uint8_t> icon_data(256);
-    for (size_t i = 0; i < icon_data.size(); ++i) icon_data[i] = static_cast<uint8_t>(i);
+    for (size_t i = 0; i < icon_data.size(); ++i) {
+        icon_data[i] = static_cast<uint8_t>(i);
+    }
     icon->write(0, std::span<const uint8_t>(icon_data));
     std::println("  icon.bin:   wrote {} bytes (mini stream)", icon_data.size());
 
@@ -110,9 +112,7 @@ int main() {
     print_separator("Flush and close");
     auto fl = cf->flush();
     std::println("  Flush: {}", fl.has_value() ? "OK" : "FAIL");
-    {
-        auto _ = std::move(cf);
-    } // close the file so we can reopen it
+    { auto _ = std::move(cf); } // close the file so we can reopen it
     std::println("  Closed");
 
     // ── Reopen and read back ────────────────────────────────────────────

@@ -25,7 +25,9 @@ namespace conformance {
 struct com_init {
     com_init() {
         HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) throw std::runtime_error("CoInitializeEx failed");
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
+            throw std::runtime_error("CoInitializeEx failed");
+        }
     }
     ~com_init() { CoUninitialize(); }
     com_init(const com_init &) = delete;
@@ -76,7 +78,9 @@ using propset_ptr = com_ptr<IPropertyStorage>;
 
 // Convert UTF-8 string_view to wide string for Win32 APIs
 inline std::wstring to_wide(std::string_view s) {
-    if (s.empty()) return {};
+    if (s.empty()) {
+        return {};
+    }
     int len = MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
     std::wstring result(len, L'\0');
     MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), result.data(), len);
@@ -85,7 +89,9 @@ inline std::wstring to_wide(std::string_view s) {
 
 // Convert wide string to UTF-8
 inline std::string to_utf8(const wchar_t *ws) {
-    if (!ws || !*ws) return {};
+    if (!ws || !*ws) {
+        return {};
+    }
     int len = WideCharToMultiByte(CP_UTF8, 0, ws, -1, nullptr, 0, nullptr, nullptr);
     std::string result(len - 1, '\0');
     WideCharToMultiByte(CP_UTF8, 0, ws, -1, result.data(), len, nullptr, nullptr);

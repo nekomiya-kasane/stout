@@ -52,10 +52,11 @@ TEST_P(StressCreateConformance, EmptyFile_Win32CreateStoutOpen) {
     guard_.add(path);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        }
     }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());
@@ -166,7 +167,9 @@ TEST_P(StressCreateConformance, HeaderReservedZeros) {
     }
     auto bytes = read_file_bytes(path);
     // Reserved bytes at offset 0x22 (6 bytes) should be zero
-    for (int i = 0x22; i < 0x28; ++i) EXPECT_EQ(bytes[i], 0u) << "Non-zero at offset 0x" << std::hex << i;
+    for (int i = 0x22; i < 0x28; ++i) {
+        EXPECT_EQ(bytes[i], 0u) << "Non-zero at offset 0x" << std::hex << i;
+    }
 }
 
 TEST_P(StressCreateConformance, HeaderMatchesWin32) {
@@ -180,10 +183,11 @@ TEST_P(StressCreateConformance, HeaderMatchesWin32) {
     }
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(win32_path.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(win32_path.wstring(), stg.put())));
+        }
     }
     auto sb = read_file_bytes(stout_path);
     auto wb = read_file_bytes(win32_path);
@@ -459,10 +463,11 @@ TEST_P(StressCreateConformance, Win32CreateWithStreamStoutReads) {
     auto data = make_test_data(400, 0x77);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStream(L"W32Data", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
@@ -483,10 +488,11 @@ TEST_P(StressCreateConformance, Win32CreateWithStorageStoutOpens) {
     guard_.add(path);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        }
         storage_ptr sub;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStorage(L"W32Sub", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, sub.put())));
@@ -527,9 +533,7 @@ TEST_P(StressCreateConformance, FlushAfterWritePreservesData) {
     ASSERT_TRUE(s2->write(0, std::span<const uint8_t>(data2)).has_value());
     ASSERT_TRUE(cf->flush().has_value());
     // Verify both exist — close cf first
-    {
-        auto tmp = std::move(cf);
-    }
+    { auto tmp = std::move(cf); }
     auto cf2 = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf2.has_value());
     EXPECT_EQ(cf2->root_storage().children().size(), 2u);

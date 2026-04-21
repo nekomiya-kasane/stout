@@ -233,10 +233,11 @@ TEST_P(StressMultiStreamConformance, Win32Creates15StoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         for (int i = 0; i < 15; ++i) {
             auto name = L"W" + std::to_wstring(i);
             stream_ptr strm;
@@ -281,10 +282,11 @@ TEST_P(StressMultiStreamConformance, EmptyAndDataMixed) {
         auto name = L"E" + std::to_wstring(i);
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(stg->OpenStream(name.c_str(), nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
-        if (i % 2 == 0)
+        if (i % 2 == 0) {
             EXPECT_EQ(win32_stream_size(strm.get()), 500u);
-        else
+        } else {
             EXPECT_EQ(win32_stream_size(strm.get()), 0u);
+        }
     }
 }
 
@@ -313,7 +315,9 @@ TEST_P(StressMultiStreamConformance, StoragesAndStreamsAtRoot) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 10u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 #endif // _WIN32

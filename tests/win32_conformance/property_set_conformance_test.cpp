@@ -19,9 +19,13 @@ class PropertySetConformance : public ::testing::Test {
     static HRESULT open_summary_read(const std::wstring &path, propset_storage_ptr &pss, propset_ptr &ps) {
         storage_ptr stg;
         HRESULT hr = win32_open_read(path, stg.put());
-        if (FAILED(hr)) return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
         hr = stg->QueryInterface(IID_IPropertySetStorage, reinterpret_cast<void **>(pss.put()));
-        if (FAILED(hr)) return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
         hr = pss->Open(FMTID_SummaryInformation, STGM_READ | STGM_SHARE_EXCLUSIVE, ps.put());
         return hr;
     }
@@ -29,11 +33,15 @@ class PropertySetConformance : public ::testing::Test {
     // Helper: write a Stout property set to the SummaryInformation stream
     static bool write_summary(compound_file &cf, const property_set &pset) {
         auto data = serialize_property_set(pset);
-        if (!data) return false;
+        if (!data) {
+            return false;
+        }
         auto root = cf.root_storage();
         // SummaryInformation stream name: "\005SummaryInformation"
         auto s = root.create_stream("\005SummaryInformation");
-        if (!s) return false;
+        if (!s) {
+            return false;
+        }
         auto wr = s->write(0, std::span<const uint8_t>(*data));
         return wr.has_value();
     }
@@ -42,11 +50,15 @@ class PropertySetConformance : public ::testing::Test {
     static std::expected<property_set, error> read_summary(compound_file &cf) {
         auto root = cf.root_storage();
         auto s = root.open_stream("\005SummaryInformation");
-        if (!s) return std::unexpected(s.error());
+        if (!s) {
+            return std::unexpected(s.error());
+        }
         auto sz = s->size();
         std::vector<uint8_t> buf(sz);
         auto rd = s->read(0, std::span<uint8_t>(buf));
-        if (!rd) return std::unexpected(rd.error());
+        if (!rd) {
+            return std::unexpected(rd.error());
+        }
         return parse_property_set(buf);
     }
 };
@@ -205,17 +217,25 @@ TEST_F(PropertySetConformance, WriteMultipleProperties) {
     specs[2].ulKind = PRSPEC_PROPID;
     specs[2].propid = PIDSI_PAGECOUNT;
     PROPVARIANT vars[3]{};
-    for (auto &v : vars) PropVariantInit(&v);
+    for (auto &v : vars) {
+        PropVariantInit(&v);
+    }
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(3, specs, vars)));
 
     EXPECT_EQ(vars[0].vt, VT_LPSTR);
-    if (vars[0].vt == VT_LPSTR) EXPECT_STREQ(vars[0].pszVal, "Multi Test");
+    if (vars[0].vt == VT_LPSTR) {
+        EXPECT_STREQ(vars[0].pszVal, "Multi Test");
+    }
     EXPECT_EQ(vars[1].vt, VT_LPSTR);
-    if (vars[1].vt == VT_LPSTR) EXPECT_STREQ(vars[1].pszVal, "Author");
+    if (vars[1].vt == VT_LPSTR) {
+        EXPECT_STREQ(vars[1].pszVal, "Author");
+    }
     EXPECT_EQ(vars[2].vt, VT_I4);
     EXPECT_EQ(vars[2].lVal, 99);
 
-    for (auto &v : vars) PropVariantClear(&v);
+    for (auto &v : vars) {
+        PropVariantClear(&v);
+    }
 }
 
 // ── Win32 writes properties, Stout reads ────────────────────────────────
@@ -299,7 +319,9 @@ TEST_F(PropertySetConformance, RoundtripStoutWin32Stout) {
         PropVariantInit(&var);
         ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(1, &spec, &var)));
         EXPECT_EQ(var.vt, VT_LPSTR);
-        if (var.vt == VT_LPSTR) EXPECT_STREQ(var.pszVal, "Original");
+        if (var.vt == VT_LPSTR) {
+            EXPECT_STREQ(var.pszVal, "Original");
+        }
         PropVariantClear(&var);
 
         // Modify title
@@ -345,15 +367,23 @@ TEST_F(PropertySetConformance, SubjectAndKeywords) {
     specs[1].ulKind = PRSPEC_PROPID;
     specs[1].propid = PIDSI_KEYWORDS;
     PROPVARIANT vars[2]{};
-    for (auto &v : vars) PropVariantInit(&v);
+    for (auto &v : vars) {
+        PropVariantInit(&v);
+    }
     ASSERT_TRUE(SUCCEEDED(prop->ReadMultiple(2, specs, vars)));
 
     EXPECT_EQ(vars[0].vt, VT_LPSTR);
-    if (vars[0].vt == VT_LPSTR) EXPECT_STREQ(vars[0].pszVal, "Test Subject");
+    if (vars[0].vt == VT_LPSTR) {
+        EXPECT_STREQ(vars[0].pszVal, "Test Subject");
+    }
     EXPECT_EQ(vars[1].vt, VT_LPSTR);
-    if (vars[1].vt == VT_LPSTR) EXPECT_STREQ(vars[1].pszVal, "stout, cfb, test");
+    if (vars[1].vt == VT_LPSTR) {
+        EXPECT_STREQ(vars[1].pszVal, "stout, cfb, test");
+    }
 
-    for (auto &v : vars) PropVariantClear(&v);
+    for (auto &v : vars) {
+        PropVariantClear(&v);
+    }
 }
 
 #endif // _WIN32

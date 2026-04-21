@@ -26,10 +26,14 @@ namespace ssv {
     tb.add_row({"Name", ei.name});
     tb.add_row({"Type", entry_type_str(ei.type)});
     tb.add_row({"Size", format_size(ei.size) + " (" + std::to_string(ei.size) + " bytes)"});
-    if (!is_null_guid(ei.clsid)) tb.add_row({"CLSID", format_guid(ei.clsid)});
+    if (!is_null_guid(ei.clsid)) {
+        tb.add_row({"CLSID", format_guid(ei.clsid)});
+    }
     tb.add_row({"Created", format_time(ei.creation_time)});
     tb.add_row({"Modified", format_time(ei.modified_time)});
-    if (ei.state_bits != 0) tb.add_row({"State Bits", std::format("0x{:08X}", ei.state_bits)});
+    if (ei.state_bits != 0) {
+        tb.add_row({"State Bits", std::format("0x{:08X}", ei.state_bits)});
+    }
     tb.add_row({"Path", ei.full_path});
 
     return tb;

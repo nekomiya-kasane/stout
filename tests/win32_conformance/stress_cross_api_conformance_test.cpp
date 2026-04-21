@@ -31,10 +31,11 @@ TEST_P(StressCrossAPIConformance, Win32ComplexStoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         // Create streams
         for (int i = 0; i < 5; ++i) {
             auto name = L"Stream" + std::to_wstring(i);
@@ -102,7 +103,9 @@ TEST_P(StressCrossAPIConformance, StoutComplexWin32Reads) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 6u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
     for (int i = 0; i < 5; ++i) {
         auto name = L"S" + std::to_wstring(i);
         stream_ptr strm;
@@ -161,10 +164,11 @@ TEST_P(StressCrossAPIConformance, RoundtripStoutModifies) {
     auto added = make_test_data(400, 0x44);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStream(L"Original", STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
@@ -184,7 +188,9 @@ TEST_P(StressCrossAPIConformance, RoundtripStoutModifies) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 2u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
     stream_ptr strm;
     ASSERT_TRUE(SUCCEEDED(stg->OpenStream(L"Added", nullptr, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, strm.put())));
     EXPECT_EQ(win32_stream_size(strm.get()), 400u);
@@ -201,10 +207,11 @@ TEST_P(StressCrossAPIConformance, Win32DeepHierarchyStoutTraverses) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         IStorage *cur = stg.get();
         storage_ptr levels[5];
         for (int i = 0; i < 5; ++i) {
@@ -296,10 +303,11 @@ TEST_P(StressCrossAPIConformance, Win32EmptyStoutReads) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
     }
     auto cf = compound_file::open(p, open_mode::read);
     ASSERT_TRUE(cf.has_value());

@@ -112,17 +112,23 @@ struct viewer_state {
     void push_nav_history() {
         if (selected) {
             nav_back.push_back(selected->full_path);
-            if (nav_back.size() > nav_max) nav_back.pop_front();
+            if (nav_back.size() > nav_max) {
+                nav_back.pop_front();
+            }
             nav_forward.clear();
         }
     }
 
     /// @brief Navigate back in history.
     void nav_go_back() {
-        if (nav_back.empty()) return;
+        if (nav_back.empty()) {
+            return;
+        }
         if (selected) {
             nav_forward.push_back(selected->full_path);
-            if (nav_forward.size() > nav_max) nav_forward.pop_front();
+            if (nav_forward.size() > nav_max) {
+                nav_forward.pop_front();
+            }
         }
         auto target = nav_back.back();
         nav_back.pop_back();
@@ -131,10 +137,14 @@ struct viewer_state {
 
     /// @brief Navigate forward in history.
     void nav_go_forward() {
-        if (nav_forward.empty()) return;
+        if (nav_forward.empty()) {
+            return;
+        }
         if (selected) {
             nav_back.push_back(selected->full_path);
-            if (nav_back.size() > nav_max) nav_back.pop_front();
+            if (nav_back.size() > nav_max) {
+                nav_back.pop_front();
+            }
         }
         auto target = nav_forward.back();
         nav_forward.pop_back();
@@ -154,12 +164,15 @@ struct viewer_state {
 
     /// @brief Toggle bookmark for the currently selected entry.
     void toggle_bookmark() {
-        if (!selected) return;
+        if (!selected) {
+            return;
+        }
         auto it = std::find(bookmarks.begin(), bookmarks.end(), selected->full_path);
-        if (it != bookmarks.end())
+        if (it != bookmarks.end()) {
             bookmarks.erase(it);
-        else
+        } else {
             bookmarks.push_back(selected->full_path);
+        }
         dirty = true;
     }
 
@@ -170,13 +183,16 @@ struct viewer_state {
 
     /// @brief Ensure children of an entry are loaded (lazy loading).
     void ensure_children_loaded(entry_info &ei) {
-        if (ei.children_loaded) return;
-        if (use_win32 && root_stg)
+        if (ei.children_loaded) {
+            return;
+        }
+        if (use_win32 && root_stg) {
             load_win32_children(root_stg, ei);
-        else if (cf)
+        } else if (cf) {
             load_stout_children(*cf, ei);
-        else
+        } else {
             ei.children_loaded = true;
+        }
     }
 
     /// @brief Rebuild the flat path list from the tree, respecting expanded set.
@@ -206,25 +222,29 @@ struct viewer_state {
             hex_scroll = 0;
             return;
         }
-        if (hex_cached_path == selected->full_path) return;
+        if (hex_cached_path == selected->full_path) {
+            return;
+        }
         hex_cached_path = selected->full_path;
         hex_scroll = 0;
 
         // Open paged reader (no size cap)
-        if (use_win32 && root_stg)
+        if (use_win32 && root_stg) {
             hex_reader = open_win32_reader(root_stg, *selected);
-        else if (cf)
+        } else if (cf) {
             hex_reader = open_stout_reader(*cf, *selected);
-        else
+        } else {
             hex_reader.clear();
+        }
 
         // Also load bulk data for property parsing (capped at 64 KB)
-        if (use_win32 && root_stg)
+        if (use_win32 && root_stg) {
             hex_data = read_win32_stream(root_stg, *selected);
-        else if (cf)
+        } else if (cf) {
             hex_data = read_stout_stream(*cf, *selected);
-        else
+        } else {
             hex_data.clear();
+        }
     }
 
     /// @brief Load OLE property set for the currently selected property stream.
@@ -234,15 +254,18 @@ struct viewer_state {
             prop_cached_path.clear();
             return;
         }
-        if (prop_cached_path == selected->full_path) return;
+        if (prop_cached_path == selected->full_path) {
+            return;
+        }
         prop_cached_path = selected->full_path;
 
         if (!hex_data.empty()) {
             auto result = stout::ole::parse_property_set(std::span<const uint8_t>(hex_data));
-            if (result)
+            if (result) {
                 prop_set = std::move(*result);
-            else
+            } else {
                 prop_set.reset();
+            }
         } else {
             prop_set.reset();
         }

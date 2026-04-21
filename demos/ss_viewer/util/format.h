@@ -16,15 +16,23 @@ namespace ssv {
 
 /// @brief Format a byte count as a human-readable string (e.g. "1.5 KB").
 [[nodiscard]] inline std::string format_size(uint64_t bytes) {
-    if (bytes < 1024) return std::format("{} B", bytes);
-    if (bytes < 1024 * 1024) return std::format("{:.1f} KB", bytes / 1024.0);
-    if (bytes < 1024ULL * 1024 * 1024) return std::format("{:.1f} MB", bytes / (1024.0 * 1024.0));
+    if (bytes < 1024) {
+        return std::format("{} B", bytes);
+    }
+    if (bytes < 1024 * 1024) {
+        return std::format("{:.1f} KB", bytes / 1024.0);
+    }
+    if (bytes < 1024ULL * 1024 * 1024) {
+        return std::format("{:.1f} MB", bytes / (1024.0 * 1024.0));
+    }
     return std::format("{:.2f} GB", bytes / (1024.0 * 1024.0 * 1024.0));
 }
 
 /// @brief Format a file_time as "YYYY-MM-DD HH:MM:SS", or "(none)" if zero.
 [[nodiscard]] inline std::string format_time(stout::file_time ft) {
-    if (ft == stout::file_time{}) return "(none)";
+    if (ft == stout::file_time{}) {
+        return "(none)";
+    }
     auto sys = std::chrono::system_clock::to_time_t(ft);
     char buf[64];
     struct tm tm_buf;

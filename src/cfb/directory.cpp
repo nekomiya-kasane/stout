@@ -77,7 +77,9 @@ void serialize_dir_entry(const dir_entry &e, std::span<uint8_t, dir_entry_size> 
 
     // Name size in bytes (including null terminator)
     uint16_t name_bytes = (char_count + 1) * 2;
-    if (e.is_empty()) name_bytes = 0;
+    if (e.is_empty()) {
+        name_bytes = 0;
+    }
     write_u16_le(out.data() + 64, name_bytes);
 
     // Type
@@ -120,22 +122,29 @@ void serialize_dir_entry(const dir_entry &e, std::span<uint8_t, dir_entry_size> 
 }
 
 auto directory::find_child(uint32_t parent_id, std::u16string_view name) const -> uint32_t {
-    if (parent_id >= entries_.size()) return nostream;
+    if (parent_id >= entries_.size()) {
+        return nostream;
+    }
     uint32_t node = entries_[parent_id].child;
 
     while (node != nostream && node < entries_.size()) {
         int cmp = util::cfb_name_compare(name, entries_[node].name);
-        if (cmp == 0) return node;
-        if (cmp < 0)
+        if (cmp == 0) {
+            return node;
+        }
+        if (cmp < 0) {
             node = entries_[node].left_sibling;
-        else
+        } else {
             node = entries_[node].right_sibling;
+        }
     }
     return nostream;
 }
 
 void directory::insert_child(uint32_t parent_id, uint32_t new_entry_id) {
-    if (parent_id >= entries_.size() || new_entry_id >= entries_.size()) return;
+    if (parent_id >= entries_.size() || new_entry_id >= entries_.size()) {
+        return;
+    }
 
     auto &parent = entries_[parent_id];
     auto &new_entry = entries_[new_entry_id];
@@ -156,18 +165,20 @@ void directory::insert_child(uint32_t parent_id, uint32_t new_entry_id) {
     while (cur != nostream && cur < entries_.size()) {
         par = cur;
         int cmp = util::cfb_name_compare(new_entry.name, entries_[cur].name);
-        if (cmp < 0)
+        if (cmp < 0) {
             cur = entries_[cur].left_sibling;
-        else
+        } else {
             cur = entries_[cur].right_sibling;
+        }
     }
 
     if (par != nostream) {
         int cmp = util::cfb_name_compare(new_entry.name, entries_[par].name);
-        if (cmp < 0)
+        if (cmp < 0) {
             entries_[par].left_sibling = new_entry_id;
-        else
+        } else {
             entries_[par].right_sibling = new_entry_id;
+        }
     }
 
     // Red-black fixup
@@ -176,11 +187,15 @@ void directory::insert_child(uint32_t parent_id, uint32_t new_entry_id) {
 
 void directory::remove_child(uint32_t parent_id, uint32_t entry_id) {
     // Simplified removal: rebuild the tree without the entry
-    if (parent_id >= entries_.size()) return;
+    if (parent_id >= entries_.size()) {
+        return;
+    }
 
     std::vector<uint32_t> children;
     enumerate_children(parent_id, [&](uint32_t id, const dir_entry &) {
-        if (id != entry_id) children.push_back(id);
+        if (id != entry_id) {
+            children.push_back(id);
+        }
     });
 
     // Clear the entry
@@ -198,31 +213,47 @@ void directory::remove_child(uint32_t parent_id, uint32_t entry_id) {
 
 void directory::enumerate_children(uint32_t parent_id,
                                    const std::function<void(uint32_t, const dir_entry &)> &callback) const {
-    if (parent_id >= entries_.size()) return;
+    if (parent_id >= entries_.size()) {
+        return;
+    }
     inorder_traverse(entries_[parent_id].child, callback);
 }
 
 void directory::inorder_traverse(uint32_t node_id,
                                  const std::function<void(uint32_t, const dir_entry &)> &callback) const {
-    if (node_id == nostream || node_id >= entries_.size()) return;
+    if (node_id == nostream || node_id >= entries_.size()) {
+        return;
+    }
     inorder_traverse(entries_[node_id].left_sibling, callback);
     callback(node_id, entries_[node_id]);
     inorder_traverse(entries_[node_id].right_sibling, callback);
 }
 
 auto directory::find_parent_in_tree(uint32_t root_id, uint32_t node_id) const -> uint32_t {
-    if (root_id == nostream || root_id >= entries_.size()) return nostream;
-    if (root_id == node_id) return nostream;
+    if (root_id == nostream || root_id >= entries_.size()) {
+        return nostream;
+    }
+    if (root_id == node_id) {
+        return nostream;
+    }
 
     // BFS/DFS to find parent
     std::vector<uint32_t> stack = {root_id};
     while (!stack.empty()) {
         auto cur = stack.back();
         stack.pop_back();
-        if (cur == nostream || cur >= entries_.size()) continue;
-        if (entries_[cur].left_sibling == node_id || entries_[cur].right_sibling == node_id) return cur;
-        if (entries_[cur].left_sibling != nostream) stack.push_back(entries_[cur].left_sibling);
-        if (entries_[cur].right_sibling != nostream) stack.push_back(entries_[cur].right_sibling);
+        if (cur == nostream || cur >= entries_.size()) {
+            continue;
+        }
+        if (entries_[cur].left_sibling == node_id || entries_[cur].right_sibling == node_id) {
+            return cur;
+        }
+        if (entries_[cur].left_sibling != nostream) {
+            stack.push_back(entries_[cur].left_sibling);
+        }
+        if (entries_[cur].right_sibling != nostream) {
+            stack.push_back(entries_[cur].right_sibling);
+        }
     }
     return nostream;
 }
@@ -230,7 +261,9 @@ auto directory::find_parent_in_tree(uint32_t root_id, uint32_t node_id) const ->
 void directory::rb_rotate_left(uint32_t parent_id, uint32_t x) {
     auto &parent = entries_[parent_id];
     uint32_t y = entries_[x].right_sibling;
-    if (y == nostream || y >= entries_.size()) return;
+    if (y == nostream || y >= entries_.size()) {
+        return;
+    }
 
     entries_[x].right_sibling = entries_[y].left_sibling;
     uint32_t px = find_parent_in_tree(parent.child, x);
@@ -248,7 +281,9 @@ void directory::rb_rotate_left(uint32_t parent_id, uint32_t x) {
 void directory::rb_rotate_right(uint32_t parent_id, uint32_t x) {
     auto &parent = entries_[parent_id];
     uint32_t y = entries_[x].left_sibling;
-    if (y == nostream || y >= entries_.size()) return;
+    if (y == nostream || y >= entries_.size()) {
+        return;
+    }
 
     entries_[x].left_sibling = entries_[y].right_sibling;
     uint32_t px = find_parent_in_tree(parent.child, x);
@@ -267,22 +302,30 @@ void directory::rb_insert_fixup(uint32_t parent_id, uint32_t z) {
     auto &parent = entries_[parent_id];
 
     auto color_of = [&](uint32_t id) -> node_color {
-        if (id == nostream || id >= entries_.size()) return node_color::black;
+        if (id == nostream || id >= entries_.size()) {
+            return node_color::black;
+        }
         return entries_[id].color;
     };
 
     while (true) {
         uint32_t zp = find_parent_in_tree(parent.child, z);
-        if (zp == nostream || color_of(zp) == node_color::black) break;
+        if (zp == nostream || color_of(zp) == node_color::black) {
+            break;
+        }
 
         uint32_t zpp = find_parent_in_tree(parent.child, zp);
-        if (zpp == nostream) break;
+        if (zpp == nostream) {
+            break;
+        }
 
         if (zp == entries_[zpp].left_sibling) {
             uint32_t uncle = entries_[zpp].right_sibling;
             if (color_of(uncle) == node_color::red) {
                 entries_[zp].color = node_color::black;
-                if (uncle != nostream && uncle < entries_.size()) entries_[uncle].color = node_color::black;
+                if (uncle != nostream && uncle < entries_.size()) {
+                    entries_[uncle].color = node_color::black;
+                }
                 entries_[zpp].color = node_color::red;
                 z = zpp;
             } else {
@@ -290,9 +333,13 @@ void directory::rb_insert_fixup(uint32_t parent_id, uint32_t z) {
                     z = zp;
                     rb_rotate_left(parent_id, z);
                     zp = find_parent_in_tree(parent.child, z);
-                    if (zp == nostream) break;
+                    if (zp == nostream) {
+                        break;
+                    }
                     zpp = find_parent_in_tree(parent.child, zp);
-                    if (zpp == nostream) break;
+                    if (zpp == nostream) {
+                        break;
+                    }
                 }
                 entries_[zp].color = node_color::black;
                 entries_[zpp].color = node_color::red;
@@ -302,7 +349,9 @@ void directory::rb_insert_fixup(uint32_t parent_id, uint32_t z) {
             uint32_t uncle = entries_[zpp].left_sibling;
             if (color_of(uncle) == node_color::red) {
                 entries_[zp].color = node_color::black;
-                if (uncle != nostream && uncle < entries_.size()) entries_[uncle].color = node_color::black;
+                if (uncle != nostream && uncle < entries_.size()) {
+                    entries_[uncle].color = node_color::black;
+                }
                 entries_[zpp].color = node_color::red;
                 z = zpp;
             } else {
@@ -310,9 +359,13 @@ void directory::rb_insert_fixup(uint32_t parent_id, uint32_t z) {
                     z = zp;
                     rb_rotate_right(parent_id, z);
                     zp = find_parent_in_tree(parent.child, z);
-                    if (zp == nostream) break;
+                    if (zp == nostream) {
+                        break;
+                    }
                     zpp = find_parent_in_tree(parent.child, zp);
-                    if (zpp == nostream) break;
+                    if (zpp == nostream) {
+                        break;
+                    }
                 }
                 entries_[zp].color = node_color::black;
                 entries_[zpp].color = node_color::red;

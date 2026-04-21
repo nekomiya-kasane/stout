@@ -98,7 +98,9 @@ TEST_P(StressInMemoryConformance, ReadWriteModify) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 2u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── Large number of small streams ───────────────────────────────────────
@@ -121,7 +123,9 @@ TEST_P(StressInMemoryConformance, FiftySmallStreams) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 50u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── Deep nesting ────────────────────────────────────────────────────────

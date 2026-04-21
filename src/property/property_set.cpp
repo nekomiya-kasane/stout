@@ -15,10 +15,18 @@ auto make_summary_info(std::string_view title, std::string_view subject, std::st
     // Always write codepage property
     sec.set(pid::codepage, vt::i2, static_cast<int16_t>(1252));
 
-    if (!title.empty()) sec.set_string(pid::title, std::string(title));
-    if (!subject.empty()) sec.set_string(pid::subject, std::string(subject));
-    if (!author.empty()) sec.set_string(pid::author, std::string(author));
-    if (!app_name.empty()) sec.set_string(pid::app_name, std::string(app_name));
+    if (!title.empty()) {
+        sec.set_string(pid::title, std::string(title));
+    }
+    if (!subject.empty()) {
+        sec.set_string(pid::subject, std::string(subject));
+    }
+    if (!author.empty()) {
+        sec.set_string(pid::author, std::string(author));
+    }
+    if (!app_name.empty()) {
+        sec.set_string(pid::app_name, std::string(app_name));
+    }
 
     return ps;
 }

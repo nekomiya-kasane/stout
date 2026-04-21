@@ -6,7 +6,9 @@
 namespace stout::io {
 
 auto memory_lock_bytes::read_at(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size_t, error> {
-    if (offset >= data_.size()) return size_t{0};
+    if (offset >= data_.size()) {
+        return size_t{0};
+    }
     auto available = data_.size() - static_cast<size_t>(offset);
     auto to_read = std::min(buf.size(), available);
     std::memcpy(buf.data(), data_.data() + offset, to_read);

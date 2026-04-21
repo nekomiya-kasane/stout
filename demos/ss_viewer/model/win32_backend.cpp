@@ -57,7 +57,9 @@ entry_info build_win32_tree(IStorage *stg, const std::string &parent_path, const
     STATSTG stat_stg;
     if (SUCCEEDED(stg->Stat(&stat_stg, STATFLAG_DEFAULT))) {
         info.size = stat_stg.cbSize.QuadPart;
-        if (stat_stg.pwcsName) CoTaskMemFree(stat_stg.pwcsName);
+        if (stat_stg.pwcsName) {
+            CoTaskMemFree(stat_stg.pwcsName);
+        }
         // CLSID
         std::memcpy(&info.clsid, &stat_stg.clsid, sizeof(stout::guid));
         // Timestamps
@@ -78,7 +80,9 @@ entry_info build_win32_tree(IStorage *stg, const std::string &parent_path, const
             info.modified_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
                 std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
-        if (parent_path.empty()) info.type = stout::entry_type::root;
+        if (parent_path.empty()) {
+            info.type = stout::entry_type::root;
+        }
     }
 
     info.children_loaded = true;
@@ -123,7 +127,9 @@ entry_info build_win32_tree_shallow(IStorage *stg, const std::string &parent_pat
     STATSTG stat_stg;
     if (SUCCEEDED(stg->Stat(&stat_stg, STATFLAG_DEFAULT))) {
         info.size = stat_stg.cbSize.QuadPart;
-        if (stat_stg.pwcsName) CoTaskMemFree(stat_stg.pwcsName);
+        if (stat_stg.pwcsName) {
+            CoTaskMemFree(stat_stg.pwcsName);
+        }
         std::memcpy(&info.clsid, &stat_stg.clsid, sizeof(stout::guid));
         ULARGE_INTEGER ct, mt;
         ct.LowPart = stat_stg.ctime.dwLowDateTime;
@@ -142,7 +148,9 @@ entry_info build_win32_tree_shallow(IStorage *stg, const std::string &parent_pat
             info.modified_time = stout::file_time(std::chrono::duration_cast<std::chrono::system_clock::duration>(
                 std::chrono::nanoseconds(ft_ns) - epoch_diff));
         }
-        if (parent_path.empty()) info.type = stout::entry_type::root;
+        if (parent_path.empty()) {
+            info.type = stout::entry_type::root;
+        }
     }
 
     IEnumSTATSTG *pEnum = nullptr;
@@ -174,7 +182,9 @@ entry_info build_win32_tree_shallow(IStorage *stg, const std::string &parent_pat
 }
 
 void load_win32_children(IStorage *root_stg, entry_info &ei) {
-    if (ei.children_loaded) return;
+    if (ei.children_loaded) {
+        return;
+    }
     if (ei.type != stout::entry_type::storage && ei.type != stout::entry_type::root) {
         ei.children_loaded = true;
         return;
@@ -269,12 +279,16 @@ std::vector<uint8_t> read_win32_stream(IStorage *root_stg, const entry_info &ei,
 /// @brief RAII wrapper for IStream shared_ptr custom deleter.
 struct istream_deleter {
     void operator()(IStream *p) const {
-        if (p) p->Release();
+        if (p) {
+            p->Release();
+        }
     }
 };
 
 paged_reader open_win32_reader(IStorage *root_stg, const entry_info &ei) {
-    if (ei.type != stout::entry_type::stream) return {};
+    if (ei.type != stout::entry_type::stream) {
+        return {};
+    }
 
     // Navigate to the stream by path
     std::vector<std::string> parts;
@@ -322,9 +336,13 @@ paged_reader open_win32_reader(IStorage *root_stg, const entry_info &ei) {
     return paged_reader(sz, [strm](uint64_t offset, std::span<uint8_t> buf) -> size_t {
         LARGE_INTEGER li;
         li.QuadPart = static_cast<LONGLONG>(offset);
-        if (FAILED(strm->Seek(li, STREAM_SEEK_SET, nullptr))) return 0;
+        if (FAILED(strm->Seek(li, STREAM_SEEK_SET, nullptr))) {
+            return 0;
+        }
         ULONG read = 0;
-        if (FAILED(strm->Read(buf.data(), static_cast<ULONG>(buf.size()), &read))) return 0;
+        if (FAILED(strm->Read(buf.data(), static_cast<ULONG>(buf.size()), &read))) {
+            return 0;
+        }
         return static_cast<size_t>(read);
     });
 }

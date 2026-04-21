@@ -192,7 +192,9 @@ auto compound_file::in_transaction() const noexcept -> bool {
 
 auto compound_file::begin_transaction() -> std::expected<void, error> {
     auto &s = impl_->state;
-    if (s.in_txn) return std::unexpected(error::transaction_failed);
+    if (s.in_txn) {
+        return std::unexpected(error::transaction_failed);
+    }
 
     auto snap = std::make_unique<internal::snapshot>();
     snap->header = s.header;
@@ -213,11 +215,15 @@ auto compound_file::begin_transaction() -> std::expected<void, error> {
 
 auto compound_file::commit() -> std::expected<void, error> {
     auto &s = impl_->state;
-    if (!s.in_txn) return std::unexpected(error::transaction_failed);
+    if (!s.in_txn) {
+        return std::unexpected(error::transaction_failed);
+    }
 
     // Flush all changes to the backing store
     auto r = flush();
-    if (!r) return std::unexpected(r.error());
+    if (!r) {
+        return std::unexpected(r.error());
+    }
 
     // Discard the snapshot
     s.txn_snapshot.reset();
@@ -227,7 +233,9 @@ auto compound_file::commit() -> std::expected<void, error> {
 
 auto compound_file::revert() -> std::expected<void, error> {
     auto &s = impl_->state;
-    if (!s.in_txn || !s.txn_snapshot) return std::unexpected(error::transaction_failed);
+    if (!s.in_txn || !s.txn_snapshot) {
+        return std::unexpected(error::transaction_failed);
+    }
 
     // Restore metadata from snapshot
     s.header = s.txn_snapshot->header;
@@ -243,7 +251,9 @@ auto compound_file::revert() -> std::expected<void, error> {
         // For file backends, re-read from disk to restore sector data
         // The metadata is already restored; flush it back to overwrite changes
         auto r = flush();
-        if (!r) return std::unexpected(r.error());
+        if (!r) {
+            return std::unexpected(r.error());
+        }
     }
 
     s.rebuild_mini_stream_io();
@@ -276,12 +286,16 @@ auto compound_file::create_in_memory(cfb_version version) -> std::expected<compo
     s.header.total_fat_sectors = 1;
     s.header.first_dir_sector = 1;
     // v4 requires total_dir_sectors to be the actual count
-    if (!s.is_v3) s.header.total_dir_sectors = 1;
+    if (!s.is_v3) {
+        s.header.total_dir_sectors = 1;
+    }
     s.header.difat[0] = 0; // FAT sector 0
 
     // Set file size: header + 2 sectors
     uint64_t file_size = ss + ss * 2;
-    if (s.is_v3) file_size = 512 + ss * 2; // v3 header is 512 bytes, sectors are 512
+    if (s.is_v3) {
+        file_size = 512 + ss * 2; // v3 header is 512 bytes, sectors are 512
+    }
     mlb.set_size(file_size);
 
     // Write header
@@ -316,7 +330,9 @@ auto compound_file::create_in_memory(cfb_version version) -> std::expected<compo
 // ── open_from_memory ───────────────────────────────────────────────────
 
 auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected<compound_file, error> {
-    if (data.size() < cfb::header_size) return std::unexpected(error::invalid_header);
+    if (data.size() < cfb::header_size) {
+        return std::unexpected(error::invalid_header);
+    }
 
     compound_file cf;
     auto &s = cf.impl_->state;
@@ -329,11 +345,15 @@ auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected
     std::array<uint8_t, cfb::header_size> hdr_buf;
     mlb.read_at(0, hdr_buf);
     auto hdr_result = cfb::parse_header(hdr_buf);
-    if (!hdr_result) return std::unexpected(hdr_result.error());
+    if (!hdr_result) {
+        return std::unexpected(hdr_result.error());
+    }
     s.header = *hdr_result;
 
     auto val = cfb::validate_header(s.header);
-    if (!val) return std::unexpected(val.error());
+    if (!val) {
+        return std::unexpected(val.error());
+    }
 
     s.is_v3 = s.header.is_v3();
     auto ss = s.header.sector_size();
@@ -341,19 +361,27 @@ auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected
 
     // Load DIFAT
     auto difat_r = s.difat.load(s.header, sio);
-    if (!difat_r) return std::unexpected(difat_r.error());
+    if (!difat_r) {
+        return std::unexpected(difat_r.error());
+    }
 
     // Load FAT
     auto fat_r = s.fat.load(sio, std::span<const uint32_t>{s.difat.fat_sector_ids()});
-    if (!fat_r) return std::unexpected(fat_r.error());
+    if (!fat_r) {
+        return std::unexpected(fat_r.error());
+    }
 
     // Load directory
     auto dir_r = s.dir.load(sio, s.fat, s.header.first_dir_sector, s.is_v3);
-    if (!dir_r) return std::unexpected(dir_r.error());
+    if (!dir_r) {
+        return std::unexpected(dir_r.error());
+    }
 
     // Load mini FAT
     auto mfat_r = s.mini_fat.load(sio, s.fat, s.header.first_mini_fat_sector);
-    if (!mfat_r) return std::unexpected(mfat_r.error());
+    if (!mfat_r) {
+        return std::unexpected(mfat_r.error());
+    }
 
     // Set up mini stream I/O
     s.rebuild_mini_stream_io();
@@ -365,7 +393,9 @@ auto compound_file::open_from_memory(std::vector<uint8_t> data) -> std::expected
 
 auto compound_file::open(const std::filesystem::path &path, open_mode mode) -> std::expected<compound_file, error> {
     auto flb_result = io::file_lock_bytes::open(path, mode);
-    if (!flb_result) return std::unexpected(flb_result.error());
+    if (!flb_result) {
+        return std::unexpected(flb_result.error());
+    }
 
     compound_file cf;
     auto &s = cf.impl_->state;
@@ -378,14 +408,20 @@ auto compound_file::open(const std::filesystem::path &path, open_mode mode) -> s
     // Parse header
     std::array<uint8_t, cfb::header_size> hdr_buf;
     auto rd = flb.read_at(0, hdr_buf);
-    if (!rd || *rd < cfb::header_size) return std::unexpected(error::invalid_header);
+    if (!rd || *rd < cfb::header_size) {
+        return std::unexpected(error::invalid_header);
+    }
 
     auto hdr_result = cfb::parse_header(hdr_buf);
-    if (!hdr_result) return std::unexpected(hdr_result.error());
+    if (!hdr_result) {
+        return std::unexpected(hdr_result.error());
+    }
     s.header = *hdr_result;
 
     auto val = cfb::validate_header(s.header);
-    if (!val) return std::unexpected(val.error());
+    if (!val) {
+        return std::unexpected(val.error());
+    }
 
     s.is_v3 = s.header.is_v3();
     auto ss = s.header.sector_size();
@@ -393,19 +429,27 @@ auto compound_file::open(const std::filesystem::path &path, open_mode mode) -> s
 
     // Load DIFAT
     auto difat_r = s.difat.load(s.header, sio);
-    if (!difat_r) return std::unexpected(difat_r.error());
+    if (!difat_r) {
+        return std::unexpected(difat_r.error());
+    }
 
     // Load FAT
     auto fat_r = s.fat.load(sio, std::span<const uint32_t>{s.difat.fat_sector_ids()});
-    if (!fat_r) return std::unexpected(fat_r.error());
+    if (!fat_r) {
+        return std::unexpected(fat_r.error());
+    }
 
     // Load directory
     auto dir_r = s.dir.load(sio, s.fat, s.header.first_dir_sector, s.is_v3);
-    if (!dir_r) return std::unexpected(dir_r.error());
+    if (!dir_r) {
+        return std::unexpected(dir_r.error());
+    }
 
     // Load mini FAT
     auto mfat_r = s.mini_fat.load(sio, s.fat, s.header.first_mini_fat_sector);
-    if (!mfat_r) return std::unexpected(mfat_r.error());
+    if (!mfat_r) {
+        return std::unexpected(mfat_r.error());
+    }
 
     s.rebuild_mini_stream_io();
 
@@ -418,7 +462,9 @@ auto compound_file::create(const std::filesystem::path &path, cfb_version versio
     -> std::expected<compound_file, error> {
     // Open file handle directly
     auto flb_result = io::file_lock_bytes::open(path, open_mode::read_write);
-    if (!flb_result) return std::unexpected(flb_result.error());
+    if (!flb_result) {
+        return std::unexpected(flb_result.error());
+    }
 
     compound_file cf;
     auto &s = cf.impl_->state;
@@ -439,7 +485,9 @@ auto compound_file::create(const std::filesystem::path &path, cfb_version versio
 
     s.header.total_fat_sectors = 1;
     s.header.first_dir_sector = 1;
-    if (!s.is_v3) s.header.total_dir_sectors = 1;
+    if (!s.is_v3) {
+        s.header.total_dir_sectors = 1;
+    }
     s.header.difat[0] = 0;
 
     // Write header + FAT + directory directly through the page cache
@@ -489,17 +537,23 @@ auto compound_file::flush() -> std::expected<void, error> {
     return s.with_sio([&](auto &sio) -> std::expected<void, error> {
         // Flush FAT
         auto fat_r = s.fat.flush(sio, std::span<const uint32_t>{s.difat.fat_sector_ids()});
-        if (!fat_r) return std::unexpected(fat_r.error());
+        if (!fat_r) {
+            return std::unexpected(fat_r.error());
+        }
 
         // Flush mini FAT
         if (s.header.first_mini_fat_sector != cfb::endofchain) {
             auto mfat_r = s.mini_fat.flush(sio, s.fat, s.header.first_mini_fat_sector);
-            if (!mfat_r) return std::unexpected(mfat_r.error());
+            if (!mfat_r) {
+                return std::unexpected(mfat_r.error());
+            }
         }
 
         // Flush directory
         auto dir_r = s.dir.flush(sio, s.fat, s.header.first_dir_sector);
-        if (!dir_r) return std::unexpected(dir_r.error());
+        if (!dir_r) {
+            return std::unexpected(dir_r.error());
+        }
 
         // Flush header
         std::array<uint8_t, cfb::header_size> hdr_buf = {};
@@ -570,8 +624,12 @@ auto storage::create_stream(std::string_view name) -> std::expected<stream, erro
 auto storage::open_stream(std::string_view name) -> std::expected<stream, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
-    if (id == cfb::nostream) return std::unexpected(error::not_found);
-    if (!cf_->dir.entry(id).is_stream()) return std::unexpected(error::not_found);
+    if (id == cfb::nostream) {
+        return std::unexpected(error::not_found);
+    }
+    if (!cf_->dir.entry(id).is_stream()) {
+        return std::unexpected(error::not_found);
+    }
     return stream(*cf_, id);
 }
 
@@ -597,15 +655,21 @@ auto storage::create_storage(std::string_view name) -> std::expected<storage, er
 auto storage::open_storage(std::string_view name) -> std::expected<storage, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
-    if (id == cfb::nostream) return std::unexpected(error::not_found);
-    if (!cf_->dir.entry(id).is_storage()) return std::unexpected(error::not_found);
+    if (id == cfb::nostream) {
+        return std::unexpected(error::not_found);
+    }
+    if (!cf_->dir.entry(id).is_storage()) {
+        return std::unexpected(error::not_found);
+    }
     return storage(*cf_, id);
 }
 
 auto storage::remove(std::string_view name) -> std::expected<void, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
-    if (id == cfb::nostream) return std::unexpected(error::not_found);
+    if (id == cfb::nostream) {
+        return std::unexpected(error::not_found);
+    }
 
     // Free the stream's sector chain
     auto &entry = cf_->dir.entry(id);
@@ -622,8 +686,12 @@ auto storage::remove(std::string_view name) -> std::expected<void, error> {
 }
 
 auto storage::rename(std::string_view new_name) -> std::expected<void, error> {
-    if (new_name.empty()) return std::unexpected(error::invalid_name);
-    if (new_name.size() > 31) return std::unexpected(error::invalid_name);
+    if (new_name.empty()) {
+        return std::unexpected(error::invalid_name);
+    }
+    if (new_name.size() > 31) {
+        return std::unexpected(error::invalid_name);
+    }
     auto u16 = util::utf8_to_utf16le(new_name);
     cf_->dir.entry(dir_id_).name = u16;
     return {};
@@ -669,7 +737,9 @@ auto storage::set_modified_time(file_time t) -> void {
 auto storage::set_element_times(std::string_view name, file_time ctime, file_time mtime) -> std::expected<void, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
-    if (id == cfb::nostream) return std::unexpected(error::not_found);
+    if (id == cfb::nostream) {
+        return std::unexpected(error::not_found);
+    }
     auto &entry = cf_->dir.entry(id);
     entry.creation_time = util::timepoint_to_filetime(ctime);
     entry.modified_time = util::timepoint_to_filetime(mtime);
@@ -679,31 +749,43 @@ auto storage::set_element_times(std::string_view name, file_time ctime, file_tim
 auto storage::copy_to(storage &dest, std::string_view name) -> std::expected<void, error> {
     auto u16 = util::utf8_to_utf16le(name);
     auto id = cf_->dir.find_child(dir_id_, u16);
-    if (id == cfb::nostream) return std::unexpected(error::not_found);
+    if (id == cfb::nostream) {
+        return std::unexpected(error::not_found);
+    }
     auto &src_entry = cf_->dir.entry(id);
 
     if (src_entry.is_stream()) {
         // Copy stream data
         auto dst_strm = dest.create_stream(name);
-        if (!dst_strm) return std::unexpected(dst_strm.error());
+        if (!dst_strm) {
+            return std::unexpected(dst_strm.error());
+        }
         auto sz = src_entry.stream_size;
         if (sz > 0) {
             std::vector<uint8_t> buf(static_cast<size_t>(sz));
             stream src_s(*cf_, id);
             auto rd = src_s.read(0, std::span<uint8_t>(buf));
-            if (!rd) return std::unexpected(rd.error());
+            if (!rd) {
+                return std::unexpected(rd.error());
+            }
             auto wr = dst_strm->write(0, std::span<const uint8_t>(buf));
-            if (!wr) return std::unexpected(wr.error());
+            if (!wr) {
+                return std::unexpected(wr.error());
+            }
         }
     } else if (src_entry.is_storage()) {
         // Copy storage recursively
         auto dst_sub = dest.create_storage(name);
-        if (!dst_sub) return std::unexpected(dst_sub.error());
+        if (!dst_sub) {
+            return std::unexpected(dst_sub.error());
+        }
         storage src_stg(*cf_, id);
         auto kids = src_stg.children();
         for (auto &child : kids) {
             auto r = src_stg.copy_to(*dst_sub, child.name);
-            if (!r) return std::unexpected(r.error());
+            if (!r) {
+                return std::unexpected(r.error());
+            }
         }
         // Copy metadata
         dst_sub->set_clsid(src_entry.clsid);
@@ -730,7 +812,9 @@ auto stream::size() const -> uint64_t {
 
 auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size_t, error> {
     auto &entry = cf_->dir.entry(dir_id_);
-    if (offset >= entry.stream_size) return size_t{0};
+    if (offset >= entry.stream_size) {
+        return size_t{0};
+    }
 
     auto available = entry.stream_size - offset;
     auto to_read = std::min(static_cast<size_t>(available), buf.size());
@@ -744,14 +828,18 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
 
             // Walk to the starting mini sector
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->mini_fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) {
+                cur = cf_->mini_fat.next(cur);
+            }
 
             size_t bytes_read = 0;
             uint8_t sec_buf[64]; // mini sector is always 64 bytes
             bool first = true;
             while (cur != cfb::endofchain && cur != cfb::freesect && bytes_read < to_read) {
                 auto r = cf_->mini_sio.read_mini_sector(sio, cur, std::span<uint8_t>(sec_buf, mss));
-                if (!r) return std::unexpected(r.error());
+                if (!r) {
+                    return std::unexpected(r.error());
+                }
                 uint32_t start = first ? off_in_sec : 0;
                 first = false;
                 auto avail = mss - start;
@@ -771,7 +859,9 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
 
             // Walk to the starting sector
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) {
+                cur = cf_->fat.next(cur);
+            }
 
             size_t bytes_read = 0;
             bool first = true;
@@ -782,7 +872,9 @@ auto stream::read(uint64_t offset, std::span<uint8_t> buf) -> std::expected<size
                 auto copy_len = std::min(static_cast<size_t>(avail), to_read - bytes_read);
                 // Use direct partial read — no intermediate buffer needed
                 auto r = sio.read_at(cur, start, buf.subspan(bytes_read, copy_len));
-                if (!r) return std::unexpected(r.error());
+                if (!r) {
+                    return std::unexpected(r.error());
+                }
                 bytes_read += copy_len;
                 cur = cf_->fat.next(cur);
             }
@@ -797,7 +889,9 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
     uint64_t end = offset + buf.size();
     if (end > entry.stream_size) {
         auto r = resize(end);
-        if (!r) return std::unexpected(r.error());
+        if (!r) {
+            return std::unexpected(r.error());
+        }
     }
 
     if (cfb::use_mini_stream(entry.stream_size)) {
@@ -808,7 +902,9 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
             uint32_t off_in_sec = static_cast<uint32_t>(offset % mss);
 
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->mini_fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) {
+                cur = cf_->mini_fat.next(cur);
+            }
 
             size_t bytes_written = 0;
             uint8_t sec_buf[64];
@@ -822,11 +918,15 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
                 // If partial write, read first
                 if (start != 0 || to_copy != mss) {
                     auto r = cf_->mini_sio.read_mini_sector(sio, cur, std::span<uint8_t>(sec_buf, mss));
-                    if (!r) return std::unexpected(r.error());
+                    if (!r) {
+                        return std::unexpected(r.error());
+                    }
                 }
                 std::copy_n(buf.data() + bytes_written, to_copy, sec_buf + start);
                 auto w = cf_->mini_sio.write_mini_sector(sio, cur, std::span<const uint8_t>(sec_buf, mss));
-                if (!w) return std::unexpected(w.error());
+                if (!w) {
+                    return std::unexpected(w.error());
+                }
                 bytes_written += to_copy;
                 cur = cf_->mini_fat.next(cur);
             }
@@ -840,7 +940,9 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
             uint32_t off_in_sec = static_cast<uint32_t>(offset % ss);
 
             uint32_t cur = entry.start_sector;
-            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) cur = cf_->fat.next(cur);
+            for (uint32_t i = 0; i < skip && cur != cfb::endofchain; ++i) {
+                cur = cf_->fat.next(cur);
+            }
 
             size_t bytes_written = 0;
             bool first = true;
@@ -851,7 +953,9 @@ auto stream::write(uint64_t offset, std::span<const uint8_t> buf) -> std::expect
                 auto copy_len = std::min(static_cast<size_t>(avail), buf.size() - bytes_written);
                 // Direct partial write — no intermediate buffer
                 auto w = sio.write_at(cur, start, std::span<const uint8_t>(buf.data() + bytes_written, copy_len));
-                if (!w) return std::unexpected(w.error());
+                if (!w) {
+                    return std::unexpected(w.error());
+                }
                 bytes_written += copy_len;
                 cur = cf_->fat.next(cur);
             }
@@ -864,7 +968,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
     auto &entry = cf_->dir.entry(dir_id_);
     auto old_size = entry.stream_size;
 
-    if (new_size == old_size) return {};
+    if (new_size == old_size) {
+        return {};
+    }
 
     bool was_mini = cfb::use_mini_stream(old_size);
     bool will_be_mini = cfb::use_mini_stream(new_size);
@@ -874,7 +980,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
         uint32_t tail = start;
         while (tail != cfb::endofchain && tail != cfb::freesect) {
             auto nxt = fat_tbl.next(tail);
-            if (nxt == cfb::endofchain || nxt == cfb::freesect) break;
+            if (nxt == cfb::endofchain || nxt == cfb::freesect) {
+                break;
+            }
             tail = nxt;
         }
         return tail;
@@ -883,7 +991,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
     // Helper: walk to nth sector in chain (0-indexed), returns sector id
     auto walk_to = [](auto &fat_tbl, uint32_t start, uint64_t n) -> uint32_t {
         uint32_t cur = start;
-        for (uint64_t i = 0; i < n && cur != cfb::endofchain && cur != cfb::freesect; ++i) cur = fat_tbl.next(cur);
+        for (uint64_t i = 0; i < n && cur != cfb::endofchain && cur != cfb::freesect; ++i) {
+            cur = fat_tbl.next(cur);
+        }
         return cur;
     };
 
@@ -915,7 +1025,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                 auto cut = walk_to(cf_->mini_fat, entry.start_sector, new_count - 1);
                 auto rest = cf_->mini_fat.next(cut);
                 cf_->mini_fat.set(cut, cfb::endofchain);
-                if (rest != cfb::endofchain && rest != cfb::freesect) cf_->mini_fat.free_chain(rest);
+                if (rest != cfb::endofchain && rest != cfb::freesect) {
+                    cf_->mini_fat.free_chain(rest);
+                }
             }
         }
     } else if (!was_mini && !will_be_mini) {
@@ -944,7 +1056,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                 auto cut = walk_to(cf_->fat, entry.start_sector, new_count - 1);
                 auto rest = cf_->fat.next(cut);
                 cf_->fat.set(cut, cfb::endofchain);
-                if (rest != cfb::endofchain && rest != cfb::freesect) cf_->fat.free_chain(rest);
+                if (rest != cfb::endofchain && rest != cfb::freesect) {
+                    cf_->fat.free_chain(rest);
+                }
             }
         }
     } else {
@@ -957,7 +1071,9 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
             if (bytes_to_copy > 0) {
                 // Read via the optimized read path (already uses chain walking)
                 auto rd = read(0, std::span<uint8_t>(saved_data));
-                if (!rd) return std::unexpected(rd.error());
+                if (!rd) {
+                    return std::unexpected(rd.error());
+                }
             }
             cf_->mini_fat.free_chain(entry.start_sector);
             entry.start_sector = cfb::endofchain;
@@ -987,20 +1103,26 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                             std::min(static_cast<size_t>(ss), static_cast<size_t>(bytes_to_copy) - bytes_written);
                         auto w =
                             sio.write_at(cur, 0, std::span<const uint8_t>(saved_data.data() + bytes_written, copy_len));
-                        if (!w) return std::unexpected(w.error());
+                        if (!w) {
+                            return std::unexpected(w.error());
+                        }
                         bytes_written += copy_len;
                         cur = cf_->fat.next(cur);
                     }
                     return bytes_written;
                 });
-                if (!write_r) return std::unexpected(write_r.error());
+                if (!write_r) {
+                    return std::unexpected(write_r.error());
+                }
             }
         } else {
             // Regular -> mini: read from regular sectors, free regular chain, allocate mini, write data
             if (bytes_to_copy > 0) {
                 // Read via the optimized read path (already uses chain walking)
                 auto rd = read(0, std::span<uint8_t>(saved_data));
-                if (!rd) return std::unexpected(rd.error());
+                if (!rd) {
+                    return std::unexpected(rd.error());
+                }
             }
             cf_->fat.free_chain(entry.start_sector);
             entry.start_sector = cfb::endofchain;
@@ -1030,16 +1152,22 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
                     while (cur != cfb::endofchain && cur != cfb::freesect && bytes_written < bytes_to_copy) {
                         auto to_copy =
                             std::min(static_cast<size_t>(mss), static_cast<size_t>(bytes_to_copy) - bytes_written);
-                        if (to_copy < mss) std::memset(sec_buf, 0, mss);
+                        if (to_copy < mss) {
+                            std::memset(sec_buf, 0, mss);
+                        }
                         std::copy_n(saved_data.data() + bytes_written, to_copy, sec_buf);
                         auto w = cf_->mini_sio.write_mini_sector(sio, cur, std::span<const uint8_t>(sec_buf, mss));
-                        if (!w) return std::unexpected(w.error());
+                        if (!w) {
+                            return std::unexpected(w.error());
+                        }
                         bytes_written += to_copy;
                         cur = cf_->mini_fat.next(cur);
                     }
                     return bytes_written;
                 });
-                if (!write_r) return std::unexpected(write_r.error());
+                if (!write_r) {
+                    return std::unexpected(write_r.error());
+                }
             }
         }
     }
@@ -1049,8 +1177,12 @@ auto stream::resize(uint64_t new_size) -> std::expected<void, error> {
 }
 
 auto stream::rename(std::string_view new_name) -> std::expected<void, error> {
-    if (new_name.empty()) return std::unexpected(error::invalid_name);
-    if (new_name.size() > 31) return std::unexpected(error::invalid_name);
+    if (new_name.empty()) {
+        return std::unexpected(error::invalid_name);
+    }
+    if (new_name.size() > 31) {
+        return std::unexpected(error::invalid_name);
+    }
     auto u16 = util::utf8_to_utf16le(new_name);
     cf_->dir.entry(dir_id_).name = u16;
     return {};
@@ -1059,7 +1191,9 @@ auto stream::rename(std::string_view new_name) -> std::expected<void, error> {
 auto stream::copy_to(stream &dest, uint64_t bytes) -> std::expected<uint64_t, error> {
     auto src_size = size();
     auto to_copy = std::min(bytes, src_size);
-    if (to_copy == 0) return uint64_t{0};
+    if (to_copy == 0) {
+        return uint64_t{0};
+    }
 
     constexpr size_t chunk_size = 65536;
     uint64_t copied = 0;
@@ -1068,16 +1202,24 @@ auto stream::copy_to(stream &dest, uint64_t bytes) -> std::expected<uint64_t, er
     // Ensure destination is large enough
     if (dest.size() < to_copy) {
         auto r = dest.resize(to_copy);
-        if (!r) return std::unexpected(r.error());
+        if (!r) {
+            return std::unexpected(r.error());
+        }
     }
 
     while (copied < to_copy) {
         auto n = std::min(static_cast<size_t>(to_copy - copied), buf.size());
         auto rd = read(copied, std::span<uint8_t>(buf.data(), n));
-        if (!rd) return std::unexpected(rd.error());
-        if (*rd == 0) break;
+        if (!rd) {
+            return std::unexpected(rd.error());
+        }
+        if (*rd == 0) {
+            break;
+        }
         auto wr = dest.write(copied, std::span<const uint8_t>(buf.data(), *rd));
-        if (!wr) return std::unexpected(wr.error());
+        if (!wr) {
+            return std::unexpected(wr.error());
+        }
         copied += *rd;
     }
     return copied;

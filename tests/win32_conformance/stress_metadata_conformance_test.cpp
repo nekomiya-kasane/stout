@@ -100,10 +100,11 @@ TEST_P(StressMetadataConformance, ClsidWin32WriteStoutRead) {
     ASSERT_TRUE(SUCCEEDED(CoCreateGuid(&test_clsid)));
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         ASSERT_TRUE(SUCCEEDED(stg->SetClass(test_clsid)));
     }
     auto cf = compound_file::open(p, open_mode::read);
@@ -179,10 +180,11 @@ TEST_P(StressMetadataConformance, StateBitsWin32WriteStoutRead) {
     guard_.add(p);
     {
         storage_ptr stg;
-        if (GetParam().ver == cfb_version::v4)
+        if (GetParam().ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(p.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(p.wstring(), stg.put())));
+        }
         ASSERT_TRUE(SUCCEEDED(stg->SetStateBits(0xCAFEBABE, 0xFFFFFFFF)));
     }
     auto cf = compound_file::open(p, open_mode::read);

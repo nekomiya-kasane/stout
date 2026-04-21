@@ -18,7 +18,9 @@ using namespace ssv;
 
 static std::filesystem::path test_cfb_path() {
     auto p = std::filesystem::path("testdata/stout_demo.cfb");
-    if (!std::filesystem::exists(p)) p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    if (!std::filesystem::exists(p)) {
+        p = std::filesystem::path(STOUT_TESTDATA_DIR) / "stout_demo.cfb";
+    }
     return p;
 }
 
@@ -104,7 +106,9 @@ TEST_F(BookmarkTest, MultipleBookmarks) {
 TEST_F(BookmarkTest, NavHistoryPushAndBack) {
     expand_all(st.root_entry, st.expanded);
     st.rebuild_flat_paths();
-    if (st.flat_paths.size() < 2) GTEST_SKIP();
+    if (st.flat_paths.size() < 2) {
+        GTEST_SKIP();
+    }
 
     st.tree_cursor = 0;
     st.select_current();
@@ -124,7 +128,9 @@ TEST_F(BookmarkTest, NavHistoryPushAndBack) {
 TEST_F(BookmarkTest, NavForwardAfterBack) {
     expand_all(st.root_entry, st.expanded);
     st.rebuild_flat_paths();
-    if (st.flat_paths.size() < 2) GTEST_SKIP();
+    if (st.flat_paths.size() < 2) {
+        GTEST_SKIP();
+    }
 
     st.tree_cursor = 0;
     st.select_current();
@@ -142,7 +148,9 @@ TEST_F(BookmarkTest, NavForwardAfterBack) {
 TEST_F(BookmarkTest, NavigateToPath) {
     expand_all(st.root_entry, st.expanded);
     st.rebuild_flat_paths();
-    if (st.flat_paths.size() < 2) GTEST_SKIP();
+    if (st.flat_paths.size() < 2) {
+        GTEST_SKIP();
+    }
 
     auto target = st.flat_paths[1];
     st.navigate_to_path(target);
@@ -256,7 +264,9 @@ TEST_F(Phase5FrameTest, ThemeSwitchProducesDifferentOutput) {
                     break;
                 }
             }
-            if (found_diff) break;
+            if (found_diff) {
+                break;
+            }
         }
         EXPECT_TRUE(found_diff);
     }

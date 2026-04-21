@@ -17,11 +17,14 @@ namespace ssv {
 
     uint32_t end = std::min(offset + 16u, static_cast<uint32_t>(data.size()));
     for (uint32_t i = offset; i < offset + 16; ++i) {
-        if (i == offset + 8) out += ' ';
-        if (i < end)
+        if (i == offset + 8) {
+            out += ' ';
+        }
+        if (i < end) {
             out += std::format("{:02X} ", data[i]);
-        else
+        } else {
             out += "   ";
+        }
     }
     out += " |";
     for (uint32_t i = offset; i < end; ++i) {

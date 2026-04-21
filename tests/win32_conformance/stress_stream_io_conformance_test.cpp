@@ -39,7 +39,9 @@ static void stout_write_win32_read(const std::filesystem::path &path, cfb_versio
         ASSERT_TRUE(cf.has_value());
         auto s = cf->root_storage().create_stream(stream_name);
         ASSERT_TRUE(s.has_value());
-        if (sz > 0) ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
+        if (sz > 0) {
+            ASSERT_TRUE(s->write(0, std::span<const uint8_t>(data)).has_value());
+        }
         ASSERT_TRUE(cf->flush().has_value());
     }
     storage_ptr stg;
@@ -63,15 +65,18 @@ static void win32_write_stout_read(const std::filesystem::path &path, cfb_versio
     auto data = make_test_data(sz, seed);
     {
         storage_ptr stg;
-        if (ver == cfb_version::v4)
+        if (ver == cfb_version::v4) {
             ASSERT_TRUE(SUCCEEDED(win32_create_v4(path.wstring(), stg.put())));
-        else
+        } else {
             ASSERT_TRUE(SUCCEEDED(win32_create_v3(path.wstring(), stg.put())));
+        }
         auto wname = std::wstring(stream_name.begin(), stream_name.end());
         stream_ptr strm;
         ASSERT_TRUE(SUCCEEDED(
             stg->CreateStream(wname.c_str(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, strm.put())));
-        if (sz > 0) ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), static_cast<ULONG>(sz))));
+        if (sz > 0) {
+            ASSERT_TRUE(SUCCEEDED(win32_stream_write(strm.get(), data.data(), static_cast<ULONG>(sz))));
+        }
     }
     auto cf = compound_file::open(path, open_mode::read);
     ASSERT_TRUE(cf.has_value());

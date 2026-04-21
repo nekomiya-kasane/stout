@@ -61,7 +61,9 @@ sized_box_builder build_content(viewer_state &st, int viewport_h) {
             path.erase(0, pos + 1);
         }
         std::string leaf = path;
-        if (st.is_bookmarked(st.selected->full_path)) leaf = "\xe2\x98\x85 " + leaf; // ★ prefix for bookmarked
+        if (st.is_bookmarked(st.selected->full_path)) {
+            leaf = "\xe2\x98\x85 " + leaf; // ★ prefix for bookmarked
+        }
         bc.add_item(leaf);
         bc.separator(" \xe2\x80\xba ");
         bc.item_style(vt.breadcrumb_item);
@@ -134,18 +136,20 @@ sized_box_builder build_content(viewer_state &st, int viewport_h) {
 
 void build_status(const viewer_state &st, status_bar_builder &sb) {
     std::string left = st.file_path.filename().string();
-    if (st.use_win32)
+    if (st.use_win32) {
         left += " [Win32]";
-    else
+    } else {
         left += " [stout]";
+    }
     sb.left(left);
 
     sb.center(std::format("CFB {} | Sector {} | {}", st.version_str, st.sector_str, format_size(st.file_size)));
 
-    if (st.selected)
+    if (st.selected) {
         sb.right(std::format("{} | {}", entry_type_str(st.selected->type), format_size(st.selected->size)));
-    else
+    } else {
         sb.right("No selection");
+    }
 }
 
 rows_builder build_frame(viewer_state &st, int viewport_h, const classic_app_theme &app_theme) {

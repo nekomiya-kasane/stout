@@ -136,7 +136,9 @@ TEST_P(StressConcurrentConformance, CreateDeleteSequence) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(p.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 10u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── Rapid open/close cycles ─────────────────────────────────────────────

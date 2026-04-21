@@ -37,7 +37,9 @@ TEST_F(RenameDestroyConformance, DestroyStream) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 
     // Stout also verifies
     auto cf = compound_file::open(path, open_mode::read);
@@ -63,7 +65,9 @@ TEST_F(RenameDestroyConformance, DestroyStorage) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── DestroyNonExistent: destroy something that doesn't exist ────────────
@@ -100,7 +104,9 @@ TEST_F(RenameDestroyConformance, DestroyWithChildren) {
     ASSERT_TRUE(SUCCEEDED(win32_open_read(path.wstring(), stg.put())));
     auto entries = win32_enumerate(stg.get());
     EXPECT_EQ(entries.size(), 0u);
-    for (auto &e : entries) free_statstg_name(e);
+    for (auto &e : entries) {
+        free_statstg_name(e);
+    }
 }
 
 // ── DestroyAndRecreate: destroy then recreate same name ─────────────────
@@ -167,7 +173,9 @@ TEST_F(RenameDestroyConformance, DestroyMiddle) {
 
     std::set<std::wstring> names;
     for (auto &e : entries) {
-        if (e.pwcsName) names.insert(e.pwcsName);
+        if (e.pwcsName) {
+            names.insert(e.pwcsName);
+        }
         free_statstg_name(e);
     }
     EXPECT_TRUE(names.count(L"S0"));
@@ -204,7 +212,9 @@ TEST_F(RenameDestroyConformance, Win32DestroyStoutRead) {
     EXPECT_EQ(children.size(), 2u);
 
     std::set<std::string> names;
-    for (auto &c : children) names.insert(c.name);
+    for (auto &c : children) {
+        names.insert(c.name);
+    }
     EXPECT_TRUE(names.count("Item0"));
     EXPECT_FALSE(names.count("Item1"));
     EXPECT_TRUE(names.count("Item2"));
