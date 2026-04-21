@@ -11,7 +11,7 @@
 
 namespace ssv {
 
-/// @brief Handle a menu item activation by label.
-void handle_menu(const std::string &label, viewer_state &st, tapiru::classic_app &app);
+    /// @brief Handle a menu item activation by label.
+    void handle_menu(const std::string &label, viewer_state &st, tapiru::classic_app &app);
 
 } // namespace ssv

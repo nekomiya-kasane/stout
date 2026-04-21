@@ -10,7 +10,7 @@
 
 namespace ssv {
 
-/// @brief Handle a key event. Returns true if the event was consumed.
-[[nodiscard]] bool handle_key(const tapiru::key_event &ke, viewer_state &st, tapiru::classic_app &app);
+    /// @brief Handle a key event. Returns true if the event was consumed.
+    [[nodiscard]] bool handle_key(const tapiru::key_event &ke, viewer_state &st, tapiru::classic_app &app);
 
 } // namespace ssv
